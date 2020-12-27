@@ -62,18 +62,11 @@ class User(CModel, AbstractUser):
         help_text='Set to true when the user have a seller account.'
     )
 
-    SELLER = 'SE'
-    BUYER = 'BU'
-    TYPE_CHOICES_CURRENT_VIEW = [
-        (SELLER, 'Seller'),
-        (BUYER, 'Buyer'),
-    ]
-    current_view = models.CharField(
-        max_length=2,
-        choices=TYPE_CHOICES_CURRENT_VIEW,
-        default=SELLER
+    seller_view  = models.BooleanField(
+        'seller view',
+        default=True,
+        help_text='Set to true when the user view is on seller dashboard set false if is in buyer view.'
     )
-
 
     is_free_trial = models.BooleanField(
         'free trial',
@@ -118,6 +111,7 @@ class User(CModel, AbstractUser):
     # Stripe connect
     stripe_account_id = models.CharField(max_length=100, blank=True, null=True)
     money_balance = models.FloatField(blank=True, null=True)
+
 
     def __str__(self):
         """Return username."""

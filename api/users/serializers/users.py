@@ -43,6 +43,7 @@ class UserModelSerializer(serializers.ModelSerializer):
             'is_staff',
             'is_verified',
             'is_seller',
+            'seller_view',
             'is_free_trial',
             'passed_free_trial_once',
             'free_trial_expiration',

@@ -275,35 +275,34 @@ class UserViewSet(mixins.RetrieveModelMixin,
             return HttpResponse(status=400)
 
     @action(detail=False, methods=['get'])
-    def get_profile(self, request, *args, **kwargs):
+    def get_user(self, request, *args, **kwargs):
+        if request.user.id == None:
+            return Response(status=404)
 
         data = {
             'user': UserModelSerializer(request.user, many=False).data,
 
         }
-        if data['user']['id'] != None:
-            if 'STRIPE_API_KEY' in os.environ:
-                stripe.api_key = os.environ['STRIPE_API_KEY']
-            else:
-                stripe.api_key = 'sk_test_51HCsUHIgGIa3w9CpMgSnYNk7ifsaahLoaD1kSpVHBCMKMueUb06dtKAWYGqhFEDb6zimiLmF8XwtLLeBt2hIvvW200YfRtDlPo'
-
-            stripe_account_id = data['user']['stripe_account_id']
-            stripe_customer_id = data['user']['stripe_customer_id']
-            if stripe_account_id != None and stripe_account_id != '':
-                stripe_dashboard_url = stripe.Account.create_login_link(
-                    data.get['user']['stripe_account_id']
-                )
-                data['user']['stripe_dashboard_url'] = stripe_dashboard_url['url']
-
-            if stripe_customer_id != None and stripe_customer_id != '':
-                payment_methods = stripe.PaymentMethod.list(
-                    customer=stripe_customer_id,
-                    type="card"
-                )
-                data['user']['payment_methods'] = payment_methods.data
-            else:
-                data['user']['payment_methods'] = None
-
-            return Response(data)
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            return Response(status=404)
+            stripe.api_key = 'sk_test_51HCsUHIgGIa3w9CpMgSnYNk7ifsaahLoaD1kSpVHBCMKMueUb06dtKAWYGqhFEDb6zimiLmF8XwtLLeBt2hIvvW200YfRtDlPo'
+
+        stripe_account_id = data['user']['stripe_account_id']
+        stripe_customer_id = data['user']['stripe_customer_id']
+        if stripe_account_id != None and stripe_account_id != '':
+            stripe_dashboard_url = stripe.Account.create_login_link(
+                data.get['user']['stripe_account_id']
+            )
+            data['user']['stripe_dashboard_url'] = stripe_dashboard_url['url']
+
+        if stripe_customer_id != None and stripe_customer_id != '':
+            payment_methods = stripe.PaymentMethod.list(
+                customer=stripe_customer_id,
+                type="card"
+            )
+            data['user']['payment_methods'] = payment_methods.data
+        else:
+            data['user']['payment_methods'] = None
+
+        return Response(data)
