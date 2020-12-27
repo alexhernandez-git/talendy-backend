@@ -62,6 +62,19 @@ class User(CModel, AbstractUser):
         help_text='Set to true when the user have a seller account.'
     )
 
+    SELLER = 'SE'
+    BUYER = 'BU'
+    TYPE_CHOICES_CURRENT_VIEW = [
+        (SELLER, 'Seller'),
+        (BUYER, 'Buyer'),
+    ]
+    current_view = models.CharField(
+        max_length=2,
+        choices=TYPE_CHOICES_CURRENT_VIEW,
+        default=SELLER
+    )
+
+
     is_free_trial = models.BooleanField(
         'free trial',
         default=False,

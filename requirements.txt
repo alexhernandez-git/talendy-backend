@@ -65,3 +65,6 @@ django-anymail[sendgrid]==7.2.1
 
 # Video
 moviepy==1.0.3
+
+# Channels
+channels==3.0.2

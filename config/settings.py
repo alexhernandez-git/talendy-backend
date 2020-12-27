@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'storages',
     'gunicorn',
     'anymail',
+    'channels'
 ]
 
 MIDDLEWARE = [
@@ -351,3 +352,6 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {
 }
 
 FILE_UPLOAD_HANDLERS = ['django.core.files.uploadhandler.TemporaryFileUploadHandler']
+
+# Websockets
+ASGI_APPLICATION = "config.routing.application"
