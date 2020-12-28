@@ -237,6 +237,23 @@ class AccountVerificationSerializer(serializers.Serializer):
         user.save()
 
 
+class IsEmailAvailableSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+
+    email = serializers.CharField()
+
+    def validate(self, data):
+        """Update user's verified status."""
+
+        email = data['email']
+
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError('This email is already in use')
+
+        return {"email":email}
+
+
+
 class ChangeEmailSerializer(serializers.Serializer):
     """Acount verification serializer."""
 

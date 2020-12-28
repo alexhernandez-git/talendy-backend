@@ -21,6 +21,7 @@ from api.users.serializers import (
     ValidateChangeEmail,
     ForgetPasswordSerializer,
     ResetPasswordSerializer,
+    IsEmailAvailableSerializer
 )
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status, viewsets, mixins
@@ -83,6 +84,17 @@ class UserViewSet(mixins.RetrieveModelMixin,
         elif self.action == 'change_password':
             return ChangePasswordSerializer
         return UserModelSerializer
+
+    @action(detail=False, methods=['post'])
+    def is_email_available(self, request):
+        """Check if email passed is correct."""
+        serializer = IsEmailAvailableSerializer(
+            data=request.data,
+        )
+
+        serializer.is_valid(raise_exception=True)
+        email=serializer.data
+        return Response(data=email,status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
     def signup(self, request):
