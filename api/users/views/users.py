@@ -21,7 +21,8 @@ from api.users.serializers import (
     ValidateChangeEmail,
     ForgetPasswordSerializer,
     ResetPasswordSerializer,
-    IsEmailAvailableSerializer
+    IsEmailAvailableSerializer,
+    IsUsernameAvailableSerializer
 )
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status, viewsets, mixins
@@ -59,11 +60,11 @@ class UserViewSet(mixins.RetrieveModelMixin,
     Handle sign up, login and account verification.
     """
 
-    queryset = User.objects.filter(is_active=True, is_client=True)
+    queryset = User.objects.all()
     serializer_class = UserModelSerializer
     lookup_field = 'id'
     filter_backends = (SearchFilter,  DjangoFilterBackend)
-    search_fields = ('first_name', 'last_name')
+    search_fields = ('first_name', 'last_name', 'username')
 
     def get_permissions(self):
         """Assign permissions based on action."""
@@ -95,6 +96,16 @@ class UserViewSet(mixins.RetrieveModelMixin,
         serializer.is_valid(raise_exception=True)
         email=serializer.data
         return Response(data=email,status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
+    def is_username_available(self, request):
+        """Check if email passed is correct."""
+        serializer = IsUsernameAvailableSerializer(
+            data=request.data,
+        )
+
+        serializer.is_valid(raise_exception=True)
+        return Response(data={"message":"This username is available"},status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
     def signup_seller(self, request):
@@ -223,7 +234,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         serializer = AccountVerificationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        data = {'message': 'Cuenta verificada!'}
+        data = {'message': 'Verified account!'}
         return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
@@ -337,3 +348,4 @@ class UserViewSet(mixins.RetrieveModelMixin,
             data['user']['payment_methods'] = None
 
         return Response(data)
+

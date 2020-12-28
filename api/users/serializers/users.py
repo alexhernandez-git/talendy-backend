@@ -38,6 +38,7 @@ class UserModelSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'email',
+            'about',
             'phone_number',
             'country',
             'is_staff',
@@ -255,7 +256,20 @@ class IsEmailAvailableSerializer(serializers.Serializer):
 
         return {"email":email}
 
+class IsUsernameAvailableSerializer(serializers.Serializer):
+    """Acount verification serializer."""
 
+    username = serializers.CharField()
+
+    def validate(self, data):
+        """Update user's verified status."""
+
+        username = data['username']
+
+        if User.objects.filter(username=username).exists():
+            raise serializers.ValidationError('This username is already in use')
+
+        return True
 
 class ChangeEmailSerializer(serializers.Serializer):
     """Acount verification serializer."""
