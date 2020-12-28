@@ -106,14 +106,17 @@ class UserSignUpSerializer(serializers.Serializer):
     def create(self, data):
         """Handle user and profile creation."""
         request = self.context['request']
+        is_seller = self.context['seller']
 
         data.pop('password_confirmation')
 
         # Create the free trial expiration date
         expiration_date = datetime.datetime.now() + datetime.timedelta(days=14)
-
-        user = User.objects.create_user(**data, is_verified=False, is_client=True,
+        if is_seller:
+            user = User.objects.create_user(**data, is_verified=False, is_client=True, seller_view=True,
                                         is_seller=True, is_free_trial=True, free_trial_expiration=expiration_date)
+        else:
+            user = User.objects.create_user(**data, is_verified=False, is_client=True)
         token, created = Token.objects.get_or_create(
             user=user)
 

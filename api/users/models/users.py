@@ -64,7 +64,7 @@ class User(CModel, AbstractUser):
 
     seller_view  = models.BooleanField(
         'seller view',
-        default=True,
+        default=False,
         help_text='Set to true when the user view is on seller dashboard set false if is in buyer view.'
     )
 
