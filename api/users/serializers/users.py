@@ -57,7 +57,6 @@ class UserModelSerializer(serializers.ModelSerializer):
 
         read_only_fields = (
             'id',
-            'username',
         )
 
 
