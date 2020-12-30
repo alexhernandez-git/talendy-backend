@@ -35,3 +35,21 @@ def send_confirmation_email(user_pk):
     msg = EmailMultiAlternatives(subject, content, from_email, [user.email])
     msg.attach_alternative(content, "text/html")
     msg.send()
+
+
+@task(name='send_notification_new_post')
+def send_change_email_email(user_pk, new_email):
+    """Send account verification link to given user."""
+
+    user = User.objects.get(pk=user_pk)
+    verification_token = helpers.gen_new_email_token(user, new_email)
+    subject = 'Welcome @{}! Change your email'.format(
+        user.username)
+    from_email = 'Full Order Tracker <no-reply@fullordertracker.com>'
+    content = render_to_string(
+        'emails/users/change_email.html',
+        {'token': verification_token, 'user': user}
+    )
+    msg = EmailMultiAlternatives(subject, content, from_email, [user.email])
+    msg.attach_alternative(content, "text/html")
+    msg.send()

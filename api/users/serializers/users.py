@@ -20,7 +20,7 @@ from api.users.models import User, UserLoginActivity
 
 
 # Celery
-from api.taskapp.tasks import send_confirmation_email
+from api.taskapp.tasks import send_confirmation_email,send_change_email_email
 
 
 # Utilities
@@ -185,7 +185,7 @@ class UserLoginSerializer(serializers.Serializer):
 
         if not user:
             raise serializers.ValidationError(
-                'Las credenciales no son correctas')
+                'Invalid credentials')
 
         if user:
             current_login_ip = helpers.get_client_ip(request)
@@ -242,7 +242,7 @@ class AccountVerificationSerializer(serializers.Serializer):
         payload = self.context['payload']
         user = User.objects.get(username=payload['user'])
         if user.is_verified:
-            raise serializers.ValidationError('Tu cuenta ya esta validada')
+            raise serializers.ValidationError('Your account is already validated')
 
         user.is_verified = True
         user.save()
@@ -287,36 +287,43 @@ class ChangeEmailSerializer(serializers.Serializer):
         """Update user's verified status."""
 
         email = data['email']
-
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError('This email is already in use')
 
         user = self.context['user']
 
-        helpers.send_change_email(user, email)
+        send_change_email_email(user.pk, email)
         return {'email': email, 'user': user}
 
 
 class ValidateChangeEmail(serializers.Serializer):
     """Acount verification serializer."""
 
-    email = serializers.CharField()
+    token = serializers.CharField()
 
-    def validate_email(self, data):
-
-        email = data
-        if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError('This email is already in use')
-        self.context['email'] = email
+    def validate_token(self, data):
+        """Verifiy token is valid."""
+        try:
+            payload = jwt.decode(data, settings.SECRET_KEY,
+                                 algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise serializers.ValidationError('Verification link has expired')
+        except jwt.PyJWTError:
+            raise serializers.ValidationError('Invalid token')
+        if payload['type'] != 'change_email':
+            raise serializers.ValidationError('Invalid token')
+        self.context['payload'] = payload
         return data
 
     def save(self):
         """Update user's verified status."""
-        user = self.context['user']
-        email = self.context['email']
+        payload = self.context['payload']
+        user = User.objects.get(username=payload['user'])
+        email = payload['email']
+        
         user.email = email
         user.save()
-        return user
+        return email
 
 
 class ForgetPasswordSerializer(serializers.Serializer):

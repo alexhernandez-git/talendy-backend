@@ -72,7 +72,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """Assign permissions based on action."""
         if self.action in ['signup', 'login', 'verify', 'list', 'retrieve', 'stripe_webhook_subscription_cancelled', 'forget_password']:
             permissions = [AllowAny]
-        elif self.action in ['update', 'delete', 'partial_update', 'change_password', 'change_email', 'validate_change_email', 'reset_password']:
+        elif self.action in ['update', 'delete', 'partial_update', 'change_password', 'change_email', 'reset_password']:
             permissions = [IsAccountOwner, IsAuthenticated]
 
         else:
@@ -223,11 +223,21 @@ class UserViewSet(mixins.RetrieveModelMixin,
     @action(detail=False, methods=['post'])
     def change_email(self, request):
         """Account verification."""
-
         serializer = ChangeEmailSerializer(
             data=request.data, context={'user': request.user})
         serializer.is_valid(raise_exception=True)
         return Response(status=status.HTTP_200_OK)
+
+
+    @action(detail=False, methods=['post'])
+    def validate_change_email(self, request):
+        """Account verification."""
+        serializer = ValidateChangeEmail(
+            data=request.data, context={'user': request.user})
+        serializer.is_valid(raise_exception=True)
+        email = serializer.save()
+        data = {'message': 'Email changed!', 'email': email}
+        return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
     def reset_password(self, request):
@@ -247,15 +257,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
         data = {'message': 'Verified account!'}
         return Response(data, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['post'])
-    def validate_change_email(self, request):
-        """Account verification."""
-        serializer = ValidateChangeEmail(
-            data=request.data, context={'user': request.user})
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        data = {'message': 'Email cambiado!'}
-        return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['patch'])
     def remove_card(self, request, *args, **kwargs):

@@ -36,6 +36,18 @@ def gen_verification_token(user):
 
     return token
 
+def gen_new_email_token(user,new_email):
+    """Create JWT token than the user change the email."""
+    exp_date = timezone.now() + timedelta(days=3)
+    payload = {
+        'user': user.username,
+        'email': new_email,
+        'exp': int(exp_date.timestamp()),
+        'type': 'change_email'
+    }
+    token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+
+    return token
 
 # def send_confirmation_email(user_pk):
 #     """Send account verification link to given user."""
@@ -53,20 +65,6 @@ def gen_verification_token(user):
 #     msg.attach_alternative(content, "text/html")
 #     msg.send()
 
-
-def send_change_email(user, email):
-    """Send account verification link to given user."""
-
-    subject = 'Cambia el email de tu cuenta'.format(
-        user.username)
-    from_email = 'Classline Academy <no-reply@classlineacademy.com>'
-    content = render_to_string(
-        'emails/users/change_email.html',
-        {'email': email, 'user': user}
-    )
-    msg = EmailMultiAlternatives(subject, content, from_email, [email])
-    msg.attach_alternative(content, "text/html")
-    msg.send()
 
 
 def send_reset_password(user, token):
