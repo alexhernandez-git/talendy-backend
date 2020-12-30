@@ -46,6 +46,8 @@ from api.users.permissions import IsAccountOwner
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
+# Celery
+from api.taskapp.tasks import send_confirmation_email
 
 import os
 from api.utils import helpers
@@ -144,6 +146,15 @@ class UserViewSet(mixins.RetrieveModelMixin,
             "access_token": token
         }
         return Response(data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['get'])
+    def send_verification_email(self, request):
+        """Send the email confirmation."""
+        if request.user.id:
+            user = request.user
+            send_confirmation_email(user_pk=user.pk)
+            return Response(status=status.HTTP_200_OK)
+        return  Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'])
     def login(self, request):

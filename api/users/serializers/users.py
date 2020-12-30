@@ -6,6 +6,7 @@ from django.contrib.auth import password_validation, authenticate
 from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
 
+
 # Django REST Framework
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
@@ -17,12 +18,16 @@ from api.users.models import User, UserLoginActivity
 
 # Serializers
 
-import re
+
+# Celery
+from api.taskapp.tasks import send_confirmation_email
+
 
 # Utilities
 import jwt
 import datetime
 from api.utils import helpers
+import re
 
 
 class UserModelSerializer(serializers.ModelSerializer):
@@ -43,6 +48,7 @@ class UserModelSerializer(serializers.ModelSerializer):
             'country',
             'is_staff',
             'is_verified',
+            'picture',
             'is_seller',
             'seller_view',
             'is_free_trial',
@@ -111,6 +117,9 @@ class UserSignUpSerializer(serializers.Serializer):
         data.pop('password_confirmation')
 
         # Create the free trial expiration date
+
+        current_login_ip = helpers.get_client_ip(request)
+
         expiration_date = datetime.datetime.now() + datetime.timedelta(days=14)
         if is_seller:
             user = User.objects.create_user(**data, is_verified=False, is_client=True, seller_view=True,
@@ -120,11 +129,9 @@ class UserSignUpSerializer(serializers.Serializer):
         token, created = Token.objects.get_or_create(
             user=user)
 
-        current_login_ip = helpers.get_client_ip(request)
-
-        if UserLoginActivity.objects.filter(user=user.pk).exists():
+        if UserLoginActivity.objects.filter(user=user).exists():
             user_login_activity = UserLoginActivity.objects.filter(
-                user=user.pk)[0]
+                user=user)[0]
             if user_login_activity.login_IP != current_login_ip:
                 if Token.objects.filter(user=user).exists():
                     last_token = Token.objects.get(user=user)
@@ -141,9 +148,11 @@ class UserSignUpSerializer(serializers.Serializer):
                                                     status=UserLoginActivity.SUCCESS)
         user_login_activity_log.save()
 
-        helpers.send_confirmation_email(user_pk=user.pk)
+        send_confirmation_email(user_pk=user.pk)
 
         return user, token.key
+
+
 
 
 class UserLoginSerializer(serializers.Serializer):
@@ -180,17 +189,16 @@ class UserLoginSerializer(serializers.Serializer):
 
         if user:
             current_login_ip = helpers.get_client_ip(request)
-
-            if UserLoginActivity.objects.filter(user=user.pk).exists():
+            
+            if UserLoginActivity.objects.filter(user=user).exists():
                 user_login_activity = UserLoginActivity.objects.filter(
-                    user=user.pk)[0]
+                    user=user)[0]
                 if user_login_activity.login_IP != current_login_ip:
                     if Token.objects.filter(user=user).exists():
                         last_token = Token.objects.get(user=user)
                         last_token.delete()
                 UserLoginActivity.objects.filter(
-                    login_username=user.username).delete()
-
+                    user=user).delete()
             user_agent_info = request.META.get(
                 'HTTP_USER_AGENT', '<unknown>')[:255],
             user_login_activity_log = UserLoginActivity(login_IP=helpers.get_client_ip(request),

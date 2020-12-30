@@ -19,7 +19,7 @@ class User(CModel, AbstractUser):
         'email address',
         unique=True,
         error_messages={
-            'unique': 'Ya existe un usuario con este email.'
+            'unique': 'Already exists a user with this email.'
         },
         blank=True,
     )
@@ -29,6 +29,14 @@ class User(CModel, AbstractUser):
     )
 
     about=models.TextField('about user', max_length=1000, null=True, blank=True)
+
+    picture = models.ImageField(
+        'profile picture',
+        upload_to='users/pictures/',
+        blank=True,
+        null=True,
+        max_length=500
+    )
 
     phone_regex = RegexValidator(
         regex=r'\+?1?\d{9,15}$',

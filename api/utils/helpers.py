@@ -37,21 +37,21 @@ def gen_verification_token(user):
     return token
 
 
-def send_confirmation_email(user_pk):
-    """Send account verification link to given user."""
+# def send_confirmation_email(user_pk):
+#     """Send account verification link to given user."""
 
-    user = User.objects.get(pk=user_pk)
-    verification_token = gen_verification_token(user)
-    subject = 'Bienvenido @{}! Verifica tu cuenta para empezar a usar Classline Academy'.format(
-        user.username)
-    from_email = 'Classline Academy <no-reply@classlineacademy.com>'
-    content = render_to_string(
-        'emails/users/account_verification.html',
-        {'token': verification_token, 'user': user}
-    )
-    msg = EmailMultiAlternatives(subject, content, from_email, [user.email])
-    msg.attach_alternative(content, "text/html")
-    msg.send()
+#     user = User.objects.get(pk=user_pk)
+#     verification_token = gen_verification_token(user)
+#     subject = 'Welcome @{}! Verify your account to start using Full Order Tracker'.format(
+#         user.username)
+#     from_email = 'Full Order Tracker <no-reply@fullordertracker.com>'
+#     content = render_to_string(
+#         'emails/users/account_verification.html',
+#         {'token': verification_token, 'user': user}
+#     )
+#     msg = EmailMultiAlternatives(subject, content, from_email, [user.email])
+#     msg.attach_alternative(content, "text/html")
+#     msg.send()
 
 
 def send_change_email(user, email):
