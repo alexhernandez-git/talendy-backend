@@ -202,8 +202,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """User login."""
         serializer = ChangePasswordSerializer(
             data=request.data,
-            context={'new_password': request.data['new_password'],
-                     'repeat_password': request.data['repeat_password']}
+            context={'request': request}
         )
 
         serializer.is_valid(raise_exception=True)

@@ -289,7 +289,7 @@ class ChangeEmailSerializer(serializers.Serializer):
         email = data['email']
 
         if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError('Este email ya esta en uso')
+            raise serializers.ValidationError('This email is already in use')
 
         user = self.context['user']
 
@@ -306,7 +306,7 @@ class ValidateChangeEmail(serializers.Serializer):
 
         email = data
         if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError('Este email ya esta en uso')
+            raise serializers.ValidationError('This email is already in use')
         self.context['email'] = email
         return data
 
@@ -393,8 +393,6 @@ class ChangePasswordSerializer(serializers.Serializer):
 
     Handle the login request
     """
-    email = serializers.CharField()
-    password = serializers.CharField(min_length=8, max_length=64)
     new_password = serializers.CharField(min_length=8, max_length=64)
     repeat_password = serializers.CharField(min_length=8, max_length=64)
 
@@ -402,28 +400,11 @@ class ChangePasswordSerializer(serializers.Serializer):
         """Check credentials."""
         # Validation with email or password
 
-        new_password = self.context['new_password']
-        repeat_password = self.context['repeat_password']
-        email = data['email']
-        password = data['password']
-        regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
-        # for custom mails use: '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$'
-
-        if email and password:
-            if re.search(regex, email):
-                user_request = get_object_or_404(
-                    User,
-                    email=email
-                )
-                email = user_request.username
-            # Check if user set email
-
-        user = authenticate(username=email, password=password)
-
-        if not user:
-            raise serializers.ValidationError('Credenciales invalidas')
+        user = self.context['request'].user
+        new_password = data['new_password']
+        repeat_password = data['repeat_password']
         if new_password != repeat_password:
-            raise serializers.ValidationError('Las contraseñas no coinciden')
+            raise serializers.ValidationError('Passwords not match')
         user.set_password(new_password)
         user.password_changed = True
         user.save()
