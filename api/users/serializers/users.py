@@ -414,14 +414,30 @@ class ChangePasswordSerializer(serializers.Serializer):
 
     Handle the login request
     """
+    password = serializers.CharField(min_length=8, max_length=64)
     new_password = serializers.CharField(min_length=8, max_length=64)
     repeat_password = serializers.CharField(min_length=8, max_length=64)
 
     def validate(self, data):
         """Check credentials."""
         # Validation with email or password
-
+        regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+        # for custom mails use: '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$'
         user = self.context['request'].user
+        password=data['password']
+        email = user.email
+        if email and password:
+            if re.search(regex, email):
+                user_request = get_object_or_404(
+                    User,
+                    email=email
+                )
+                email = user_request.username
+            # Check if user set email
+
+        user = authenticate(username=email, password=password)
+        if not user:
+            raise serializers.ValidationError('Current password is not correct')
         new_password = data['new_password']
         repeat_password = data['repeat_password']
         if new_password != repeat_password:

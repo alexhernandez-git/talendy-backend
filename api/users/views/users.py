@@ -112,9 +112,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
     @action(detail=False, methods=['post'])
     def signup_seller(self, request):
         """User sign up."""
-
-        # request.data['username'] = request.data['email']
-
+        
         serializer = UserSignUpSerializer(
 
             data=request.data,
@@ -132,10 +130,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
     def signup_buyer(self, request):
         """User sign up."""
 
-        # request.data['username'] = request.data['email']
-
         serializer = UserSignUpSerializer(
-
             data=request.data,
             context={'request': request, 'seller': False})
         serializer.is_valid(raise_exception=True)
