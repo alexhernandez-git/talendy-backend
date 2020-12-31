@@ -65,17 +65,3 @@ def gen_new_email_token(user,new_email):
 #     msg.attach_alternative(content, "text/html")
 #     msg.send()
 
-
-
-def send_reset_password(user, token):
-    """Send account verification link to given user."""
-
-    subject = 'Resetea la contraseña'
-    from_email = 'Classline Academy <no-reply@classlineacademy.com>'
-    content = render_to_string(
-        'emails/users/reset_password.html',
-        {'token': token, 'user': user}
-    )
-    msg = EmailMultiAlternatives(subject, content, from_email, [user.email])
-    msg.attach_alternative(content, "text/html")
-    msg.send()

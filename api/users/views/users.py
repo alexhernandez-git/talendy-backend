@@ -72,7 +72,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """Assign permissions based on action."""
         if self.action in ['signup', 'login', 'verify', 'list', 'retrieve', 'stripe_webhook_subscription_cancelled', 'forget_password']:
             permissions = [AllowAny]
-        elif self.action in ['update', 'delete', 'partial_update', 'change_password', 'change_email', 'reset_password']:
+        elif self.action in ['update', 'delete', 'partial_update', 'change_password', 'change_email']:
             permissions = [IsAccountOwner, IsAuthenticated]
 
         else:
@@ -209,16 +209,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
         return Response(status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['post'])
-    def forget_password(self, request):
-        """User login."""
-        serializer = ForgetPasswordSerializer(
-            data=request.data,
-        )
 
-        serializer.is_valid(raise_exception=True)
-
-        return Response(status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
     def change_email(self, request):
@@ -240,10 +231,21 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
+    def forget_password(self, request):
+        """User login."""
+        serializer = ForgetPasswordSerializer(
+            data=request.data,
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        return Response(status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
     def reset_password(self, request):
         """Account verification."""
         serializer = ResetPasswordSerializer(
-            data=request.data, context={'user': request.user, 'confirm_password': request.data['confirm_password']})
+            data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(status=status.HTTP_200_OK)

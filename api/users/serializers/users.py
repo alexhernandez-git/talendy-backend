@@ -20,7 +20,7 @@ from api.users.models import User, UserLoginActivity
 
 
 # Celery
-from api.taskapp.tasks import send_confirmation_email,send_change_email_email
+from api.taskapp.tasks import send_confirmation_email,send_change_email_email,send_reset_password_email
 
 
 # Utilities
@@ -337,34 +337,48 @@ class ForgetPasswordSerializer(serializers.Serializer):
         email = data['email']
 
         if not User.objects.filter(email=email).exists():
-            raise serializers.ValidationError('Este email no existe')
+            raise serializers.ValidationError('This email does not exists')
 
-        user = User.objects.filter(email=email).first()
-        token = Token.objects.get(user=user)
-
-        helpers.send_reset_password(user, token.key)
-        return {'email': email, 'user': user}
+        send_reset_password_email(email)
+        return {'email': email}
 
 
 class ResetPasswordSerializer(serializers.Serializer):
     """Acount verification serializer."""
 
+    token = serializers.CharField()
     password = serializers.CharField(min_length=8, max_length=64)
     confirm_password = serializers.CharField(min_length=8, max_length=64)
 
-    def validate_password(self, data):
 
-        password = data
-        confirm_password = self.context['confirm_password']
+    def validate_token(self, data):
+        """Verifiy token is valid."""
+        try:
+            payload = jwt.decode(data, settings.SECRET_KEY,
+                                 algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise serializers.ValidationError('Verification link has expired')
+        except jwt.PyJWTError:
+            raise serializers.ValidationError('Invalid token')
+        if payload['type'] != 'email_confirmation':
+            raise serializers.ValidationError('Invalid token')
+        self.context['payload'] = payload
+        return data
+
+    def validate(self, data):
+
+        password = data['password']
+        confirm_password = data['confirm_password']
         if password != confirm_password:
             raise serializers.ValidationError('Passwords don\'t match')
-        self.context['password'] = password
         return data
 
     def save(self):
         """Update user's verified status."""
-        user = self.context['user']
-        password = self.context['password']
+        username = self.context['payload']['user']
+
+        password = self.data['password']
+        user = User.objects.get(username=username)
         user.set_password(password)
         user.save()
         return user
