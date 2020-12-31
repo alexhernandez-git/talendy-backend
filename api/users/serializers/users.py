@@ -182,7 +182,6 @@ class UserLoginSerializer(serializers.Serializer):
             # Check if user set email
 
         user = authenticate(username=email, password=password)
-
         if not user:
             raise serializers.ValidationError(
                 'Invalid credentials')
