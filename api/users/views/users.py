@@ -11,19 +11,7 @@ from api.users.models import User, UserLoginActivity
 import stripe
 import json
 import uuid
-from api.users.serializers import (
-    UserLoginSerializer,
-    UserModelSerializer,
-    UserSignUpSerializer,
-    AccountVerificationSerializer,
-    ChangePasswordSerializer,
-    ChangeEmailSerializer,
-    ValidateChangeEmail,
-    ForgetPasswordSerializer,
-    ResetPasswordSerializer,
-    IsEmailAvailableSerializer,
-    IsUsernameAvailableSerializer
-)
+
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
@@ -41,6 +29,20 @@ from rest_framework.permissions import (
 from api.users.permissions import IsAccountOwner
 
 # Serializers
+from api.users.serializers import (
+    UserLoginSerializer,
+    UserModelSerializer,
+    UserSignUpSerializer,
+    AccountVerificationSerializer,
+    ChangePasswordSerializer,
+    ChangeEmailSerializer,
+    ValidateChangeEmail,
+    ForgetPasswordSerializer,
+    ResetPasswordSerializer,
+    IsEmailAvailableSerializer,
+    IsUsernameAvailableSerializer,
+    InviteUserSerializer
+)
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -86,6 +88,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
             return UserModelSerializer
         elif self.action == 'change_password':
             return ChangePasswordSerializer
+        elif self.action == 'invite_user':
+            return InviteUserSerializer
         return UserModelSerializer
 
     @action(detail=False, methods=['post'])
@@ -112,11 +116,14 @@ class UserViewSet(mixins.RetrieveModelMixin,
     @action(detail=False, methods=['post'])
     def signup_seller(self, request):
         """User sign up."""
+
+        invitation_token = None
+        if 'invitation_token' in request.data:
+            invitation_token = request.data['invitation_token']
         
         serializer = UserSignUpSerializer(
-
             data=request.data,
-            context={'request': request, 'seller': True})
+            context={'request': request, 'seller': True, 'invitation_token': invitation_token})
         serializer.is_valid(raise_exception=True)
         user, token = serializer.save()
         user_serialized = UserModelSerializer(user).data
@@ -130,9 +137,12 @@ class UserViewSet(mixins.RetrieveModelMixin,
     def signup_buyer(self, request):
         """User sign up."""
 
+        invitation_token = None
+        if 'invitation_token' in request.data:
+            invitation_token = request.data['invitation_token']
         serializer = UserSignUpSerializer(
             data=request.data,
-            context={'request': request, 'seller': False})
+            context={'request': request, 'seller': False, 'invitation_token': invitation_token})
         serializer.is_valid(raise_exception=True)
         user, token = serializer.save()
         user_serialized = UserModelSerializer(user).data
@@ -147,7 +157,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """Send the email confirmation."""
         if request.user.id:
             user = request.user
-            send_confirmation_email(user_pk=user.pk)
+            send_confirmation_email(user)
             return Response(status=status.HTTP_200_OK)
         return  Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -356,4 +366,15 @@ class UserViewSet(mixins.RetrieveModelMixin,
             data['user']['payment_methods'] = None
 
         return Response(data)
+
+    @action(detail=False, methods=['post'])
+    def invite_user(self, request, *args, **kwargs):
+        serializer = self.get_serializer(
+            data=request.data,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+    
+        return Response(status=status.HTTP_200_OK)
+
 

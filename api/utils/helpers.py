@@ -49,19 +49,15 @@ def gen_new_email_token(user,new_email):
 
     return token
 
-# def send_confirmation_email(user_pk):
-#     """Send account verification link to given user."""
+def get_invitation_token(from_user,email):
+    """Create JWT token than the user change the email."""
+    exp_date = timezone.now() + timedelta(days=7)
+    payload = {
+        'from_user': str(from_user.pk),
+        'to_user_email': email,
+        'exp': int(exp_date.timestamp()),
+        'type': 'invitation_token'
+    }
+    token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
 
-#     user = User.objects.get(pk=user_pk)
-#     verification_token = gen_verification_token(user)
-#     subject = 'Welcome @{}! Verify your account to start using Full Order Tracker'.format(
-#         user.username)
-#     from_email = 'Full Order Tracker <no-reply@fullordertracker.com>'
-#     content = render_to_string(
-#         'emails/users/account_verification.html',
-#         {'token': verification_token, 'user': user}
-#     )
-#     msg = EmailMultiAlternatives(subject, content, from_email, [user.email])
-#     msg.attach_alternative(content, "text/html")
-#     msg.send()
-
+    return token

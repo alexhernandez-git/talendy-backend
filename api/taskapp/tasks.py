@@ -20,10 +20,9 @@ from api.utils import helpers
 import re
 
 @task(name='send_confirmation_email')
-def send_confirmation_email(user_pk):
+def send_confirmation_email(user):
     """Send account verification link to given user."""
 
-    user = User.objects.get(pk=user_pk)
     verification_token = helpers.gen_verification_token(user)
     subject = 'Welcome @{}! Verify your account to start using Full Order Tracker'.format(
         user.username)
@@ -38,10 +37,9 @@ def send_confirmation_email(user_pk):
 
 
 @task(name='send_change_email_email')
-def send_change_email_email(user_pk, new_email):
+def send_change_email_email(user, new_email):
     """Send account verification link to given user."""
 
-    user = User.objects.get(pk=user_pk)
     verification_token = helpers.gen_new_email_token(user, new_email)
     subject = 'Welcome @{}! Change your email'.format(
         user.username)
@@ -68,5 +66,23 @@ def send_reset_password_email(user_email):
         {'token': verification_token, 'user': user}
     )
     msg = EmailMultiAlternatives(subject, content, from_email, [user.email])
+    msg.attach_alternative(content, "text/html")
+    msg.send()
+
+
+
+@task(name='send_invitation_email')
+def send_invitation_email(user, email, type):
+    """Send account verification link to given user."""
+
+    verification_token = helpers.get_invitation_token(user, email)
+    subject = 'Welcome @{}! Change your email'.format(
+        user.username)
+    from_email = 'Full Order Tracker <no-reply@fullordertracker.com>'
+    content = render_to_string(
+        'emails/users/user_invitation.html',
+        {'token': verification_token, 'user': user, 'type': type}
+    )
+    msg = EmailMultiAlternatives(subject, content, from_email, [email])
     msg.attach_alternative(content, "text/html")
     msg.send()

@@ -5,8 +5,13 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 # Models
-from api.users.models import User
+from api.users.models import User,Contact
 
+
+@admin.register(Contact)
+class ContactAdmin(admin.ModelAdmin):
+    """Contact model admin."""
+    list_display = ('id','from_user','contact_user')
 
 class CustomUserAdmin(UserAdmin):
     """User model admin."""
@@ -17,6 +22,5 @@ class CustomUserAdmin(UserAdmin):
                     'is_staff', 'is_client')
     list_filter = ('is_client', 'is_staff', 'created',
                    'modified', )
-
 
 admin.site.register(User, CustomUserAdmin)

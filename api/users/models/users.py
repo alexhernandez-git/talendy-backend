@@ -65,6 +65,8 @@ class User(CModel, AbstractUser):
 
     country = models.CharField(max_length=2, blank=True, null=True)
 
+    contacts = models.ManyToManyField("users.User", through="users.Contact", verbose_name="user_contacts")
+
     # Is seller
     is_seller = models.BooleanField(
         'seller',

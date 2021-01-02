@@ -20,7 +20,12 @@ from api.users.models import User, UserLoginActivity
 
 
 # Celery
-from api.taskapp.tasks import send_confirmation_email,send_change_email_email,send_reset_password_email
+from api.taskapp.tasks import (
+    send_confirmation_email,
+    send_change_email_email,
+    send_reset_password_email,
+    send_invitation_email
+)
 
 
 # Utilities
@@ -107,6 +112,20 @@ class UserSignUpSerializer(serializers.Serializer):
             raise serializers.ValidationError('Las contraseñas no coinciden')
         password_validation.validate_password(passwd)
 
+        # Verifiy token is valid
+        if 'invitation_token' in self.context and self.context['invitation_token']:
+            invitation_token = self.context['invitation_token']
+            try:
+                payload = jwt.decode(invitation_token, settings.SECRET_KEY,
+                                    algorithms=['HS256'])
+            except jwt.ExpiredSignatureError:
+                raise serializers.ValidationError('Token has expired')
+            except jwt.PyJWTError:
+                raise serializers.ValidationError('Invalid token')
+            if payload['type'] != 'invitation_token':
+                raise serializers.ValidationError('Invalid token')
+            self.context['payload'] = payload
+            
         return data
 
     def create(self, data):
@@ -148,7 +167,16 @@ class UserSignUpSerializer(serializers.Serializer):
                                                     status=UserLoginActivity.SUCCESS)
         user_login_activity_log.save()
 
-        send_confirmation_email(user_pk=user.pk)
+
+        send_confirmation_email(user)
+        
+        if 'payload' in self.context:
+            # Add to contacts user to from user
+            payload = self.context['payload']
+         
+            from_user = get_object_or_404(User, id=payload['from_user'])
+            from_user.contacts.add(user)
+            from_user.save()
 
         return user, token.key
 
@@ -167,6 +195,7 @@ class UserLoginSerializer(serializers.Serializer):
     def validate(self, data):
         """Check credentials."""
         # Validation with email or password
+        
         email = data['email']
         password = data['password']
         request = self.context['request']
@@ -291,7 +320,7 @@ class ChangeEmailSerializer(serializers.Serializer):
 
         user = self.context['user']
 
-        send_change_email_email(user.pk, email)
+        send_change_email_email(user, email)
         return {'email': email, 'user': user}
 
 
@@ -445,4 +474,27 @@ class ChangePasswordSerializer(serializers.Serializer):
         user.password_changed = True
         user.save()
 
+        return data
+
+
+class InviteUserSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+
+    email = serializers.CharField()
+    type = serializers.CharField()
+
+    def validate(self, data):
+        """Update user's verified status."""
+
+        email = data['email']
+        type = data['type']
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError('This user already exists')
+        if(type != "seller" and type != "buyer"):
+            raise serializers.ValidationError('Type not valid')
+            
+        request = self.context['request']
+        user = request.user
+
+        send_invitation_email(user, email, type)
         return data
