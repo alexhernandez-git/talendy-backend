@@ -72,16 +72,16 @@ def send_reset_password_email(user_email):
 
 
 @task(name='send_invitation_email')
-def send_invitation_email(user, email, type):
+def send_invitation_email(user, email, message, type):
     """Send account verification link to given user."""
 
     verification_token = helpers.get_invitation_token(user, email)
-    subject = 'Welcome @{}! Change your email'.format(
+    subject = 'Welcome! @{} has invited you '.format(
         user.username)
     from_email = 'Full Order Tracker <no-reply@fullordertracker.com>'
     content = render_to_string(
         'emails/users/user_invitation.html',
-        {'token': verification_token, 'user': user, 'type': type}
+        {'token': verification_token, 'user': user,'message': message, 'type': type}
     )
     msg = EmailMultiAlternatives(subject, content, from_email, [email])
     msg.attach_alternative(content, "text/html")

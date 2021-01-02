@@ -91,6 +91,12 @@ class UserViewSet(mixins.RetrieveModelMixin,
         elif self.action == 'invite_user':
             return InviteUserSerializer
         return UserModelSerializer
+    
+    def get_queryset(self):
+        if self.action == "list_contacts_available":
+            return User.objects.all().exclude(pk__in=self.request.user.contacts.through.objects.all().values('contact_user'),user=self.request.user)    
+        return User.objects.all()
+    
 
     @action(detail=False, methods=['post'])
     def is_email_available(self, request):
@@ -378,3 +384,14 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(status=status.HTTP_200_OK)
 
 
+    @action(detail=False, methods=['get'])
+    def list_contacts_available(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

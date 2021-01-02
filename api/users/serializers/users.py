@@ -482,12 +482,14 @@ class InviteUserSerializer(serializers.Serializer):
 
     email = serializers.CharField()
     type = serializers.CharField()
+    message = serializers.CharField(allow_blank=True)
 
     def validate(self, data):
         """Update user's verified status."""
 
         email = data['email']
         type = data['type']
+        message = data['message']
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError('This user already exists')
         if(type != "seller" and type != "buyer"):
@@ -496,5 +498,5 @@ class InviteUserSerializer(serializers.Serializer):
         request = self.context['request']
         user = request.user
 
-        send_invitation_email(user, email, type)
+        send_invitation_email(user, email, message, type)
         return data
