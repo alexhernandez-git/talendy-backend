@@ -48,6 +48,7 @@ from api.utils import helpers
 
 class ContactViewSet(mixins.ListModelMixin,
                     mixins.CreateModelMixin,
+                    mixins.DestroyModelMixin,
                     viewsets.GenericViewSet):
     """User view set.
 

@@ -177,6 +177,8 @@ class UserSignUpSerializer(serializers.Serializer):
             from_user = get_object_or_404(User, id=payload['from_user'])
             from_user.contacts.add(user)
             from_user.save()
+            user.contacts.add(from_user)
+            user.save()
 
         return user, token.key
 
