@@ -28,6 +28,8 @@ from rest_framework.permissions import (
 )
 from api.users.permissions import IsAccountOwner
 
+# Models
+from api.users.models import Contact
 # Serializers
 from api.users.serializers import (
     UserLoginSerializer,
@@ -94,7 +96,11 @@ class UserViewSet(mixins.RetrieveModelMixin,
     
     def get_queryset(self):
         if self.action == "list_contacts_available":
-            return User.objects.all().exclude(pk__in=self.request.user.contacts.through.objects.all().values('contact_user'),user=self.request.user)    
+            user=self.request.user
+            users = Contact.objects.filter(from_user=user).values_list('contact_user__pk')
+            users_list = [x[0] for x in users]
+            users_list.append(user.pk)
+            return User.objects.all().exclude(pk__in=users_list)   
         return User.objects.all()
     
 
