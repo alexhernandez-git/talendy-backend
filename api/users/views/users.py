@@ -128,11 +128,9 @@ class UserViewSet(mixins.RetrieveModelMixin,
     @action(detail=False, methods=['post'])
     def signup_seller(self, request):
         """User sign up."""
-
         invitation_token = None
         if 'invitation_token' in request.data:
             invitation_token = request.data['invitation_token']
-        
         serializer = UserSignUpSerializer(
             data=request.data,
             context={'request': request, 'seller': True, 'invitation_token': invitation_token})

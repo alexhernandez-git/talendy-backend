@@ -15,7 +15,6 @@ import uuid
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
@@ -26,10 +25,12 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from api.users.permissions import IsAccountOwner
 
 # Models
-from api.users.models import Contact
+from api.users.models import User
+from api.chat.models import Chat, participants
 
 # Serializers
-from api.users.serializers import ContactModelSerializer, CreateContactSerializer
+from api.users.serializers import UserModelSerializer
+from api.chat.serializers import ChatModelSerializer, CreateChatSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -40,25 +41,21 @@ import os
 from api.utils import helpers
 
 
-class ContactViewSet(
+class ChatViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    """User view set.
+    """Chats view set."""
 
-    Handle sign up, login and account verification.
-    """
-
-    queryset = Contact.objects.all()
+    queryset = Chat.objects.all()
     lookup_field = "id"
-    serializer_class = ContactModelSerializer
+    serializer_class = ChatModelSerializer
     filter_backends = (SearchFilter, DjangoFilterBackend)
     search_fields = (
-        "contact_user__first_name",
-        "contact_user__last_name",
-        "contact_user__username",
+        "participants__first_name",
+        "participants__last_name",
+        "participants__username",
     )
 
     def get_permissions(self):
@@ -67,23 +64,24 @@ class ContactViewSet(
         permissions = [IsAuthenticated]
         return [p() for p in permissions]
 
-    def get_queryset(self):
-        """Restrict list to public-only."""
-        user = self.request.user
-        queryset = Contact.objects.filter(from_user=user)
-
-        return queryset
-
     def get_serializer_class(self):
         """Return serializer based on action."""
         if self.action == "create":
-            return CreateContactSerializer
-        return ContactModelSerializer
+            return CreateChatSerializer
+        return ChatModelSerializer
+
+    def get_queryset(self):
+        if self.action == "list":
+            user = self.request.user
+            return Chat.objects.filter(participants=user)
+        return Chat.objects.all()
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
-        contact = serializer.save()
-        contact_data = ContactModelSerializer(contact, many=False).data
-        headers = self.get_success_headers(serializer.data)
-        return Response(contact_data, status=status.HTTP_201_CREATED, headers=headers)
+        chat = serializer.save()
+
+        chat_data = ChatModelSerializer(chat, many=False).data
+
+        headers = self.get_success_headers(chat)
+        return Response(chat_data, status=status.HTTP_201_CREATED, headers=headers)

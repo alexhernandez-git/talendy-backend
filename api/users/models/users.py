@@ -128,3 +128,14 @@ class User(CModel, AbstractUser):
     def __str__(self):
         """Return username."""
         return '{} {}'.format(self.first_name, self.last_name)
+
+    def save(self, **kwargs):
+        try:
+            this = User.objects.get(id=self.id)
+            # import pdb
+            # pdb.set_trace()
+            if this.picture != self.picture:
+                this.picture.delete(save=False)
+        except:
+            pass
+        super(User, self).save(**kwargs)

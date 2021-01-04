@@ -4,27 +4,25 @@ from api.users.models import User
 import random
 
 from api.users.models import User
+from api.chat.models import Chat
 from faker import Faker
 
 import uuid
 
 fakegen = Faker()
 
-class Command(BaseCommand):
 
+class Command(BaseCommand):
     def handle(self, *args, **options):
         if not User.objects.filter(username="alexadmin").exists():
-                User.objects.create_superuser(
-                "alexadmin", "alexandrehernandez@classlineacademy.com", "admin321")
-                print("Admin user created...")
+            User.objects.create_superuser(
+                "alexadmin", "alexandrehernandez@classlineacademy.com", "admin321"
+            )
+            print("Admin user created...")
 
         if not User.objects.filter(username="alex").exists():
             user = User.objects.create(
-                first_name="Alex",
-                last_name="Hernandez",
-                username="alex",
-                email="alex@gmail.com"
-                
+                first_name="Alex", last_name="Hernandez", username="alex", email="alex@gmail.com"
             )
             user.set_password("admin321")
             user.save()
@@ -36,9 +34,14 @@ class Command(BaseCommand):
                 fake_last_name = fakegen.last_name()
                 fake_email = fakegen.email()
                 fake_username = fakegen.email()
-                User.objects.create(first_name=fake_first_name, last_name=fake_last_name, email=fake_email, username=fake_username)
+                User.objects.create(
+                    first_name=fake_first_name,
+                    last_name=fake_last_name,
+                    email=fake_email,
+                    username=fake_username,
+                )
             print("Fake data users created...")
-        
+
         def add_contacts():
             users = User.objects.all().exclude(username="alex")
             alex_user = User.objects.get(username="alex")
@@ -47,5 +50,15 @@ class Command(BaseCommand):
                 alex_user.save()
             print("Contacts added to alex...")
 
+        def create_chats():
+            users = User.objects.all().exclude(username="alex")
+            alex_user = User.objects.get(username="alex")
+            for user in users:
+                chat = Chat.objects.create()
+                chat.participants.add(alex_user, user)
+                chat.save()
+            print("Chats created...")
+
         add_users(5)
         add_contacts()
+        create_chats()

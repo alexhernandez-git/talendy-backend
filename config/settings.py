@@ -47,9 +47,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # LOCAL_APPS
-    'api.utils.apps.UtilsAppConfig',
-    'api.users.apps.UsersAppConfig',
-    'api.taskapp.celery.CeleryAppConfig',
+    'api.utils',
+    'api.users',
+    'api.taskapp',
+    'api.chat',
+    'api.notifications',
 
     # THIRD_PARTY_APPS
     'rest_framework',
@@ -62,6 +64,7 @@ INSTALLED_APPS = [
     'gunicorn',
     'anymail',
     'channels',
+    'channels_redis',
     'corsheaders',
 ]
 
@@ -361,3 +364,21 @@ FILE_UPLOAD_HANDLERS = ['django.core.files.uploadhandler.TemporaryFileUploadHand
 
 # Websockets
 ASGI_APPLICATION = "config.routing.application"
+
+
+# Channel Layer
+if 'REDIS_URL' in os.environ:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                "hosts": [os.environ['REDIS_URL']],
+            },
+        },
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer"
+        }
+    }
