@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 # Models
 from api.users.models import User
-from api.chat.models import Chat, participants
+from api.chats.models import Chat, participants
 
 # Serializers
 from api.users.serializers import UserModelSerializer
@@ -17,12 +17,13 @@ class ChatModelSerializer(serializers.ModelSerializer):
 
     room_name = serializers.SerializerMethodField(read_only=True)
     to_user = serializers.SerializerMethodField(read_only=True)
+    last_message = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
 
         model = Chat
-        fields = ("id", "room_name", "to_user", "last_message")
+        fields = ("id", "room_name", "to_user", "last_message", "created")
 
         read_only_fields = ("id",)
 
@@ -42,6 +43,14 @@ class ChatModelSerializer(serializers.ModelSerializer):
             return UserModelSerializer(to_users[0], many=False).data
         return None
 
+    def get_last_message(self, obj):
+
+        if obj.last_message:
+
+            return obj.last_message.text
+
+        return None
+
 
 class CreateChatSerializer(serializers.Serializer):
     to_user = serializers.CharField()
@@ -53,10 +62,16 @@ class CreateChatSerializer(serializers.Serializer):
         chats = Chat.objects.filter(Q(participants=to_user) and Q(participants=from_user))
 
         if chats.exists():
-            raise serializers.ValidationError("You already have this chat")
+            for chat in chats:
+                if chat.participants.all().count() == 2:
+                    return {"chat": chat}
+            raise serializers.ValidationError("Chat not found")
         return {"to_user": to_user, "from_user": from_user}
 
     def create(self, validated_data):
+        if "chat" in validated_data:
+            return {"chat": validated_data["chat"], "status": "retrieved"}
+
         to_user = validated_data["to_user"]
         from_user = validated_data["from_user"]
         chat = Chat.objects.create()
@@ -65,4 +80,4 @@ class CreateChatSerializer(serializers.Serializer):
         chat.participants.add(from_user)
         chat.save()
 
-        return chat
+        return {"chat": chat, "status": "created"}

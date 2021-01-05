@@ -5,6 +5,6 @@ from django.contrib import admin
 
 urlpatterns = [
     path("api/", include(("api.users.urls", "users"), namespace="users")),
-    path("api/", include(("api.chat.urls", "chat"), namespace="chat")),
+    path("api/", include(("api.chats.urls", "chat"), namespace="chat")),
     path("admin/", admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

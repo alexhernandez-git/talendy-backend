@@ -2,7 +2,7 @@
 from rest_framework import serializers
 
 # Models
-from api.chat.models import Participant
+from api.chats.models import Participant
 
 # Serializers
 from api.users.serializers import UserModelSerializer

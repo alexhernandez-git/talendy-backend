@@ -4,7 +4,7 @@ from api.users.models import User
 import random
 
 from api.users.models import User
-from api.chat.models import Chat
+from api.chats.models import Chat
 from faker import Faker
 
 import uuid

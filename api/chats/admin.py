@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Models
-from api.chat.models import Chat
+from api.chats.models import Chat
 
 # Register your models here.
 

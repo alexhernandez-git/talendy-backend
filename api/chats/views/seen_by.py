@@ -24,39 +24,38 @@ from django.http import HttpResponse
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from api.users.permissions import IsAccountOwner
 
+
 # Models
 from api.users.models import User
-from api.chat.models import Chat, participants
+from api.chats.models import SeenBy, SeenBy
 
 # Serializers
 from api.users.serializers import UserModelSerializer
-from api.chat.serializers import ChatModelSerializer, CreateChatSerializer
+from api.chats.serializers import (
+    SeenByModelSerializer,
+    SeenByModelSerializer,
+    CreateSeenBySerializer,
+)
 
-# Filters
-from rest_framework.filters import SearchFilter
-from django_filters.rest_framework import DjangoFilterBackend
 
+# Utils
 
+from api.utils.mixins import AddChatMixin
 import os
 from api.utils import helpers
 
 
-class ChatViewSet(
+class SeenByViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
-    viewsets.GenericViewSet,
+    mixins.DestroyModelMixin,
+    AddChatMixin,
 ):
-    """Chats view set."""
+    """SeenBys view set."""
 
-    queryset = Chat.objects.all()
+    queryset = SeenBy.objects.all()
     lookup_field = "id"
-    serializer_class = ChatModelSerializer
-    filter_backends = (SearchFilter, DjangoFilterBackend)
-    search_fields = (
-        "participants__first_name",
-        "participants__last_name",
-        "participants__username",
-    )
+    serializer_class = SeenByModelSerializer
 
     def get_permissions(self):
         """Assign permissions based on action."""
@@ -67,21 +66,20 @@ class ChatViewSet(
     def get_serializer_class(self):
         """Return serializer based on action."""
         if self.action == "create":
-            return CreateChatSerializer
-        return ChatModelSerializer
+            return CreateSeenBySerializer
+        return SeenByModelSerializer
+
+    def get_serializer_context(self):
+        """
+        Extra context provided to the serializer class.
+        """
+        return {
+            "request": self.request,
+            "format": self.format_kwarg,
+            "view": self,
+            "chat": self.chat,
+        }
 
     def get_queryset(self):
-        if self.action == "list":
-            user = self.request.user
-            return Chat.objects.filter(participants=user)
-        return Chat.objects.all()
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data, context={"request": request})
-        serializer.is_valid(raise_exception=True)
-        chat = serializer.save()
-
-        chat_data = ChatModelSerializer(chat, many=False).data
-
-        headers = self.get_success_headers(chat)
-        return Response(chat_data, status=status.HTTP_201_CREATED, headers=headers)
+        return SeenBy.objects.filter(chat=self.chat)
