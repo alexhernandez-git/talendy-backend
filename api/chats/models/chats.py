@@ -10,7 +10,7 @@ class Chat(CModel):
         "users.User", through="chats.Participant", verbose_name="room_participants"
     )
     last_message = models.ForeignKey(
-        "chats.Message", on_delete=models.CASCADE, null=True, related_name="last_message"
+        "chats.Message", on_delete=models.SET_NULL, null=True, related_name="last_message"
     )
 
     class Meta:

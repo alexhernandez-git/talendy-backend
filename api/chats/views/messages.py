@@ -51,7 +51,10 @@ from asgiref.sync import sync_to_async
 def create_message(self, text, sent_by):
     chat = Chat.objects.get(pk=self.room_name)
     user = User.objects.get(pk=sent_by["id"])
-    return Message.objects.create(chat=chat, text=text, sent_by=user)
+    new_message = Message.objects.create(chat=chat, text=text, sent_by=user)
+    chat.last_message = new_message
+    chat.save()
+    return new_message
 
 
 # Message ViewSet

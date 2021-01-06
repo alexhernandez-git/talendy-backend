@@ -10,4 +10,4 @@ class Message(CModel):
     sent_by = models.ForeignKey("users.User", on_delete=models.CASCADE)
 
     class Meta:
-        ordering = ["created"]
+        ordering = ["-created"]

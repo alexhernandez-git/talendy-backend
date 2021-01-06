@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Models
-from api.chats.models import Chat
+from api.chats.models import Chat, Message
 
 # Register your models here.
 
@@ -9,3 +9,8 @@ from api.chats.models import Chat
 @admin.register(Chat)
 class ChatAdmin(admin.ModelAdmin):
     """Chat model admin."""
+
+
+@admin.register(Message)
+class MessageAdmin(admin.ModelAdmin):
+    """Message model admin."""
