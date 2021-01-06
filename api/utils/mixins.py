@@ -7,6 +7,8 @@ from rest_framework.generics import get_object_or_404
 # Models
 from api.chats.models import Chat
 
+# Utils
+
 
 class AddChatMixin(viewsets.GenericViewSet):
     """Add circle mixin

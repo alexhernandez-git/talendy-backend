@@ -30,20 +30,23 @@ from api.chats.models import Chat
 
 # Serializers
 from api.users.serializers import UserModelSerializer
-from api.chats.serializers import ChatModelSerializer, CreateChatSerializer
+from api.chats.serializers import (
+    ChatModelSerializer,
+    CreateChatSerializer,
+    RetrieveChatModelSerializer,
+)
 
 # Filters
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
-
-import os
 from api.utils import helpers
 
 
 class ChatViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
     """Chats view set."""
@@ -52,6 +55,7 @@ class ChatViewSet(
     lookup_field = "id"
     serializer_class = ChatModelSerializer
     filter_backends = (SearchFilter, DjangoFilterBackend)
+    pagination_class = None
     search_fields = (
         "participants__first_name",
         "participants__last_name",
@@ -68,6 +72,8 @@ class ChatViewSet(
         """Return serializer based on action."""
         if self.action == "create":
             return CreateChatSerializer
+        elif self.action == "retrieve":
+            return RetrieveChatModelSerializer
         return ChatModelSerializer
 
     def get_queryset(self):

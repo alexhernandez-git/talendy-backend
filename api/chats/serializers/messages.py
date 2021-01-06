@@ -1,6 +1,5 @@
 # Django REST Framework
 from rest_framework import serializers
-from rest_framework.generics import get_object_or_404
 
 # Models
 from api.chats.models import Message, Chat

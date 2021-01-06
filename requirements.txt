@@ -47,7 +47,7 @@ pytest-django==3.4.4
 factory-boy==2.11.1
 mypy==0.782
 # Code quality
-flake8==3.6.0
+flake8==3.8.4
 
 #Stripe
 stripe
@@ -74,3 +74,7 @@ django-cors-headers==3.6.0
 requests==2.25.1
 
 channels-redis==3.2.0
+
+autopep8==1.5.4
+
+pycodestyle==2.6.0

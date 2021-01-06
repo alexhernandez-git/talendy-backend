@@ -1,7 +1,6 @@
 """Users views."""
 
 # Django
-import pdb
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
@@ -51,7 +50,7 @@ class SeenByViewSet(
     mixins.DestroyModelMixin,
     AddChatMixin,
 ):
-    """SeenBys view set."""
+    """SeenBy view set."""
 
     queryset = SeenBy.objects.all()
     lookup_field = "id"
