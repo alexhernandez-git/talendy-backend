@@ -1,7 +1,6 @@
 """Users views."""
 
 # Django
-import pdb
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
@@ -43,6 +42,19 @@ from api.chats.serializers import (
 from api.utils.mixins import AddChatMixin
 import os
 from api.utils import helpers
+from asgiref.sync import sync_to_async
+
+# Consumer methods
+
+
+@sync_to_async
+def create_message(self, text, sent_by):
+    chat = Chat.objects.get(pk=self.room_name)
+    user = User.objects.get(pk=sent_by["id"])
+    return Message.objects.create(chat=chat, text=text, sent_by=user)
+
+
+# Message ViewSet
 
 
 class MessageViewSet(
