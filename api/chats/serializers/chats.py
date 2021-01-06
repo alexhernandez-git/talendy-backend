@@ -124,7 +124,8 @@ class CreateChatSerializer(serializers.Serializer):
         to_user = get_object_or_404(User, pk=data["to_user"])
         from_user = self.context["request"].user
 
-        chats = Chat.objects.filter(Q(participants=to_user) and Q(participants=from_user))
+        chats = Chat.objects.filter(participants=from_user)
+        chats = chats.filter(participants=to_user)
 
         if chats.exists():
             for chat in chats:
