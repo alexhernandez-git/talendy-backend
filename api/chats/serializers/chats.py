@@ -54,12 +54,14 @@ class ChatModelSerializer(serializers.ModelSerializer):
         return None
 
     def get_last_message_seen(self, obj):
-
-        seen_by = SeenBy.objects.filter(chat=obj, user=self.context["request"].user)
-        if seen_by.exists():
-            seen_by = seen_by[0]
-            return seen_by.message == obj.last_message
-        return False
+        if obj.last_message:
+            seen_by = SeenBy.objects.filter(chat=obj, user=self.context["request"].user)
+            if seen_by.exists():
+                seen_by = seen_by[0]
+                return seen_by.message == obj.last_message
+            return False
+        else:
+            return True
 
 
 class RetrieveChatModelSerializer(serializers.ModelSerializer):

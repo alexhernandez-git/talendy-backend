@@ -34,6 +34,7 @@ from api.chats.serializers import (
     ChatModelSerializer,
     CreateChatSerializer,
     RetrieveChatModelSerializer,
+    CreateSeenBySerializer,
 )
 
 # Filters
@@ -81,6 +82,17 @@ class ChatViewSet(
             user = self.request.user
             return Chat.objects.filter(participants=user)
         return Chat.objects.all()
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        createSeenSerializer = CreateSeenBySerializer(
+            data={}, context={"request": request, "chat": instance}
+        )
+        is_valid = createSeenSerializer.is_valid(raise_exception=False)
+        if is_valid:
+            createSeenSerializer.save()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data, context={"request": request})

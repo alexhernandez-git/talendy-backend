@@ -15,4 +15,4 @@ class Chat(CModel):
 
     class Meta:
 
-        ordering = ["-created"]
+        ordering = ["-last_message__created"]
