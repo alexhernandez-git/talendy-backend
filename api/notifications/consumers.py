@@ -1,20 +1,23 @@
 import asyncio
+from django.core import serializers
+from django.http.response import JsonResponse
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+import json
+
 
 class NoseyConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         await self.accept()
-        await self.channel_layer.group_add("user-1", self.channel_name)
-        print(f"Added {self.channel_name} channel to gossip")
-    
+        self.user_id = self.scope["url_route"]["kwargs"]["user_id"]
+
+        self.room_group_name = "user-%s" % self.user_id
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+
     async def disconnect(self, message, **kwargs):
-        await self.channel_layer.group_discard("user-1", self.channel_name)
-        print(f"Removed {self.channel_name} channel to gossip")
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
-    async def user_gossip(self,event):
-        await self.send_json(event)
-        print(f"Got message {event} at {self.channel_name}")
+    async def message_sent(self, event):
+        chat = serializers.serialize('json', [event["chat"]])
+        message = serializers.serialize('json', [event["message"]])
 
-    async def user_update(self,event):
-        await self.send_json(event)
-        print(f"Got message {event} at {self.channel_name}")
+        await self.send_json({"chat": chat, "message": message})

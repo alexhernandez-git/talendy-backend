@@ -2,6 +2,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from .views.messages import create_message
+from django.http import JsonResponse
 
 
 class ChatConsumer(AsyncWebsocketConsumer):

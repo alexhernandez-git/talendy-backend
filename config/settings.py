@@ -47,8 +47,8 @@ INSTALLED_APPS = [
     "api.utils",
     "api.users",
     "api.taskapp",
+    "api.notifications.apps.NotificationsConfig",
     "api.chats",
-    "api.notifications",
     # THIRD_PARTY_APPS
     "rest_framework",
     "rest_framework.authtoken",
