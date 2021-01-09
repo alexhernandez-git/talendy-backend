@@ -54,7 +54,7 @@ def create_message(self, text, sent_by):
     new_message = Message.objects.create(chat=chat, text=text, sent_by=user)
     chat.last_message = new_message
     chat.save()
-    return new_message
+    return new_message, chat.pk
 
 
 # Message ViewSet

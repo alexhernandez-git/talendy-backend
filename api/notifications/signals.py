@@ -16,13 +16,13 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
     sent_to = participants.exclude(pk=sent_by.pk).first()
 
     if created:
-
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
             "user-%s" % sent_to.id, {
                 "type": "message.sent",
                 "event": "New Message",
                 "message": instance,
-                "chat": chat
+                "chat": chat,
+                "sent_by": sent_by
             }
         )

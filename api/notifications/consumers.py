@@ -17,7 +17,8 @@ class NoseyConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
     async def message_sent(self, event):
-        chat = serializers.serialize('json', [event["chat"]])
-        message = serializers.serialize('json', [event["message"]])
+        chat = event["chat"]
+        message = event["message"]
+        sent_by = event["sent_by"]
 
-        await self.send_json({"chat": chat, "message": message})
+        await self.send_json({"chat__pk": str(chat.pk), "message__pk": str(message.pk), "message__text": message.text, "message__created": str(message.created), "sent_by__pk": str(sent_by.pk), "sent_by__username": sent_by.username})
