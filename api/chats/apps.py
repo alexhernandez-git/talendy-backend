@@ -1,4 +1,3 @@
-import pdb
 from django.apps import AppConfig
 
 

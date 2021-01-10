@@ -2,7 +2,6 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from .views.messages import create_message
-from django.http import JsonResponse
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -51,5 +50,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         # Send message to WebSocket
         await self.send(
-            text_data=json.dumps({"id": id, "text": text, "sent_by": sent_by, "created": created, "chat__id": chat__pk})
+            text_data=json.dumps({
+                "id": id,
+                "text": text,
+                "sent_by": sent_by,
+                "created": created,
+                "chat__id": chat__pk
+            })
         )

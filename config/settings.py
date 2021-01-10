@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # LOCAL_APPS
     "api.utils",
-    "api.users",
+    "api.users.apps.UsersAppConfig",
     "api.taskapp",
     "api.notifications.apps.NotificationsConfig",
     "api.chats",

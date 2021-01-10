@@ -111,3 +111,10 @@ class ChatViewSet(
             current_status = status.HTTP_201_CREATED
 
         return Response(chat_data, status=current_status, headers=headers)
+
+    @action(detail=True, methods=['get'])
+    def retrieve_chat_feed(self, request, *args, **kwargs):
+
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
