@@ -28,7 +28,7 @@ class User(CModel, AbstractUser):
         unique=True,
     )
 
-    about=models.TextField('about user', max_length=1000, null=True, blank=True)
+    about = models.TextField('about user', max_length=1000, null=True, blank=True)
 
     picture = models.ImageField(
         'profile picture',
@@ -74,7 +74,7 @@ class User(CModel, AbstractUser):
         help_text='Set to true when the user have a seller account.'
     )
 
-    seller_view  = models.BooleanField(
+    seller_view = models.BooleanField(
         'seller view',
         default=False,
         help_text='Set to true when the user view is on seller dashboard set false if is in buyer view.'
@@ -124,6 +124,11 @@ class User(CModel, AbstractUser):
     stripe_account_id = models.CharField(max_length=100, blank=True, null=True)
     money_balance = models.FloatField(blank=True, null=True)
 
+    # Notifications
+
+    notifications = models.ManyToManyField(
+        "notifications.Notification", through="notifications.NotificationUser", related_name="user_notifications"
+    )
 
     def __str__(self):
         """Return username."""
