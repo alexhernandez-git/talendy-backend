@@ -22,7 +22,7 @@ class NotificationModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
 
     actor = UserModelSerializer(read_only=True)
-    message = MessageModelSerializer(read_only=True)
+    messages = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -32,10 +32,13 @@ class NotificationModelSerializer(serializers.ModelSerializer):
             "id",
             "type",
             "actor",
-            "message"
+            "messages"
         )
 
         read_only_fields = ("id",)
+
+    def get_messages(self, obj):
+        return MessageModelSerializer(obj.messages, many=True).data
 
 
 class NotificationUserModelSerializer(serializers.ModelSerializer):

@@ -8,6 +8,7 @@ from rest_framework import serializers
 # Models
 from api.users.models import User
 from api.chats.models import Chat, SeenBy
+from api.notifications.models import NotificationUser
 
 # Serializers
 from api.users.serializers import UserModelSerializer
@@ -154,3 +155,15 @@ class CreateChatSerializer(serializers.Serializer):
         chat.save()
 
         return {"chat": chat, "status": "created"}
+
+
+class ClearChatNotification(serializers.Serializer):
+
+    def update(self, instance, validated_data):
+        user = self.context['request'].user
+        notifications = NotificationUser.objects.filter(notification__chat=instance, is_read=False, user=user)
+
+        for notification in notifications:
+            notification.is_read = True
+            notification.save()
+        return instance

@@ -35,6 +35,7 @@ from api.chats.serializers import (
     CreateChatSerializer,
     RetrieveChatModelSerializer,
     CreateSeenBySerializer,
+    ClearChatNotification
 )
 
 # Filters
@@ -85,12 +86,24 @@ class ChatViewSet(
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
+        # Create seen by
         createSeenSerializer = CreateSeenBySerializer(
             data={}, context={"request": request, "chat": instance}
         )
         is_valid = createSeenSerializer.is_valid(raise_exception=False)
         if is_valid:
             createSeenSerializer.save()
+
+        # Clear chat notifications
+        clearChatNotification = ClearChatNotification(
+            instance,
+            data={},
+            context={"request": request, "chat": instance},
+            partial=True
+        )
+        is_valid = clearChatNotification.is_valid(raise_exception=False)
+        if is_valid:
+            clearChatNotification.update(instance, request)
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 

@@ -5,7 +5,7 @@ from asgiref.sync import async_to_sync
 
 # Models
 from api.chats.models import Message, Chat
-from api.notifications.models import Notification
+from api.notifications.models import Notification, NotificationUser
 
 
 @receiver(post_save, sender=Message)
@@ -17,16 +17,32 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
     sent_to = participants.exclude(pk=sent_by.pk).first()
 
     if created:
-        # Create the notification
+        # Get or Create the notification user
 
-        notification = Notification.objects.create(
-            actor=sent_by,
-            type=Notification.MESSAGE,
-            message=instance,
-        )
-        # Add the notification to user
-        sent_to.notifications.add(notification)
-        sent_to.save()
+        user_notification = None
+        try:
+            user_notification = NotificationUser.objects.get(
+                user=sent_to,
+                is_read=False,
+                notification__type=Notification.MESSAGES,
+                notification__chat=chat,
+                notification__actor=sent_by,
+            )
+        except NotificationUser.DoesNotExist:
+
+            notification = Notification.objects.create(
+                type=Notification.MESSAGES,
+                chat=chat,
+                actor=sent_by,
+            )
+
+            user_notification = NotificationUser.objects.create(
+                notification=notification,
+                user=sent_to
+            )
+
+        user_notification.notification.messages.add(instance)
+        user_notification.notification.save()
 
         # Send the event of message to user websocket
         channel_layer = get_channel_layer()
@@ -37,6 +53,6 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
                 "message": instance,
                 "chat": chat,
                 "sent_by": sent_by,
-                "notification": notification
+                "notification": user_notification.notification
             }
         )

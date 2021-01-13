@@ -4,7 +4,7 @@
 import pdb
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
-
+from django.db.models import F
 
 # Django REST Framework
 import stripe
@@ -51,7 +51,6 @@ class NotificationViewSet(
 
     queryset = NotificationUser.objects.all()
     lookup_field = "id"
-    pagination_class = None
     serializer_class = NotificationUserModelSerializer
     filter_backends = (SearchFilter, DjangoFilterBackend)
 

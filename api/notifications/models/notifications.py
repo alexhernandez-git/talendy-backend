@@ -11,15 +11,17 @@ class NotificationUser(CModel):
 
 class Notification(CModel):
 
-    MESSAGE = 'ME'
+    MESSAGES = 'ME'
     TYPE_CHOICES = [
-        (MESSAGE, 'Message'),
+        (MESSAGES, 'Messages'),
     ]
     type = models.CharField(
         max_length=2,
         choices=TYPE_CHOICES,
     )
-    message = models.ForeignKey(
-        "chats.Message", on_delete=models.CASCADE, null=True, related_name="notifications_message"
+    messages = models.ManyToManyField(
+        "chats.Message", blank=True, related_name="notifications_messages"
     )
+    chat = models.ForeignKey("chats.Chat", on_delete=models.CASCADE, null=True)
+
     actor = models.ForeignKey("users.User", on_delete=models.SET_NULL, null=True)
