@@ -43,7 +43,7 @@ class ChatModelSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
         to_users = obj.participants.all().exclude(pk=user.pk)
         if to_users.exists() and to_users[0].picture:
-            return to_users[0].picture
+            return to_users[0].picture.url
         return None
 
     def get_last_message(self, obj):

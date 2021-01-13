@@ -14,6 +14,7 @@ from rest_framework.validators import UniqueValidator
 
 # Models
 from api.users.models import User, UserLoginActivity
+from api.notifications.models import Notification
 
 
 # Serializers
@@ -37,6 +38,8 @@ import re
 
 class UserModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
+    pending_notifications = serializers.SerializerMethodField(read_only=True)
+    pending_messages = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -63,12 +66,21 @@ class UserModelSerializer(serializers.ModelSerializer):
             'stripe_customer_id',
             'currency',
             'stripe_account_id',
-            'money_balance'
+            'money_balance',
+            'pending_messages',
+            'pending_notifications'
         )
 
         read_only_fields = (
             'id',
         )
+
+    def get_pending_notifications(self, obj):
+        return obj.notifications.through.objects.filter(user=obj, is_read=False).exists()
+
+    def get_pending_messages(self, obj):
+        return obj.notifications.through.objects.filter(
+            user=obj, is_read=False, notification__type=Notification.MESSAGES).exists()
 
 
 class UserSignUpSerializer(serializers.Serializer):

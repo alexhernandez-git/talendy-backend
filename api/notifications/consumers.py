@@ -23,6 +23,7 @@ class NoseyConsumer(AsyncJsonWebsocketConsumer):
         notification = event["notification"]
 
         await self.send_json({
+            "event": "MESSAGE_RECEIVED",
             "chat__pk": str(chat.pk),
             "message__pk": str(message.pk),
             "message__text": message.text,

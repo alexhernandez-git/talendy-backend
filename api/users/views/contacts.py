@@ -59,6 +59,7 @@ class ContactViewSet(
         "contact_user__first_name",
         "contact_user__last_name",
         "contact_user__username",
+        "contact_user__email",
     )
 
     def get_permissions(self):

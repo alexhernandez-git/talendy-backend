@@ -53,6 +53,6 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
                 "message": instance,
                 "chat": chat,
                 "sent_by": sent_by,
-                "notification": user_notification.notification
+                "notification": user_notification
             }
         )
