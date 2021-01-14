@@ -34,9 +34,10 @@ def gen_verification_token(user):
     }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
 
-    return token
+    return token.decode()
 
-def gen_new_email_token(user,new_email):
+
+def gen_new_email_token(user, new_email):
     """Create JWT token than the user change the email."""
     exp_date = timezone.now() + timedelta(days=3)
     payload = {
@@ -47,9 +48,10 @@ def gen_new_email_token(user,new_email):
     }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
 
-    return token
+    return token.decode()
 
-def get_invitation_token(from_user,email):
+
+def get_invitation_token(from_user, email):
     """Create JWT token than the user change the email."""
     exp_date = timezone.now() + timedelta(days=7)
     payload = {
@@ -60,4 +62,4 @@ def get_invitation_token(from_user,email):
     }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
 
-    return token
+    return token.decode()

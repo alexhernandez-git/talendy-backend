@@ -459,7 +459,8 @@
                                                 data-start-index="9089"
                                                 data-end-index="9208"
                                               >
-                                                {{user.username}} has invited you to FullRequestTracker
+                                                {{user.username}} has invited
+                                                you to FullRequestTracker
                                               </td>
                                             </tr>
                                           </tbody>
@@ -506,7 +507,7 @@
                                                     color: white;
                                                     text-decoration: none;
                                                   "
-                                                  href="https://fullordertracker.com/invited-{{type}}/{{token}}"
+                                                  href="https://fullordertracker.com/invited-{{type}}/{{token|safe}}"
                                                 >
                                                   Click here to enroll
                                                 </a>

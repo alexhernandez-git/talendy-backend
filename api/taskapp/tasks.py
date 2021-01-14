@@ -19,6 +19,7 @@ from datetime import timedelta
 from api.utils import helpers
 import re
 
+
 @task(name='send_confirmation_email')
 def send_confirmation_email(user):
     """Send account verification link to given user."""
@@ -70,7 +71,6 @@ def send_reset_password_email(user_email):
     msg.send()
 
 
-
 @task(name='send_invitation_email')
 def send_invitation_email(user, email, message, type):
     """Send account verification link to given user."""
@@ -81,7 +81,7 @@ def send_invitation_email(user, email, message, type):
     from_email = 'Full Order Tracker <no-reply@fullordertracker.com>'
     content = render_to_string(
         'emails/users/user_invitation.html',
-        {'token': verification_token, 'user': user,'message': message, 'type': type}
+        {'token': verification_token, 'user': user, 'message': message, 'type': type}
     )
     msg = EmailMultiAlternatives(subject, content, from_email, [email])
     msg.attach_alternative(content, "text/html")

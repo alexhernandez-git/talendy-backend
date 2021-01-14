@@ -66,3 +66,9 @@ class NotificationViewSet(
         queryset = NotificationUser.objects.filter(user=user, is_read=False)
 
         return queryset
+
+    @action(detail=False, methods=['get'])
+    def set_all_notifications_read(self, request):
+        """Set read all my notifications."""
+        self.queryset.update(is_read=True)
+        return Response(status=status.HTTP_200_OK)
