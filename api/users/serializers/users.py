@@ -66,6 +66,7 @@ class UserModelSerializer(serializers.ModelSerializer):
             'stripe_customer_id',
             'currency',
             'stripe_account_id',
+            'stripe_dashboard_url',
             'money_balance',
             'pending_messages',
             'pending_notifications'
@@ -512,3 +513,82 @@ class InviteUserSerializer(serializers.Serializer):
 
         send_invitation_email(user, email, message, type)
         return data
+
+
+class InviteUserSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+
+    email = serializers.CharField()
+    type = serializers.CharField()
+    message = serializers.CharField(allow_blank=True)
+
+    def validate(self, data):
+        """Update user's verified status."""
+
+        email = data['email']
+        type = data['type']
+        message = data['message']
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError('This user already exists')
+        if(type != "seller" and type != "buyer"):
+            raise serializers.ValidationError('Type not valid')
+
+        request = self.context['request']
+        user = request.user
+
+        send_invitation_email(user, email, message, type)
+        return data
+
+
+class StripeConnectSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+
+    auth_code = serializers.CharField()
+
+    def validate(self, data):
+        """Update user's verified status."""
+        stripe = self.context['stripe']
+        user = self.context['request'].user
+        auth_code = data["auth_code"]
+        if user.stripe_account_id != None and user.stripe_account_id != '':
+            raise serializers.ValidationError('This user already is connected to stripe')
+        try:
+            response = stripe.OAuth.token(
+                grant_type='authorization_code',
+                code=auth_code,
+            )
+        except:
+            raise serializers.ValidationError('Something went wrong')
+
+        connected_account_id = response['stripe_user_id']
+
+        self.context['connected_account_id'] = connected_account_id
+
+        if User.objects.filter(stripe_account_id=connected_account_id).exists():
+            raise serializers.ValidationError('This account is already in use')
+
+        stripe.Account.modify(
+            connected_account_id,
+            settings={
+                'payouts': {
+                    'schedule': {
+                        'interval': 'monthly',
+                        'monthly_anchor': 1
+                    }
+                }
+            }
+        )
+
+        return data
+
+    def update(self, instance, validated_data):
+        stripe = self.context['stripe']
+        user = instance
+        connected_account_id = self.context['connected_account_id']
+        stripe_dashboard_url = stripe.Account.create_login_link(
+            connected_account_id
+        )
+        user.stripe_account_id = connected_account_id
+        user.stripe_dashboard_url = stripe_dashboard_url["url"]
+        user.save()
+        return {"stripe_account_id": user.stripe_account_id, "stripe_dashboard_url": user.stripe_dashboard_url}

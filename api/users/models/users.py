@@ -122,6 +122,7 @@ class User(CModel, AbstractUser):
 
     # Stripe connect
     stripe_account_id = models.CharField(max_length=100, blank=True, null=True)
+    stripe_dashboard_url = models.CharField(max_length=100, blank=True, null=True)
     money_balance = models.FloatField(blank=True, null=True)
 
     # Notifications

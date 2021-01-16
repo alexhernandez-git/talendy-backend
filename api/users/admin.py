@@ -18,8 +18,10 @@ class ContactAdmin(admin.ModelAdmin):
 class CustomUserAdmin(UserAdmin):
     """User model admin."""
 
-    fieldsets = UserAdmin.fieldsets + ((None, {"fields": ("is_verified",)}),)
-    list_display = ("email", "first_name", "last_name", "is_staff", "is_client")
+    fieldsets = UserAdmin.fieldsets + ((None, {"fields": ("is_verified",
+                                                          "stripe_account_id", "stripe_dashboard_url")}),)
+    list_display = ("email", "first_name", "last_name", "is_staff",
+                    "is_client", "stripe_account_id", "stripe_dashboard_url")
     list_filter = (
         "is_client",
         "is_staff",

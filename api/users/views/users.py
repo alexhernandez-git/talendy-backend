@@ -43,7 +43,8 @@ from api.users.serializers import (
     ResetPasswordSerializer,
     IsEmailAvailableSerializer,
     IsUsernameAvailableSerializer,
-    InviteUserSerializer
+    InviteUserSerializer,
+    StripeConnectSerializer
 )
 
 # Filters
@@ -76,7 +77,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """Assign permissions based on action."""
         if self.action in ['signup', 'login', 'verify', 'list', 'retrieve', 'stripe_webhook_subscription_cancelled', 'forget_password']:
             permissions = [AllowAny]
-        elif self.action in ['update', 'delete', 'partial_update', 'change_password', 'change_email']:
+        elif self.action in ['update', 'delete', 'partial_update', 'change_password', 'change_email', 'stripe_connect']:
             permissions = [IsAccountOwner, IsAuthenticated]
 
         else:
@@ -93,16 +94,15 @@ class UserViewSet(mixins.RetrieveModelMixin,
         elif self.action == 'invite_user':
             return InviteUserSerializer
         return UserModelSerializer
-    
+
     def get_queryset(self):
         if self.action == "list_contacts_available":
-            user=self.request.user
+            user = self.request.user
             users = Contact.objects.filter(from_user=user).values_list('contact_user__pk')
             users_list = [x[0] for x in users]
             users_list.append(user.pk)
-            return User.objects.all().exclude(pk__in=users_list)   
+            return User.objects.all().exclude(pk__in=users_list)
         return User.objects.all()
-    
 
     @action(detail=False, methods=['post'])
     def is_email_available(self, request):
@@ -112,8 +112,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         )
 
         serializer.is_valid(raise_exception=True)
-        email=serializer.data
-        return Response(data=email,status=status.HTTP_200_OK)
+        email = serializer.data
+        return Response(data=email, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
     def is_username_available(self, request):
@@ -123,7 +123,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         )
 
         serializer.is_valid(raise_exception=True)
-        return Response(data={"message":"This username is available"},status=status.HTTP_200_OK)
+        return Response(data={"message": "This username is available"}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
     def signup_seller(self, request):
@@ -142,7 +142,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             "access_token": token
         }
         return Response(data, status=status.HTTP_201_CREATED)
-    
+
     @action(detail=False, methods=['post'])
     def signup_buyer(self, request):
         """User sign up."""
@@ -169,7 +169,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             user = request.user
             send_confirmation_email(user)
             return Response(status=status.HTTP_200_OK)
-        return  Response(status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'])
     def login(self, request):
@@ -193,22 +193,17 @@ class UserViewSet(mixins.RetrieveModelMixin,
         else:
             stripe.api_key = 'sk_test_51HCsUHIgGIa3w9CpMgSnYNk7ifsaahLoaD1kSpVHBCMKMueUb06dtKAWYGqhFEDb6zimiLmF8XwtLLeBt2hIvvW200YfRtDlPo'
 
-            stripe_account_id = data['user']['stripe_account_id']
-            stripe_customer_id = data['user']['stripe_customer_id']
-            if stripe_account_id != None and stripe_account_id != '':
-                stripe_dashboard_url = stripe.Account.create_login_link(
-                    data.get['user']['stripe_account_id']
-                )
-                data['user']['stripe_dashboard_url'] = stripe_dashboard_url['url']
+        stripe_account_id = data['user']['stripe_account_id']
+        stripe_customer_id = data['user']['stripe_customer_id']
 
-            if stripe_customer_id != None and stripe_customer_id != '':
-                payment_methods = stripe.PaymentMethod.list(
-                    customer=stripe_customer_id,
-                    type="card"
-                )
-                data['user']['payment_methods'] = payment_methods.data
-            else:
-                data['user']['payment_methods'] = None
+        if stripe_customer_id != None and stripe_customer_id != '':
+            payment_methods = stripe.PaymentMethod.list(
+                customer=stripe_customer_id,
+                type="card"
+            )
+            data['user']['payment_methods'] = payment_methods.data
+        else:
+            data['user']['payment_methods'] = None
 
         return Response(data, status=status.HTTP_201_CREATED)
 
@@ -224,8 +219,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
         return Response(status=status.HTTP_200_OK)
 
-
-
     @action(detail=False, methods=['post'])
     def change_email(self, request):
         """Account verification."""
@@ -233,7 +226,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
             data=request.data, context={'user': request.user})
         serializer.is_valid(raise_exception=True)
         return Response(status=status.HTTP_200_OK)
-
 
     @action(detail=False, methods=['post'])
     def validate_change_email(self, request):
@@ -274,7 +266,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
         data = {'message': 'Verified account!'}
         return Response(data, status=status.HTTP_200_OK)
 
-
     @action(detail=False, methods=['patch'])
     def remove_card(self, request, *args, **kwargs):
         """Remove payment method"""
@@ -293,56 +284,20 @@ class UserViewSet(mixins.RetrieveModelMixin,
     def stripe_connect(self, request, *args, **kwargs):
         """Process stripe connect auth flow."""
         user = request.user
-        user = user
-        id = request.data.get("id")
-
-        if user.stripe_account_id == None or user.stripe_account_id == '':
-            if 'STRIPE_API_KEY' in os.environ:
-                stripe.api_key = os.environ['STRIPE_API_KEY']
-            else:
-                stripe.api_key = 'sk_test_51HCsUHIgGIa3w9CpMgSnYNk7ifsaahLoaD1kSpVHBCMKMueUb06dtKAWYGqhFEDb6zimiLmF8XwtLLeBt2hIvvW200YfRtDlPo'
-
-            response = stripe.OAuth.token(
-                grant_type='authorization_code',
-                id=id,
-            )
-            # Access the connected account id in the response
-            connected_account_id = response['stripe_user_id']
-            if User.objects.filter(stripe_account_id=connected_account_id).exists():
-                return HttpResponse(
-                    {'message': 'Esta cuenta de stripe ya esta siendo usada por otro usuario'},
-                    status=400)
-
-            stripe.Account.modify(
-                connected_account_id,
-                settings={
-                    'payouts': {
-                        'schedule': {
-                            'interval': 'monthly',
-                            'monthly_anchor': 1
-                        }
-                    }
-                }
-            )
-            partial = request.method == 'PATCH'
-            user.stripe_account_id = connected_account_id
-            serializer = UserModelSerializer(
-                user,
-                data=request.data,
-                partial=partial
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            data = UserModelSerializer(user).data
-            if user.stripe_account_id != None and user.stripe_account_id != '':
-                stripe_dashboard_url = stripe.Account.create_login_link(
-                    data.get('user').get('stripe_account_id')
-                )
-                data['user']['stripe_dashboard_url'] = stripe_dashboard_url['url']
-
-            return Response(data)
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            return HttpResponse(status=400)
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+        partial = request.method == 'PATCH'
+        serializer = StripeConnectSerializer(
+            user,
+            data=request.data,
+            context={"request": request, "stripe": stripe},
+            partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+        data = serializer.save()
+        return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'])
     def get_user(self, request, *args, **kwargs):
@@ -358,13 +313,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         else:
             stripe.api_key = 'sk_test_51HCsUHIgGIa3w9CpMgSnYNk7ifsaahLoaD1kSpVHBCMKMueUb06dtKAWYGqhFEDb6zimiLmF8XwtLLeBt2hIvvW200YfRtDlPo'
 
-        stripe_account_id = data['user']['stripe_account_id']
         stripe_customer_id = data['user']['stripe_customer_id']
-        if stripe_account_id != None and stripe_account_id != '':
-            stripe_dashboard_url = stripe.Account.create_login_link(
-                data.get['user']['stripe_account_id']
-            )
-            data['user']['stripe_dashboard_url'] = stripe_dashboard_url['url']
 
         if stripe_customer_id != None and stripe_customer_id != '':
             payment_methods = stripe.PaymentMethod.list(
@@ -384,9 +333,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
             context={'request': request}
         )
         serializer.is_valid(raise_exception=True)
-    
-        return Response(status=status.HTTP_200_OK)
 
+        return Response(status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'])
     def list_contacts_available(self, request, *args, **kwargs):
