@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     # LOCAL_APPS
     "api.utils",
     "api.users.apps.UsersAppConfig",
-    "api.taskapp",
+    "api.taskapp.celery.CeleryAppConfig",
     "api.notifications.apps.NotificationsConfig",
     "api.chats",
     # THIRD_PARTY_APPS
@@ -62,6 +62,8 @@ INSTALLED_APPS = [
     "channels",
     "channels_redis",
     "corsheaders",
+    "django_celery_beat",
+    "django_celery_results"
 ]
 
 MIDDLEWARE = [
@@ -333,14 +335,16 @@ LOGGING = {
     },
 }
 
+if USE_TZ:
+    CELERY_TIMEZONE = TIME_ZONE
+CELERY_BROKER_URL = "redis://localhost:6379/0"
 CELERY_RESULT_BACKEND = "django-db"
-CELERY_BROKER_URL = "https://sqs.eu-west-3.amazonaws.com/502869789067/classline-queue"
-CELERY_BROKER_TRANSPORT_OPTIONS = {
-    "region": "eu-west-3",
-    "queue_name_prefix": "django_app-%s-" % "c8jdhs)2-=c46n)i-9h8-8f#ko8x*dt@=e4eh65*5(@n#d&gw%",
-    "visibility_timeout": 360,
-    "polling_interval": 1,
-}
+CELERY_CACHE_BACKEND = 'default'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERYD_TASK_TIME_LIMIT = 5 * 60
+CELERYD_TASK_SOFT_TIME_LIMIT = 60
 
 FILE_UPLOAD_HANDLERS = ["django.core.files.uploadhandler.TemporaryFileUploadHandler"]
 

@@ -44,7 +44,8 @@ from api.users.serializers import (
     IsEmailAvailableSerializer,
     IsUsernameAvailableSerializer,
     InviteUserSerializer,
-    StripeConnectSerializer
+    StripeConnectSerializer,
+    StripeSellerSubscriptionSerializer
 )
 
 # Filters
@@ -75,7 +76,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     def get_permissions(self):
         """Assign permissions based on action."""
-        if self.action in ['signup', 'login', 'verify', 'list', 'retrieve', 'stripe_webhook_subscription_cancelled', 'forget_password']:
+        if self.action in ['signup', 'login', 'verify', 'list', 'retrieve', 'stripe_webhooks', 'forget_password']:
             permissions = [AllowAny]
         elif self.action in ['update', 'delete', 'partial_update', 'change_password', 'change_email', 'stripe_connect']:
             permissions = [IsAccountOwner, IsAuthenticated]
@@ -127,13 +128,17 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @action(detail=False, methods=['post'])
     def signup_seller(self, request):
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
+        else:
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
         """User sign up."""
         invitation_token = None
         if 'invitation_token' in request.data:
             invitation_token = request.data['invitation_token']
         serializer = UserSignUpSerializer(
             data=request.data,
-            context={'request': request, 'seller': True, 'invitation_token': invitation_token})
+            context={'request': request, 'seller': True, 'invitation_token': invitation_token, 'stripe': stripe})
         serializer.is_valid(raise_exception=True)
         user, token = serializer.save()
         user_serialized = UserModelSerializer(user).data
@@ -191,19 +196,11 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51HCsUHIgGIa3w9CpMgSnYNk7ifsaahLoaD1kSpVHBCMKMueUb06dtKAWYGqhFEDb6zimiLmF8XwtLLeBt2hIvvW200YfRtDlPo'
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
 
-        stripe_account_id = data['user']['stripe_account_id']
         stripe_customer_id = data['user']['stripe_customer_id']
 
-        if stripe_customer_id != None and stripe_customer_id != '':
-            payment_methods = stripe.PaymentMethod.list(
-                customer=stripe_customer_id,
-                type="card"
-            )
-            data['user']['payment_methods'] = payment_methods.data
-        else:
-            data['user']['payment_methods'] = None
+        data['user']['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
 
         return Response(data, status=status.HTTP_201_CREATED)
 
@@ -273,7 +270,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51HCsUHIgGIa3w9CpMgSnYNk7ifsaahLoaD1kSpVHBCMKMueUb06dtKAWYGqhFEDb6zimiLmF8XwtLLeBt2hIvvW200YfRtDlPo'
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
 
         remove = stripe.PaymentMethod.detach(
             request.data.get('payment_method').get('id'),
@@ -299,6 +296,28 @@ class UserViewSet(mixins.RetrieveModelMixin,
         data = serializer.save()
         return Response(data, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['post'])
+    def seller_subscription(self, request, *args, **kwargs):
+        """Process stripe connect auth flow."""
+        user = request.user
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
+        else:
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+        partial = request.method == 'PATCH'
+        serializer = StripeSellerSubscriptionSerializer(
+            user,
+            data=request.data,
+            context={"request": request, "stripe": stripe},
+            partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+        data = serializer.save()
+        stripe_customer_id = data['stripe_customer_id']
+
+        data['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
+        return Response(data, status=status.HTTP_200_OK)
+
     @action(detail=False, methods=['get'])
     def get_user(self, request, *args, **kwargs):
         if request.user.id == None:
@@ -311,18 +330,11 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51HCsUHIgGIa3w9CpMgSnYNk7ifsaahLoaD1kSpVHBCMKMueUb06dtKAWYGqhFEDb6zimiLmF8XwtLLeBt2hIvvW200YfRtDlPo'
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
 
         stripe_customer_id = data['user']['stripe_customer_id']
 
-        if stripe_customer_id != None and stripe_customer_id != '':
-            payment_methods = stripe.PaymentMethod.list(
-                customer=stripe_customer_id,
-                type="card"
-            )
-            data['user']['payment_methods'] = payment_methods.data
-        else:
-            data['user']['payment_methods'] = None
+        data['user']['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
 
         return Response(data)
 
@@ -347,3 +359,27 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def stripe_webhooks(self, request, *args, **kwargs):
+        """Process stripe webhook notification for subscription cancellation"""
+        payload = request.body
+        event = None
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
+        else:
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+
+        try:
+            event = stripe.Event.construct_from(
+                json.loads(payload), stripe.api_key
+            )
+        except ValueError as e:
+            # Invalid payload
+            return HttpResponse(status=400)
+        import pdb
+        pdb.set_trace()
+        pass
+
+    # Events that may have to handle:
+    # - customer.subscription.trial_will_end - This event notify the subscription trial will end in one day

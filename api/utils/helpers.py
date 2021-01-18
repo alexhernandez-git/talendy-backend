@@ -33,8 +33,11 @@ def gen_verification_token(user):
         'type': 'email_confirmation'
     }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-
-    return token.decode()
+    try:
+        token = token.decode()
+    except:
+        pass
+    return token
 
 
 def gen_new_email_token(user, new_email):
@@ -47,8 +50,11 @@ def gen_new_email_token(user, new_email):
         'type': 'change_email'
     }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-
-    return token.decode()
+    try:
+        token = token.decode()
+    except:
+        pass
+    return token
 
 
 def get_invitation_token(from_user, email):
@@ -62,4 +68,19 @@ def get_invitation_token(from_user, email):
     }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
 
-    return token.decode()
+    try:
+        token = token.decode()
+    except:
+        pass
+    return token
+
+
+def get_payment_methods(stripe, stripe_customer_id):
+    if stripe_customer_id != None and stripe_customer_id != '':
+        payment_methods = stripe.PaymentMethod.list(
+            customer=stripe_customer_id,
+            type="card"
+        )
+        return payment_methods.data
+    else:
+        return None

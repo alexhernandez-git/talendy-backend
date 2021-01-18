@@ -114,6 +114,13 @@ class User(CModel, AbstractUser):
         choices=TYPE_CHOICES,
     )
 
+    subscription_id = models.CharField(max_length=100, blank=True, null=True)
+    to_be_cancelled = models.BooleanField(null=False, blank=False, default=False)
+    cancelled = models.BooleanField(null=False, blank=False, default=False)
+    payment_issue = models.BooleanField(null=False, blank=False, default=False)
+    current_period_end = models.IntegerField(blank=True, default=0)
+    default_payment_method = models.CharField(max_length=100, blank=True, null=True)
+
     # Payments
     stripe_customer_id = models.CharField(
         max_length=100, blank=True, null=True)

@@ -11,6 +11,7 @@ from api.users.models import User
 
 # Celery
 from celery.decorators import task
+from celery.schedules import crontab
 
 # Utilities
 import jwt
@@ -20,7 +21,7 @@ from api.utils import helpers
 import re
 
 
-@task(name='send_confirmation_email')
+@task(name='send_confirmation_email', max_retries=3)
 def send_confirmation_email(user):
     """Send account verification link to given user."""
 
@@ -37,7 +38,7 @@ def send_confirmation_email(user):
     msg.send()
 
 
-@task(name='send_change_email_email')
+@task(name='send_change_email_email', max_retries=3)
 def send_change_email_email(user, new_email):
     """Send account verification link to given user."""
 
@@ -54,7 +55,7 @@ def send_change_email_email(user, new_email):
     msg.send()
 
 
-@task(name='send_reset_password')
+@task(name='send_reset_password', max_retries=3)
 def send_reset_password_email(user_email):
     """Send account verification link to given user."""
     user = User.objects.get(email=user_email)
@@ -71,7 +72,7 @@ def send_reset_password_email(user_email):
     msg.send()
 
 
-@task(name='send_invitation_email')
+@task(name='send_invitation_email', max_retries=3)
 def send_invitation_email(user, email, message, type):
     """Send account verification link to given user."""
 
@@ -86,3 +87,8 @@ def send_invitation_email(user, email, message, type):
     msg = EmailMultiAlternatives(subject, content, from_email, [email])
     msg.attach_alternative(content, "text/html")
     msg.send()
+
+
+@task(name='check_if_user_have_messages')
+def check_if_user_have_messages():
+    print("ole ole loh caracoleh")

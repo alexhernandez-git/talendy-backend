@@ -117,6 +117,10 @@ class UserSignUpSerializer(serializers.Serializer):
     first_name = serializers.CharField(min_length=2, max_length=30)
     last_name = serializers.CharField(min_length=2, max_length=30)
 
+    # Currency for seller subscription
+    currency = serializers.CharField(max_length=3, required=False)
+    unit_amount = serializers.FloatField(required=False)
+
     def validate(self, data):
         """Verify passwords match."""
         passwd = data['password']
@@ -147,6 +151,12 @@ class UserSignUpSerializer(serializers.Serializer):
         is_seller = self.context['seller']
 
         data.pop('password_confirmation')
+        currency = "eur"
+        if 'currency' in data:
+            currency = data.pop('currency')
+        unit_amount = 9.99
+        if 'unit_amount' in data:
+            unit_amount = data.pop('unit_amount')
 
         # Create the free trial expiration date
 
@@ -154,8 +164,52 @@ class UserSignUpSerializer(serializers.Serializer):
 
         expiration_date = datetime.datetime.now() + datetime.timedelta(days=14)
         if is_seller:
-            user = User.objects.create_user(**data, is_verified=False, is_client=True, seller_view=True,
-                                            is_seller=True, is_free_trial=True, free_trial_expiration=expiration_date)
+            stripe = self.context['stripe']
+            user = User.objects.create_user(**data,
+                                            is_verified=False,
+                                            is_client=True,
+
+                                            )
+            if not currency or not unit_amount:
+                raise serializers.ValidationError(
+                    'Something wrong happened with stripe')
+            try:
+                new_customer = stripe.Customer.create(
+                    description="claCustomer_"+user.first_name+'_'+user.last_name,
+                    name=user.first_name+' '+user.last_name,
+                    email=user.email,
+                )
+                product = stripe.Product.create(name="Basic Plan for" + '_' + user.username)
+                price = stripe.Price.create(
+                    unit_amount=int(unit_amount * 100),
+                    currency=currency,
+                    recurring={"interval": "month"},
+                    product=product['id']
+                )
+                subscription = stripe.Subscription.create(
+                    customer=new_customer['id'],
+                    items=[
+                        {"price": price['id']}
+                    ],
+                    trial_period_days="14",
+                )
+                user.seller_view = True
+                user.is_seller = True
+                user.is_free_trial = True
+                user.free_trial_expiration = expiration_date
+                user.have_active_plan = True
+                user.plan_type = User.BASIC
+                user.subscription_id = subscription["id"]
+                user.save()
+
+            except stripe.error.StripeError as e:
+
+                raise serializers.ValidationError(
+                    'Something wrong happened with stripe')
+            except Exception as e:
+                raise serializers.ValidationError(
+                    'Something wrong happened with stripe')
+
         else:
             user = User.objects.create_user(**data, is_verified=False, is_client=True)
         token, created = Token.objects.get_or_create(
@@ -592,3 +646,72 @@ class StripeConnectSerializer(serializers.Serializer):
         user.stripe_dashboard_url = stripe_dashboard_url["url"]
         user.save()
         return {"stripe_account_id": user.stripe_account_id, "stripe_dashboard_url": user.stripe_dashboard_url}
+
+
+class StripeSellerSubscriptionSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+
+    payment_method_id = serializers.CharField()
+    card_name = serializers.CharField()
+    city = serializers.CharField()
+    country = serializers.CharField()
+    email = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    line1 = serializers.CharField()
+    line2 = serializers.CharField()
+    postal_code = serializers.CharField()
+    state = serializers.CharField()
+
+    def validate(self, data):
+        """Update user's verified status."""
+        stripe = self.context['stripe']
+        user = self.context['request'].user
+        payment_method_id = data["payment_method_id"]
+
+        stripe.Customer.modify(
+            user.stripe_customer_id,
+            address={
+                "city": data['city'],
+                "country": data['country'],
+                "line1": data['line1'],
+                "line2": data['line2'],
+                "postal_code": data['postal_code'],
+                "state": data['state'],
+            },
+            email=data['email'],
+            name=data['first_name']+"_"+data['last_name'],
+            payment_method=payment_method_id,
+            invoice_settings={
+                "default_payment_method": payment_method_id
+            }
+        )
+        stripe.PaymentMethod.attach(
+            payment_method_id,
+            customer=user.stripe_customer_id,
+        )
+        stripe.PaymentMethod.modify(
+            payment_method_id,
+            billing_details={
+                "address": {
+                    "city": data['city'],
+                    "country": data['country'],
+                    "line1": data['line1'],
+                    "line2": data['line2'],
+                    "postal_code": data['postal_code'],
+                    "state": data['state'],
+                },
+                "email": data['email'],
+                "name": data['card_name'],
+            }
+        )
+
+        # Create customer if not exists
+
+        return data
+
+    def update(self, instance, validated_data):
+
+        instance.default_payment_method = validated_data['payment_method_id']
+        instance.save()
+        return instance
