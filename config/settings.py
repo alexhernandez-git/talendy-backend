@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     # LOCAL_APPS
     "api.utils",
     "api.users.apps.UsersAppConfig",
+    "api.plans.apps.PlansAppConfig",
     "api.taskapp.celery.CeleryAppConfig",
     "api.notifications.apps.NotificationsConfig",
     "api.chats",
@@ -75,6 +76,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'django.middleware.locale.LocaleMiddleware'
 ]
 
 ROOT_URLCONF = "config.urls"

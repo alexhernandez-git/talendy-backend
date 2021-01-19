@@ -1,5 +1,4 @@
 """Users views."""
-
 # Django
 import pdb
 from django.core.mail import EmailMultiAlternatives
@@ -297,8 +296,9 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
-    def seller_subscription(self, request, *args, **kwargs):
+    def seller_add_payment_method(self, request, *args, **kwargs):
         """Process stripe connect auth flow."""
+
         user = request.user
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
@@ -312,7 +312,9 @@ class UserViewSet(mixins.RetrieveModelMixin,
             partial=partial
         )
         serializer.is_valid(raise_exception=True)
-        data = serializer.save()
+        user = serializer.save()
+
+        data = UserModelSerializer(user, many=False).data
         stripe_customer_id = data['stripe_customer_id']
 
         data['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)

@@ -1,6 +1,7 @@
 """Users serializers."""
 
 # Django
+from api.plans.models.plans import Plan
 from django.conf import settings
 from django.contrib.auth import password_validation, authenticate
 from django.core.validators import RegexValidator
@@ -34,6 +35,8 @@ import jwt
 import datetime
 from api.utils import helpers
 import re
+import geoip2.database
+import ccy
 
 
 class UserModelSerializer(serializers.ModelSerializer):
@@ -62,14 +65,14 @@ class UserModelSerializer(serializers.ModelSerializer):
             'is_free_trial',
             'passed_free_trial_once',
             'free_trial_expiration',
-            'plan_type',
             'stripe_customer_id',
             'currency',
             'stripe_account_id',
             'stripe_dashboard_url',
             'money_balance',
             'pending_messages',
-            'pending_notifications'
+            'pending_notifications',
+            'default_payment_method'
         )
 
         read_only_fields = (
@@ -119,7 +122,6 @@ class UserSignUpSerializer(serializers.Serializer):
 
     # Currency for seller subscription
     currency = serializers.CharField(max_length=3, required=False)
-    unit_amount = serializers.FloatField(required=False)
 
     def validate(self, data):
         """Verify passwords match."""
@@ -151,17 +153,22 @@ class UserSignUpSerializer(serializers.Serializer):
         is_seller = self.context['seller']
 
         data.pop('password_confirmation')
-        currency = "eur"
-        if 'currency' in data:
-            currency = data.pop('currency')
-        unit_amount = 9.99
-        if 'unit_amount' in data:
-            unit_amount = data.pop('unit_amount')
 
         # Create the free trial expiration date
 
         current_login_ip = helpers.get_client_ip(request)
-
+        currency = "USD"
+        if 'currency' in data:
+            currency = data.pop('currency')
+        else:
+            try:
+                with geoip2.database.Reader('geolite2-db/GeoLite2-Country.mmdb') as reader:
+                    response = reader.country(current_login_ip)
+                    country_code = response.country.iso_code
+                    currency = ccy.countryccy(country_code)
+            except Exception as e:
+                print(e)
+                pass
         expiration_date = datetime.datetime.now() + datetime.timedelta(days=14)
         if is_seller:
             stripe = self.context['stripe']
@@ -170,9 +177,15 @@ class UserSignUpSerializer(serializers.Serializer):
                                             is_client=True,
 
                                             )
-            if not currency or not unit_amount:
+            if not currency:
                 raise serializers.ValidationError(
                     'Something wrong happened with stripe')
+            try:
+                plan = Plan.objects.get(currency=currency, type=Plan.BASIC)
+            except Plan.DoesNotExist:
+                raise serializers.ValidationError(
+                    'No plan available')
+
             try:
                 new_customer = stripe.Customer.create(
                     description="claCustomer_"+user.first_name+'_'+user.last_name,
@@ -181,7 +194,7 @@ class UserSignUpSerializer(serializers.Serializer):
                 )
                 product = stripe.Product.create(name="Basic Plan for" + '_' + user.username)
                 price = stripe.Price.create(
-                    unit_amount=int(unit_amount * 100),
+                    unit_amount=int(plan.unit_amount * 100),
                     currency=currency,
                     recurring={"interval": "month"},
                     product=product['id']
@@ -198,8 +211,12 @@ class UserSignUpSerializer(serializers.Serializer):
                 user.is_free_trial = True
                 user.free_trial_expiration = expiration_date
                 user.have_active_plan = True
-                user.plan_type = User.BASIC
                 user.subscription_id = subscription["id"]
+                user.stripe_customer_id = new_customer["id"]
+                user.plan_unit_amount = plan.unit_amount
+                user.plan_currency = currency
+                user.currency = currency
+                user.plan_price_label = plan.price_label
                 user.save()
 
             except stripe.error.StripeError as e:
@@ -651,60 +668,69 @@ class StripeConnectSerializer(serializers.Serializer):
 class StripeSellerSubscriptionSerializer(serializers.Serializer):
     """Acount verification serializer."""
 
-    payment_method_id = serializers.CharField()
-    card_name = serializers.CharField()
-    city = serializers.CharField()
-    country = serializers.CharField()
-    email = serializers.CharField()
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    line1 = serializers.CharField()
-    line2 = serializers.CharField()
-    postal_code = serializers.CharField()
-    state = serializers.CharField()
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
+    payment_method_id = serializers.CharField(required=True)
+    card_name = serializers.CharField(required=True)
+    city = serializers.CharField(required=False, allow_blank=True)
+    country = serializers.CharField(required=True)
+    email = serializers.CharField(required=True)
+    line1 = serializers.CharField(required=False, allow_blank=True)
+    line2 = serializers.CharField(required=False, allow_blank=True)
+    postal_code = serializers.CharField(required=True)
+    state = serializers.CharField(required=False, allow_blank=True)
 
     def validate(self, data):
         """Update user's verified status."""
         stripe = self.context['stripe']
         user = self.context['request'].user
-        payment_method_id = data["payment_method_id"]
-
-        stripe.Customer.modify(
-            user.stripe_customer_id,
-            address={
-                "city": data['city'],
-                "country": data['country'],
-                "line1": data['line1'],
-                "line2": data['line2'],
-                "postal_code": data['postal_code'],
-                "state": data['state'],
-            },
-            email=data['email'],
-            name=data['first_name']+"_"+data['last_name'],
-            payment_method=payment_method_id,
-            invoice_settings={
-                "default_payment_method": payment_method_id
-            }
-        )
-        stripe.PaymentMethod.attach(
-            payment_method_id,
-            customer=user.stripe_customer_id,
-        )
-        stripe.PaymentMethod.modify(
-            payment_method_id,
-            billing_details={
-                "address": {
-                    "city": data['city'],
-                    "country": data['country'],
-                    "line1": data['line1'],
-                    "line2": data['line2'],
-                    "postal_code": data['postal_code'],
-                    "state": data['state'],
+        payment_method_id = data.get("payment_method_id", "")
+        try:
+            stripe.PaymentMethod.attach(
+                payment_method_id,
+                customer=user.stripe_customer_id,
+            )
+            stripe.Customer.modify(
+                user.stripe_customer_id,
+                address={
+                    "city": data.get('city', ""),
+                    "country": data.get('country', ""),
+                    "line1": data.get('line1', ""),
+                    "line2": data.get('line2', ""),
+                    "postal_code": data.get('postal_code', ""),
+                    "state": data.get('state', ""),
                 },
-                "email": data['email'],
-                "name": data['card_name'],
-            }
-        )
+                email=data.get('email', ""),
+                name=data.get('first_name', "")+"_"+data.get('last_name', ""),
+                invoice_settings={
+                    "default_payment_method": payment_method_id
+                }
+            )
+            stripe.PaymentMethod.modify(
+                payment_method_id,
+                billing_details={
+                    "address": {
+                        "city": data.get('city', ""),
+                        "country": data.get('country', ""),
+                        "line1": data.get('line1', ""),
+                        "line2": data.get('line2', ""),
+                        "postal_code": data.get('postal_code', ""),
+                        "state": data.get('state', ""),
+                    },
+                    "email": data.get('email', ""),
+                    "name": data.get('card_name', ""),
+                }
+            )
+        except stripe.error.StripeError as e:
+            import pdb
+            pdb.set_trace()
+            raise serializers.ValidationError(
+                'Something wrong happened with stripe')
+        except Exception as e:
+            import pdb
+            pdb.set_trace()
+            raise serializers.ValidationError(
+                'Something wrong happened with stripe')
 
         # Create customer if not exists
 
