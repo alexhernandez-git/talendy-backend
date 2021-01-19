@@ -7,5 +7,6 @@ urlpatterns = [
     path("api/", include(("api.users.urls", "users"), namespace="users")),
     path("api/", include(("api.chats.urls", "chats"), namespace="chats")),
     path("api/", include(("api.notifications.urls", "notifications"), namespace="notifications")),
+    path("api/", include(("api.plans.urls", "plans"), namespace="plans")),
     path("admin/", admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

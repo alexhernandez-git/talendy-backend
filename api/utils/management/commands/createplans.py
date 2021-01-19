@@ -16,5 +16,5 @@ class Command(BaseCommand):
             type=Plan.BASIC,
             unit_amount=12.99,
             currency="USD",
-            price_label="11.99"
+            price_label="$11.99"
         )

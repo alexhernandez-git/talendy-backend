@@ -44,7 +44,8 @@ from api.users.serializers import (
     IsUsernameAvailableSerializer,
     InviteUserSerializer,
     StripeConnectSerializer,
-    StripeSellerSubscriptionSerializer
+    StripeSellerSubscriptionSerializer,
+    GetCurrencySerializer
 )
 
 # Filters
@@ -93,6 +94,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
             return ChangePasswordSerializer
         elif self.action == 'invite_user':
             return InviteUserSerializer
+        elif self.action == 'get_currency':
+            return GetCurrencySerializer
         return UserModelSerializer
 
     def get_queryset(self):
@@ -103,6 +106,16 @@ class UserViewSet(mixins.RetrieveModelMixin,
             users_list.append(user.pk)
             return User.objects.all().exclude(pk__in=users_list)
         return User.objects.all()
+
+    @action(detail=False, methods=['get'])
+    def get_currency(self, request):
+        """Check if email passed is correct."""
+        serializer = self.get_serializer(data=self.request.data)
+
+        serializer.is_valid(raise_exception=True)
+        data = serializer.data
+
+        return Response(data=data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
     def is_email_available(self, request):

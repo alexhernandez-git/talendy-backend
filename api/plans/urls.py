@@ -7,9 +7,11 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 # Views
+from .views import plans as plan_views
 
 
 router = DefaultRouter()
+router.register(r'plans', plan_views.PlanViewSet, basename='plans')
 
 urlpatterns = [
     path('', include(router.urls))

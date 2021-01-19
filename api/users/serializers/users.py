@@ -87,6 +87,26 @@ class UserModelSerializer(serializers.ModelSerializer):
             user=obj, is_read=False, notification__type=Notification.MESSAGES).exists()
 
 
+class GetCurrencySerializer(serializers.Serializer):
+    currency = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, data):
+        current_login_ip = helpers.get_client_ip(self.context["request"])
+        # Remove this line in production
+        current_login_ip = "37.133.187.101"
+        try:
+            with geoip2.database.Reader('geolite2-db/GeoLite2-Country.mmdb') as reader:
+                response = reader.country(current_login_ip)
+                country_code = response.country.iso_code
+                country_currency = ccy.countryccy(country_code)
+                if Plan.objects.filter(type=Plan.BASIC, currency=country_currency).exists():
+                    data['currency'] = country_currency
+        except Exception as e:
+            print(e)
+            pass
+        return data
+
+
 class UserSignUpSerializer(serializers.Serializer):
     """Useer sign up serializer.
 
@@ -157,15 +177,26 @@ class UserSignUpSerializer(serializers.Serializer):
         # Create the free trial expiration date
 
         current_login_ip = helpers.get_client_ip(request)
+        # Remove this line in production
+        current_login_ip = "37.133.187.101"
+        # Get country
+        country_code = None
+        try:
+            with geoip2.database.Reader('geolite2-db/GeoLite2-Country.mmdb') as reader:
+                response = reader.country(current_login_ip)
+                country_code = response.country.iso_code
+        except Exception as e:
+            print(e)
+            pass
         currency = "USD"
         if 'currency' in data:
             currency = data.pop('currency')
         else:
             try:
-                with geoip2.database.Reader('geolite2-db/GeoLite2-Country.mmdb') as reader:
-                    response = reader.country(current_login_ip)
-                    country_code = response.country.iso_code
-                    currency = ccy.countryccy(country_code)
+
+                country_currency = ccy.countryccy(country_code)
+                if Plan.objects.filter(type=Plan.BASIC, currency=country_currency).exists():
+                    currency = country_currency
             except Exception as e:
                 print(e)
                 pass
@@ -179,7 +210,7 @@ class UserSignUpSerializer(serializers.Serializer):
                                             )
             if not currency:
                 raise serializers.ValidationError(
-                    'Something wrong happened with stripe')
+                    'Something went wrong with stripe')
             try:
                 plan = Plan.objects.get(currency=currency, type=Plan.BASIC)
             except Plan.DoesNotExist:
@@ -206,12 +237,14 @@ class UserSignUpSerializer(serializers.Serializer):
                     ],
                     trial_period_days="14",
                 )
+                user.country = country_code
                 user.seller_view = True
                 user.is_seller = True
                 user.is_free_trial = True
                 user.free_trial_expiration = expiration_date
                 user.have_active_plan = True
                 user.subscription_id = subscription["id"]
+                user.product_id = product["id"]
                 user.stripe_customer_id = new_customer["id"]
                 user.plan_unit_amount = plan.unit_amount
                 user.plan_currency = currency
@@ -222,10 +255,10 @@ class UserSignUpSerializer(serializers.Serializer):
             except stripe.error.StripeError as e:
 
                 raise serializers.ValidationError(
-                    'Something wrong happened with stripe')
+                    'Something went wrong with stripe')
             except Exception as e:
                 raise serializers.ValidationError(
-                    'Something wrong happened with stripe')
+                    'Something went wrong with stripe')
 
         else:
             user = User.objects.create_user(**data, is_verified=False, is_client=True)
@@ -685,7 +718,33 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
         stripe = self.context['stripe']
         user = self.context['request'].user
         payment_method_id = data.get("payment_method_id", "")
+        currency = user.currency
         try:
+            if currency != user.plan_currency:
+                plan = Plan.objects.get(currency=currency, type=Plan.BASIC)
+                price = stripe.Price.create(
+                    unit_amount=int(plan.unit_amount * 100),
+                    currency=currency,
+                    recurring={"interval": "month"},
+                    product=user.product_id
+                )
+                subscription = stripe.Subscription.retrieve(user.subscription_id)
+
+                stripe.Subscription.modify(
+                    subscription["id"],
+                    cancel_at_period_end=False,
+                    prorate=False,
+                    items=[
+                        {
+                            'id': subscription['items']['data'][0].id,
+                            "price": price["id"],
+                        },
+                    ]
+                )
+                user.plan_currency = plan.currency
+                user.plan_unit_amount = plan.unit_amount
+                user.plan_price_label = plan.price_label
+                user.save()
             stripe.PaymentMethod.attach(
                 payment_method_id,
                 customer=user.stripe_customer_id,
@@ -725,12 +784,12 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
             import pdb
             pdb.set_trace()
             raise serializers.ValidationError(
-                'Something wrong happened with stripe')
+                'Something went wrong with stripe')
         except Exception as e:
             import pdb
             pdb.set_trace()
             raise serializers.ValidationError(
-                'Something wrong happened with stripe')
+                'Something went wrong with stripe')
 
         # Create customer if not exists
 
