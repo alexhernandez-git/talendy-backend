@@ -45,7 +45,8 @@ from api.users.serializers import (
     InviteUserSerializer,
     StripeConnectSerializer,
     StripeSellerSubscriptionSerializer,
-    GetCurrencySerializer
+    GetCurrencySerializer,
+    SellerChangePaymentMethodSerializer
 )
 
 # Filters
@@ -398,3 +399,28 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     # Events that may have to handle:
     # - customer.subscription.trial_will_end - This event notify the subscription trial will end in one day
+
+    @action(detail=False, methods=['post'])
+    def seller_change_payment_method(self, request, *args, **kwargs):
+        """Process stripe connect auth flow."""
+
+        user = request.user
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
+        else:
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+        partial = request.method == 'PATCH'
+        serializer = SellerChangePaymentMethodSerializer(
+            user,
+            data=request.data,
+            context={"request": request, "stripe": stripe},
+            partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        data = UserModelSerializer(user, many=False).data
+        stripe_customer_id = data['stripe_customer_id']
+
+        data['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
+        return Response(data, status=status.HTTP_200_OK)

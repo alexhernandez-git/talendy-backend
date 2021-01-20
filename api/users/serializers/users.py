@@ -717,7 +717,12 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
         """Update user's verified status."""
         stripe = self.context['stripe']
         user = self.context['request'].user
-        payment_method_id = data.get("payment_method_id", "")
+        payment_method_id = None
+        if "payment_method_id" in data and data["payment_method_id"]:
+            payment_method_id = data["payment_method_id"]
+        else:
+            raise serializers.ValidationError(
+                'There is no payment method')
         currency = user.currency
         try:
             if currency != user.plan_currency:
@@ -752,15 +757,15 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
             stripe.Customer.modify(
                 user.stripe_customer_id,
                 address={
-                    "city": data.get('city', ""),
-                    "country": data.get('country', ""),
-                    "line1": data.get('line1', ""),
-                    "line2": data.get('line2', ""),
-                    "postal_code": data.get('postal_code', ""),
-                    "state": data.get('state', ""),
+                    "city": data.get('city', " "),
+                    "country": data.get('country', " "),
+                    "line1": data.get('line1', " "),
+                    "line2": data.get('line2', " "),
+                    "postal_code": data.get('postal_code', " "),
+                    "state": data.get('state', " "),
                 },
-                email=data.get('email', ""),
-                name=data.get('first_name', "")+"_"+data.get('last_name', ""),
+                email=data.get('email', " "),
+                name=data.get('first_name', " ")+"_"+data.get('last_name', " "),
                 invoice_settings={
                     "default_payment_method": payment_method_id
                 }
@@ -768,16 +773,90 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
             stripe.PaymentMethod.modify(
                 payment_method_id,
                 billing_details={
-                    "address": {
-                        "city": data.get('city', ""),
-                        "country": data.get('country', ""),
-                        "line1": data.get('line1', ""),
-                        "line2": data.get('line2', ""),
-                        "postal_code": data.get('postal_code', ""),
-                        "state": data.get('state', ""),
-                    },
-                    "email": data.get('email', ""),
-                    "name": data.get('card_name', ""),
+                    "name": data.get('card_name', " "),
+                }
+            )
+        except stripe.error.StripeError as e:
+
+            raise serializers.ValidationError(
+                'Something went wrong with stripe')
+        except Exception as e:
+
+            raise serializers.ValidationError(
+                'Something went wrong with stripe')
+
+        # Create customer if not exists
+
+        return data
+
+    def update(self, instance, validated_data):
+
+        instance.default_payment_method = validated_data['payment_method_id']
+        instance.passed_free_trial_once = True
+        instance.is_free_trial = False
+        instance.save()
+        return instance
+
+
+class SellerChangePaymentMethodSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+
+    payment_method_id = serializers.CharField(required=True)
+
+    def validate(self, data):
+        """Update user's verified status."""
+        stripe = self.context['stripe']
+        user = self.context['request'].user
+        payment_method_id = data.get("payment_method_id", "")
+        currency = user.currency
+        try:
+            stripe.PaymentMethod.detach(
+                user.default_payment_method,
+            )
+        except:
+            pass
+        try:
+            if currency != user.plan_currency:
+                plan = Plan.objects.get(currency=currency, type=Plan.BASIC)
+                price = stripe.Price.create(
+                    unit_amount=int(plan.unit_amount * 100),
+                    currency=currency,
+                    recurring={"interval": "month"},
+                    product=user.product_id
+                )
+                subscription = stripe.Subscription.retrieve(user.subscription_id)
+
+                stripe.Subscription.modify(
+                    subscription["id"],
+                    cancel_at_period_end=False,
+                    prorate=False,
+                    items=[
+                        {
+                            'id': subscription['items']['data'][0].id,
+                            "price": price["id"],
+                        },
+                    ]
+                )
+                user.plan_currency = plan.currency
+                user.plan_unit_amount = plan.unit_amount
+                user.plan_price_label = plan.price_label
+                user.save()
+
+            stripe.PaymentMethod.attach(
+                payment_method_id,
+                customer=user.stripe_customer_id,
+            )
+            stripe.Customer.modify(
+                user.stripe_customer_id,
+
+                invoice_settings={
+                    "default_payment_method": payment_method_id
+                }
+            )
+            stripe.PaymentMethod.modify(
+                payment_method_id,
+                billing_details={
+                    "name": data.get('card_name', " "),
                 }
             )
         except stripe.error.StripeError as e:
@@ -786,8 +865,7 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'Something went wrong with stripe')
         except Exception as e:
-            import pdb
-            pdb.set_trace()
+
             raise serializers.ValidationError(
                 'Something went wrong with stripe')
 
