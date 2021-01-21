@@ -1,7 +1,6 @@
 """Users serializers."""
 
 # Django
-from api.plans.models.plans import Plan
 from django.conf import settings
 from django.contrib.auth import password_validation, authenticate
 from django.core.validators import RegexValidator
@@ -14,11 +13,9 @@ from rest_framework.authtoken.models import Token
 from rest_framework.validators import UniqueValidator
 
 # Models
-from api.users.models import User, UserLoginActivity
+from api.users.models import User, UserLoginActivity, PlanSubscription
 from api.notifications.models import Notification
-
-
-# Serializers
+from api.plans.models import Plan
 
 
 # Celery
@@ -237,19 +234,23 @@ class UserSignUpSerializer(serializers.Serializer):
                     ],
                     trial_period_days="14",
                 )
+                plan_subscription = PlanSubscription(
+                    subscription_id=subscription["id"],
+                    plan_unit_amount=plan.unit_amount,
+                    plan_currency=plan.currency,
+                    plan_price_label=plan.price_label,
+                    plan=plan
+                )
                 user.country = country_code
                 user.seller_view = True
                 user.is_seller = True
                 user.is_free_trial = True
                 user.free_trial_expiration = expiration_date
                 user.have_active_plan = True
-                user.subscription_id = subscription["id"]
                 user.product_id = product["id"]
                 user.stripe_customer_id = new_customer["id"]
-                user.plan_unit_amount = plan.unit_amount
-                user.plan_currency = currency
                 user.currency = currency
-                user.plan_price_label = plan.price_label
+                user.plan_subscriptions.add(plan_subscription)
                 user.save()
 
             except stripe.error.StripeError as e:
@@ -733,7 +734,14 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
                     recurring={"interval": "month"},
                     product=user.product_id
                 )
-                subscription = stripe.Subscription.retrieve(user.subscription_id)
+                subscriptions_queryset = PlanSubscription.objects.filter(user=user, cancelled=False)
+
+                if not subscriptions_queryset.exists():
+                    raise serializers.ValidationError(
+                        "User have not a plan subscription")
+
+                subscription = subscriptions_queryset.first()
+                subscription = stripe.Subscription.retrieve(subscription.subscription_id)
 
                 stripe.Subscription.modify(
                     subscription["id"],
@@ -792,8 +800,6 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
 
         instance.default_payment_method = validated_data['payment_method_id']
-        instance.passed_free_trial_once = True
-        instance.is_free_trial = False
         instance.save()
         return instance
 
@@ -802,6 +808,7 @@ class SellerChangePaymentMethodSerializer(serializers.Serializer):
     """Acount verification serializer."""
 
     payment_method_id = serializers.CharField(required=True)
+    card_name = serializers.CharField(required=True)
 
     def validate(self, data):
         """Update user's verified status."""
@@ -824,7 +831,14 @@ class SellerChangePaymentMethodSerializer(serializers.Serializer):
                     recurring={"interval": "month"},
                     product=user.product_id
                 )
-                subscription = stripe.Subscription.retrieve(user.subscription_id)
+                subscriptions_queryset = PlanSubscription.objects.filter(user=user, cancelled=False)
+
+                if not subscriptions_queryset.exists():
+                    raise serializers.ValidationError(
+                        "User have not a plan subscription")
+
+                subscription = subscriptions_queryset.first()
+                subscription = stripe.Subscription.retrieve(subscription.subscription_id)
 
                 stripe.Subscription.modify(
                     subscription["id"],

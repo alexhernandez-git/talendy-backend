@@ -11,12 +11,11 @@ from api.users.models import User
 
 # Celery
 from celery.decorators import task
-from celery.schedules import crontab
 
 # Utilities
 import jwt
 import time
-from datetime import timedelta
+from django.utils import timezone
 from api.utils import helpers
 import re
 
@@ -89,6 +88,19 @@ def send_invitation_email(user, email, message, type):
     msg.send()
 
 
-@task(name='check_if_user_have_messages')
-def check_if_user_have_messages():
-    print("ole ole loh caracoleh")
+@task(name='check_if_free_trial_have_ended')
+def check_if_free_trial_have_ended():
+    """Check if the free trial has ended and turn off"""
+    now = timezone.now()
+
+    # Update rides that have already finished
+    users = User.objects.filter(
+        free_trial_expiration__gte=now,
+        is_free_trial=True
+    )
+    users.update(is_free_trial=False, passed_free_trial_once=True)
+    print("Users that has been updated")
+    print("Total: "+str(users.count()))
+    for user in users:
+        print("---------------------------------")
+        print(user.username)

@@ -20,9 +20,9 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
-    'check-if-user-have-messages': {
-        'task': 'check_if_user_have_messages',
-        'schedule': timedelta(seconds=3),
+    'check_if_free_trial_have_ended': {
+        'task': 'check_if_free_trial_have_ended',
+        'schedule': timedelta(minutes=30),
     },
 }
 app.conf.timezone = 'UTC'

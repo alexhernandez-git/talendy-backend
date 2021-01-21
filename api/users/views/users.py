@@ -6,7 +6,7 @@ from django.template.loader import render_to_string
 
 
 # Django REST Framework
-from api.users.models import User, UserLoginActivity
+from api.users.models import User, UserLoginActivity, PlanSubscription
 import stripe
 import json
 import uuid
@@ -377,30 +377,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(serializer.data)
 
     @action(detail=False, methods=['post'])
-    def stripe_webhooks(self, request, *args, **kwargs):
-        """Process stripe webhook notification for subscription cancellation"""
-        payload = request.body
-        event = None
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
-        else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
-
-        try:
-            event = stripe.Event.construct_from(
-                json.loads(payload), stripe.api_key
-            )
-        except ValueError as e:
-            # Invalid payload
-            return HttpResponse(status=400)
-        import pdb
-        pdb.set_trace()
-        pass
-
-    # Events that may have to handle:
-    # - customer.subscription.trial_will_end - This event notify the subscription trial will end in one day
-
-    @action(detail=False, methods=['post'])
     def seller_change_payment_method(self, request, *args, **kwargs):
         """Process stripe connect auth flow."""
 
@@ -424,3 +400,63 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
         data['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
         return Response(data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'])
+    def list_invoices(self, request, *args, **kwargs):
+        """Process stripe connect auth flow."""
+        user = request.user
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
+        else:
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+        subscriptions_queryset = PlanSubscription.objects.filter(user=user, cancelled=False)
+        if not subscriptions_queryset.exists():
+            Response("User have not a plan subscription", status=status.HTTP_404_NOT_FOUND)
+        subscription = subscriptions_queryset.first()
+        list_data = stripe.Invoice.list(
+            customer=user.stripe_customer_id,
+            subscription=subscription.subscription_id
+        )
+
+        return Response(list_data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
+    def stripe_subscription_payment_failed(self, request, *args, **kwargs):
+        """Process stripe webhook notification for subscription cancellation"""
+        payload = request.body
+        event = None
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
+        else:
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+
+        try:
+            event = stripe.Event.construct_from(
+                json.loads(payload), stripe.api_key
+            )
+        except ValueError as e:
+            # Invalid payload
+            return HttpResponse(status=400)
+        if event.type == 'customer.subscription.deleted':
+            invoice = event.data.object  # contains Stripe.invoice
+            subscription_id = invoice.subscription
+            subscriptions_queryset = PlanSubscription.objects.filter(subscription_id=subscription_id, cancelled=False)
+            if not subscriptions_queryset.exists():
+                Response("User have not a plan subscription", status=status.HTTP_404_NOT_FOUND)
+            subscription = subscriptions_queryset.first()
+            user = subscription.user
+            subscription.update(
+                cancelled=True
+            )
+            user.update(
+                have_active_plan=False,
+            )
+
+            return HttpResponse(status=200)
+
+        else:
+            # Unexpected event type
+            return HttpResponse(status=400)
+
+    # Events that may have to handle:
+    # - customer.subscription.trial_will_end - This event notify the subscription trial will end in one day
