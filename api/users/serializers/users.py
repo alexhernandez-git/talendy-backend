@@ -910,3 +910,61 @@ class SellerChangePaymentMethodSerializer(serializers.Serializer):
         instance.default_payment_method = validated_data['payment_method_id']
         instance.save()
         return instance
+
+
+class SellerCancelSubscriptionSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+
+    def validate(self, data):
+        """Update user's verified status."""
+        stripe = self.context['stripe']
+        user = self.context['request'].user
+        subscriptions_queryset = PlanSubscription.objects.filter(user_plan_subscription=user, cancelled=False)
+
+        if not subscriptions_queryset.exists():
+            raise serializers.ValidationError(
+                "User have not a plan subscription")
+
+        plan_subscription = subscriptions_queryset.first()
+        stripe.Subscription.modify(
+            plan_subscription.subscription_id,
+            cancel_at_period_end=True
+        )
+        self.context['plan_subscription'] = plan_subscription
+
+        return data
+
+    def update(self, instance, validated_data):
+        plan_subscription = self.context['plan_subscription']
+        plan_subscription.to_be_cancelled = True
+        plan_subscription.save()
+        return instance
+
+
+class SellerReactivateSubscriptionSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+
+    def validate(self, data):
+        """Update user's verified status."""
+        stripe = self.context['stripe']
+        user = self.context['request'].user
+        subscriptions_queryset = PlanSubscription.objects.filter(user_plan_subscription=user, cancelled=False)
+
+        if not subscriptions_queryset.exists():
+            raise serializers.ValidationError(
+                "User have not a plan subscription")
+
+        plan_subscription = subscriptions_queryset.first()
+        stripe.Subscription.modify(
+            plan_subscription.subscription_id,
+            cancel_at_period_end=False
+        )
+        self.context['plan_subscription'] = plan_subscription
+
+        return data
+
+    def update(self, instance, validated_data):
+        plan_subscription = self.context['plan_subscription']
+        plan_subscription.to_be_cancelled = False
+        plan_subscription.save()
+        return instance
