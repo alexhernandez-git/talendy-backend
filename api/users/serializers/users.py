@@ -64,6 +64,7 @@ class UserModelSerializer(serializers.ModelSerializer):
             'is_free_trial',
             'passed_free_trial_once',
             'free_trial_expiration',
+            'have_active_plan',
             'stripe_customer_id',
             'currency',
             'stripe_account_id',
@@ -269,13 +270,17 @@ class UserSignUpSerializer(serializers.Serializer):
                 raise serializers.ValidationError(
                     'Something went wrong with stripe')
             except Exception as e:
-                import pdb
-                pdb.set_trace()
+
                 raise serializers.ValidationError(
                     'Something went wrong with stripe')
 
         else:
-            user = User.objects.create_user(**data, is_verified=False, is_client=True)
+            user = User.objects.create_user(**data,
+                                            is_verified=False,
+                                            is_client=True,
+                                            currency=currency,
+                                            country=country_code
+                                            )
         token, created = Token.objects.get_or_create(
             user=user)
 
@@ -804,10 +809,9 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'Something went wrong with stripe')
         except Exception as e:
-            import pdb
-            pdb.set_trace()
+
             raise serializers.ValidationError(
-                'Something went wrong with stripe')
+                'Something went wrong')
 
         # Create customer if not exists
 
@@ -892,14 +896,13 @@ class SellerChangePaymentMethodSerializer(serializers.Serializer):
                 }
             )
         except stripe.error.StripeError as e:
-            import pdb
-            pdb.set_trace()
+
             raise serializers.ValidationError(
                 'Something went wrong with stripe')
         except Exception as e:
 
             raise serializers.ValidationError(
-                'Something went wrong with stripe')
+                'Something went wrong')
 
         # Create customer if not exists
 
@@ -967,4 +970,108 @@ class SellerReactivateSubscriptionSerializer(serializers.Serializer):
         plan_subscription = self.context['plan_subscription']
         plan_subscription.to_be_cancelled = False
         plan_subscription.save()
+        return instance
+
+
+class BecomeASellerSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+
+    def validate(self, data):
+        """Update user's verified status."""
+        stripe = self.context['stripe']
+        request = self.context['request']
+        user = request.user
+
+        currency = user.currency
+        country_code = user.country
+        if user.is_seller:
+            raise serializers.ValidationError(
+                'User already is a seller')
+
+        if not currency:
+            # Get country
+            if not country_code:
+                current_login_ip = helpers.get_client_ip(request)
+                # Remove this line in production
+                current_login_ip = "37.133.187.101"
+                # Get country
+                try:
+                    with geoip2.database.Reader('geolite2-db/GeoLite2-Country.mmdb') as reader:
+                        response = reader.country(current_login_ip)
+                        country_code = response.country.iso_code
+                except Exception as e:
+                    print(e)
+                    pass
+
+                # Get the currency by country
+                if country_code:
+
+                    try:
+                        country_currency = ccy.countryccy(country_code)
+                        if Plan.objects.filter(type=Plan.BASIC, currency=country_currency).exists():
+                            currency = country_currency
+                    except Exception as e:
+                        print(e)
+                        pass
+                else:
+                    currency = "USD"
+        try:
+            plan = Plan.objects.get(currency=currency, type=Plan.BASIC)
+        except Plan.DoesNotExist:
+            raise serializers.ValidationError(
+                'No plan available')
+
+        try:
+            new_customer = stripe.Customer.create(
+                description="claCustomer_"+user.first_name+'_'+user.last_name,
+                name=user.first_name+' '+user.last_name,
+                email=user.email,
+            )
+            product = stripe.Product.create(name="Basic Plan for" + '_' + user.username)
+            price = stripe.Price.create(
+                unit_amount=int(plan.unit_amount * 100),
+                currency=currency,
+                recurring={"interval": "month"},
+                product=product['id']
+            )
+            subscription = stripe.Subscription.create(
+                customer=new_customer['id'],
+                items=[
+                    {"price": price['id']}
+                ],
+                trial_period_days="14",
+            )
+            plan_subscription = PlanSubscription.objects.create(
+                subscription_id=subscription["id"],
+                plan_unit_amount=plan.unit_amount,
+                plan_currency=plan.currency,
+                plan_price_label=plan.price_label,
+                plan_type=plan.type,
+                product_id=product["id"]
+            )
+            self.context['plan_subscription'] = plan_subscription
+            self.context['new_customer_id'] = new_customer['id']
+
+        except stripe.error.StripeError as e:
+
+            raise serializers.ValidationError(
+                'Something went wrong with stripe')
+        except Exception as e:
+
+            raise serializers.ValidationError(
+                'Something went wrong')
+
+        return data
+
+    def update(self, instance, validated_data):
+        expiration_date = datetime.datetime.now() + datetime.timedelta(days=14)
+        plan_subscription = self.context['plan_subscription']
+        new_customer_id = self.context['new_customer_id']
+        instance.is_seller = True
+        instance.is_free_trial = True
+        instance.free_trial_expiration = expiration_date
+        instance.have_active_plan = True
+        instance.stripe_customer_id = new_customer_id
+        instance.plan_subscriptions.add(plan_subscription)
+        instance.save()
         return instance
