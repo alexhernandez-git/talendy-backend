@@ -1,6 +1,7 @@
 """Users serializers."""
 
 # Django
+from api.users.serializers.plan_subscriptions import PlanSubscriptionModelSerializer
 from django.conf import settings
 from django.contrib.auth import password_validation, authenticate
 from django.core.validators import RegexValidator
@@ -13,7 +14,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.validators import UniqueValidator
 
 # Models
-from api.users.models import User, UserLoginActivity, PlanSubscription
+from api.users.models import User, UserLoginActivity, PlanSubscription, plan_subscriptions
 from api.notifications.models import Notification
 from api.plans.models import Plan
 
@@ -40,6 +41,7 @@ class UserModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
     pending_notifications = serializers.SerializerMethodField(read_only=True)
     pending_messages = serializers.SerializerMethodField(read_only=True)
+    current_plan_subscription = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -69,7 +71,8 @@ class UserModelSerializer(serializers.ModelSerializer):
             'money_balance',
             'pending_messages',
             'pending_notifications',
-            'default_payment_method'
+            'default_payment_method',
+            'current_plan_subscription'
         )
 
         read_only_fields = (
@@ -82,6 +85,14 @@ class UserModelSerializer(serializers.ModelSerializer):
     def get_pending_messages(self, obj):
         return obj.notifications.through.objects.filter(
             user=obj, is_read=False, notification__type=Notification.MESSAGES).exists()
+
+    def get_current_plan_subscription(self, obj):
+
+        subscriptions_queryset = PlanSubscription.objects.filter(user_plan_subscription=obj, cancelled=False)
+        if not subscriptions_queryset.exists():
+            return None
+        plan_subscription = subscriptions_queryset.first()
+        return PlanSubscriptionModelSerializer(plan_subscription, many=False).data
 
 
 class GetCurrencySerializer(serializers.Serializer):
@@ -234,12 +245,13 @@ class UserSignUpSerializer(serializers.Serializer):
                     ],
                     trial_period_days="14",
                 )
-                plan_subscription = PlanSubscription(
+                plan_subscription = PlanSubscription.objects.create(
                     subscription_id=subscription["id"],
                     plan_unit_amount=plan.unit_amount,
                     plan_currency=plan.currency,
                     plan_price_label=plan.price_label,
-                    plan=plan
+                    plan_type=plan.type,
+                    product_id=product["id"]
                 )
                 user.country = country_code
                 user.seller_view = True
@@ -247,7 +259,6 @@ class UserSignUpSerializer(serializers.Serializer):
                 user.is_free_trial = True
                 user.free_trial_expiration = expiration_date
                 user.have_active_plan = True
-                user.product_id = product["id"]
                 user.stripe_customer_id = new_customer["id"]
                 user.currency = currency
                 user.plan_subscriptions.add(plan_subscription)
@@ -258,6 +269,8 @@ class UserSignUpSerializer(serializers.Serializer):
                 raise serializers.ValidationError(
                     'Something went wrong with stripe')
             except Exception as e:
+                import pdb
+                pdb.set_trace()
                 raise serializers.ValidationError(
                     'Something went wrong with stripe')
 
@@ -725,23 +738,24 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'There is no payment method')
         currency = user.currency
+        plan = Plan.objects.get(currency=currency, type=Plan.BASIC)
+        subscriptions_queryset = PlanSubscription.objects.filter(user_plan_subscription=user, cancelled=False)
+
+        if not subscriptions_queryset.exists():
+            raise serializers.ValidationError(
+                "User have not a plan subscription")
+
+        plan_subscription = subscriptions_queryset.first()
+        plan_currency = plan_subscription.plan_currency
         try:
-            if currency != user.plan_currency:
-                plan = Plan.objects.get(currency=currency, type=Plan.BASIC)
+            if currency != plan_currency:
                 price = stripe.Price.create(
                     unit_amount=int(plan.unit_amount * 100),
                     currency=currency,
                     recurring={"interval": "month"},
-                    product=user.product_id
+                    product=plan_subscription.product_id
                 )
-                subscriptions_queryset = PlanSubscription.objects.filter(user=user, cancelled=False)
-
-                if not subscriptions_queryset.exists():
-                    raise serializers.ValidationError(
-                        "User have not a plan subscription")
-
-                subscription = subscriptions_queryset.first()
-                subscription = stripe.Subscription.retrieve(subscription.subscription_id)
+                subscription = stripe.Subscription.retrieve(plan_subscription.subscription_id)
 
                 stripe.Subscription.modify(
                     subscription["id"],
@@ -754,10 +768,11 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
                         },
                     ]
                 )
-                user.plan_currency = plan.currency
-                user.plan_unit_amount = plan.unit_amount
-                user.plan_price_label = plan.price_label
-                user.save()
+                plan_subscription.plan_type = plan.type
+                plan_subscription.plan_currency = plan.currency
+                plan_subscription.plan_unit_amount = plan.unit_amount
+                plan_subscription.plan_price_label = plan.price_label
+                plan_subscription.save()
             stripe.PaymentMethod.attach(
                 payment_method_id,
                 customer=user.stripe_customer_id,
@@ -789,7 +804,8 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'Something went wrong with stripe')
         except Exception as e:
-
+            import pdb
+            pdb.set_trace()
             raise serializers.ValidationError(
                 'Something went wrong with stripe')
 
@@ -815,6 +831,14 @@ class SellerChangePaymentMethodSerializer(serializers.Serializer):
         stripe = self.context['stripe']
         user = self.context['request'].user
         payment_method_id = data.get("payment_method_id", "")
+        subscriptions_queryset = PlanSubscription.objects.filter(user_plan_subscription=user, cancelled=False)
+
+        if not subscriptions_queryset.exists():
+            raise serializers.ValidationError(
+                "User have not a plan subscription")
+
+        plan_subscription = subscriptions_queryset.first()
+        plan_currency = plan_subscription.plan_currency
         currency = user.currency
         try:
             stripe.PaymentMethod.detach(
@@ -823,22 +847,15 @@ class SellerChangePaymentMethodSerializer(serializers.Serializer):
         except:
             pass
         try:
-            if currency != user.plan_currency:
+            if currency != plan_currency:
                 plan = Plan.objects.get(currency=currency, type=Plan.BASIC)
                 price = stripe.Price.create(
                     unit_amount=int(plan.unit_amount * 100),
                     currency=currency,
                     recurring={"interval": "month"},
-                    product=user.product_id
+                    product=plan_subscription.product_id
                 )
-                subscriptions_queryset = PlanSubscription.objects.filter(user=user, cancelled=False)
-
-                if not subscriptions_queryset.exists():
-                    raise serializers.ValidationError(
-                        "User have not a plan subscription")
-
-                subscription = subscriptions_queryset.first()
-                subscription = stripe.Subscription.retrieve(subscription.subscription_id)
+                subscription = stripe.Subscription.retrieve(plan_subscription.subscription_id)
 
                 stripe.Subscription.modify(
                     subscription["id"],
@@ -851,10 +868,11 @@ class SellerChangePaymentMethodSerializer(serializers.Serializer):
                         },
                     ]
                 )
-                user.plan_currency = plan.currency
-                user.plan_unit_amount = plan.unit_amount
-                user.plan_price_label = plan.price_label
-                user.save()
+                plan_subscription.plan_type = plan.type
+                plan_subscription.plan_currency = plan.currency
+                plan_subscription.plan_unit_amount = plan.unit_amount
+                plan_subscription.plan_price_label = plan.price_label
+                plan_subscription.save()
 
             stripe.PaymentMethod.attach(
                 payment_method_id,

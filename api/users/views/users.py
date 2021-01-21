@@ -409,7 +409,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
             stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
-        subscriptions_queryset = PlanSubscription.objects.filter(user=user, cancelled=False)
+        subscriptions_queryset = PlanSubscription.objects.filter(user_plan_subscription=user, cancelled=False)
         if not subscriptions_queryset.exists():
             Response("User have not a plan subscription", status=status.HTTP_404_NOT_FOUND)
         subscription = subscriptions_queryset.first()
@@ -425,6 +425,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """Process stripe webhook notification for subscription cancellation"""
         payload = request.body
         event = None
+
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
@@ -437,13 +438,24 @@ class UserViewSet(mixins.RetrieveModelMixin,
         except ValueError as e:
             # Invalid payload
             return HttpResponse(status=400)
+
         if event.type == 'customer.subscription.deleted':
             invoice = event.data.object  # contains Stripe.invoice
             subscription_id = invoice.subscription
+
+            try:
+                stripe.Subscription.delete(subscription_id)
+            except stripe.error.StripeError as e:
+                return HttpResponse(status=400)
+
+            except Exception as e:
+                return HttpResponse(status=400)
+
             subscriptions_queryset = PlanSubscription.objects.filter(subscription_id=subscription_id, cancelled=False)
             if not subscriptions_queryset.exists():
                 Response("User have not a plan subscription", status=status.HTTP_404_NOT_FOUND)
             subscription = subscriptions_queryset.first()
+
             user = subscription.user
             subscription.update(
                 cancelled=True
