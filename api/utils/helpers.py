@@ -164,10 +164,12 @@ def get_currency_and_country(request):
 
 def get_plan(currency):
     plan = None
+
     try:
         plans_queryset = Plan.objects.filter(currency=currency, type=Plan.BASIC)
         if plans_queryset.exists():
             plan = plans_queryset.first()
+
     except Plan.DoesNotExist:
         plans_queryset = Plan.objects.filter(currency="USD", type=Plan.BASIC)
         if plans_queryset.exists():

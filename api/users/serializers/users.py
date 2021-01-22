@@ -809,12 +809,12 @@ class SellerChangePaymentMethodSerializer(serializers.Serializer):
     """Acount verification serializer."""
 
     payment_method_id = serializers.CharField(required=True)
-    card_name = serializers.CharField(required=True)
 
     def validate(self, data):
         """Update user's verified status."""
         stripe = self.context['stripe']
-        user = self.context['request'].user
+        request = self.context['request']
+        user = request.user
         payment_method_id = data.get("payment_method_id", "")
         subscriptions_queryset = PlanSubscription.objects.filter(user_plan_subscription=user, cancelled=False)
 
@@ -824,7 +824,7 @@ class SellerChangePaymentMethodSerializer(serializers.Serializer):
 
         plan_subscription = subscriptions_queryset.first()
         plan_currency = plan_subscription.plan_currency
-        currency = user.currency
+        currency, _ = helpers.get_currency_and_country(request)
         try:
             if currency != plan_currency:
 
@@ -857,17 +857,6 @@ class SellerChangePaymentMethodSerializer(serializers.Serializer):
                 plan_subscription.plan_price_label = plan.price_label
                 plan_subscription.save()
 
-            stripe.PaymentMethod.attach(
-                payment_method_id,
-                customer=user.stripe_customer_id,
-            )
-
-            stripe.PaymentMethod.modify(
-                payment_method_id,
-                billing_details={
-                    "name": data.get('card_name', " "),
-                }
-            )
         except stripe.error.StripeError as e:
 
             raise serializers.ValidationError(
@@ -1016,6 +1005,43 @@ class BecomeASellerSerializer(serializers.Serializer):
         instance.stripe_customer_id = new_customer_id
         instance.plan_subscriptions.add(plan_subscription)
         instance.save()
+        return instance
+
+
+class AttachPaymentMethodSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+    payment_method_id = serializers.CharField(required=True)
+    card_name = serializers.CharField(required=True)
+
+    def validate(self, data):
+        """Update user's verified status."""
+        stripe = self.context['stripe']
+        user = self.context['request'].user
+        payment_method_id = data['payment_method_id']
+        payment_method_object = stripe.PaymentMethod.retrieve(
+            payment_method_id,
+        )
+        payment_methods = helpers.get_payment_methods(stripe, user.stripe_customer_id)
+        for payment_method in payment_methods:
+            if payment_method.card.fingerprint == payment_method_object.card.fingerprint:
+                raise serializers.ValidationError(
+                    'This payment method is already added')
+
+        stripe.PaymentMethod.attach(
+            payment_method_id,
+            customer=user.stripe_customer_id,
+        )
+        stripe.PaymentMethod.modify(
+            payment_method_id,
+            billing_details={
+                "name": data.get('card_name', " "),
+            }
+        )
+
+        return data
+
+    def update(self, instance, validated_data):
+
         return instance
 
 
