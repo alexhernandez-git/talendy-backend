@@ -1,5 +1,6 @@
 
 # Django
+from api.plans.models.plans import Plan
 import pdb
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
@@ -13,6 +14,8 @@ from api.users.models import User
 # Utilities
 import jwt
 from datetime import timedelta
+import geoip2.database
+import ccy
 
 
 def get_client_ip(request):
@@ -84,3 +87,90 @@ def get_payment_methods(stripe, stripe_customer_id):
         return payment_methods.data
     else:
         return None
+
+
+def get_currency_and_country_anonymous(request):
+    country = None
+    currency = None
+    if not currency:
+        # Get country
+        if not country:
+            current_login_ip = get_client_ip(request)
+            # Remove this line in production
+            current_login_ip = "37.133.187.101"
+            # Get country
+            try:
+                with geoip2.database.Reader('geolite2-db/GeoLite2-Country.mmdb') as reader:
+                    response = reader.country(current_login_ip)
+                    country = response.country.iso_code
+            except Exception as e:
+                print(e)
+                pass
+
+            # Get the currency by country
+            if country:
+
+                try:
+                    country_currency = ccy.countryccy(country)
+                    if Plan.objects.filter(type=Plan.BASIC, currency=country_currency).exists():
+                        currency = country_currency
+                except Exception as e:
+                    print(e)
+                    pass
+            else:
+                currency = "USD"
+
+    return currency, country
+
+
+def get_currency_and_country(request):
+    user = request.user
+    country = user.country
+    currency = user.currency
+    if not currency:
+        # Get country
+        if not user.country:
+            current_login_ip = get_client_ip(request)
+            # Remove this line in production
+            current_login_ip = "37.133.187.101"
+            # Get country
+            try:
+                with geoip2.database.Reader('geolite2-db/GeoLite2-Country.mmdb') as reader:
+                    response = reader.country(current_login_ip)
+                    country = response.country.iso_code
+            except Exception as e:
+                print(e)
+                pass
+
+            # Get the currency by country
+            if country:
+
+                try:
+                    country_currency = ccy.countryccy(country)
+                    if Plan.objects.filter(type=Plan.BASIC, currency=country_currency).exists():
+                        currency = country_currency
+                except Exception as e:
+                    print(e)
+                    pass
+            else:
+                currency = "USD"
+    if not user.currency:
+        user.currency = currency
+    if not user.country:
+        user.country = country
+    user.save()
+    return currency, country
+
+
+def get_plan(currency):
+    plan = None
+    try:
+        plans_queryset = Plan.objects.filter(currency=currency, type=Plan.BASIC)
+        if plans_queryset.exists():
+            plan = plans_queryset.first()
+    except Plan.DoesNotExist:
+        plans_queryset = Plan.objects.filter(currency="USD", type=Plan.BASIC)
+        if plans_queryset.exists():
+            plan = plans_queryset.first()
+
+    return plan

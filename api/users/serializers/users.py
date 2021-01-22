@@ -73,6 +73,7 @@ class UserModelSerializer(serializers.ModelSerializer):
             'pending_messages',
             'pending_notifications',
             'default_payment_method',
+            'plan_default_payment_method',
             'current_plan_subscription'
         )
 
@@ -113,6 +114,7 @@ class GetCurrencySerializer(serializers.Serializer):
         except Exception as e:
             print(e)
             pass
+
         return data
 
 
@@ -185,31 +187,10 @@ class UserSignUpSerializer(serializers.Serializer):
 
         # Create the free trial expiration date
 
-        current_login_ip = helpers.get_client_ip(request)
-        # Remove this line in production
-        current_login_ip = "37.133.187.101"
-        # Get country
-        country_code = None
-        try:
-            with geoip2.database.Reader('geolite2-db/GeoLite2-Country.mmdb') as reader:
-                response = reader.country(current_login_ip)
-                country_code = response.country.iso_code
-        except Exception as e:
-            print(e)
-            pass
-        currency = "USD"
-        if 'currency' in data:
-            currency = data.pop('currency')
-        else:
-            try:
+        currency, country = helpers.get_currency_and_country_anonymous(request)
 
-                country_currency = ccy.countryccy(country_code)
-                if Plan.objects.filter(type=Plan.BASIC, currency=country_currency).exists():
-                    currency = country_currency
-            except Exception as e:
-                print(e)
-                pass
         expiration_date = datetime.datetime.now() + datetime.timedelta(days=14)
+
         if is_seller:
             stripe = self.context['stripe']
             user = User.objects.create_user(**data,
@@ -217,14 +198,8 @@ class UserSignUpSerializer(serializers.Serializer):
                                             is_client=True,
 
                                             )
-            if not currency:
-                raise serializers.ValidationError(
-                    'Something went wrong with stripe')
-            try:
-                plan = Plan.objects.get(currency=currency, type=Plan.BASIC)
-            except Plan.DoesNotExist:
-                raise serializers.ValidationError(
-                    'No plan available')
+
+            plan = helpers.get_plan(currency)
 
             try:
                 new_customer = stripe.Customer.create(
@@ -254,7 +229,7 @@ class UserSignUpSerializer(serializers.Serializer):
                     plan_type=plan.type,
                     product_id=product["id"]
                 )
-                user.country = country_code
+                user.country = country
                 user.seller_view = True
                 user.is_seller = True
                 user.is_free_trial = True
@@ -735,15 +710,17 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
     def validate(self, data):
         """Update user's verified status."""
         stripe = self.context['stripe']
-        user = self.context['request'].user
+        request = self.context['request']
+        user = request.user
         payment_method_id = None
+
         if "payment_method_id" in data and data["payment_method_id"]:
             payment_method_id = data["payment_method_id"]
         else:
             raise serializers.ValidationError(
                 'There is no payment method')
-        currency = user.currency
-        plan = Plan.objects.get(currency=currency, type=Plan.BASIC)
+
+        currency, country = helpers.get_currency_and_country(request)
         subscriptions_queryset = PlanSubscription.objects.filter(user_plan_subscription=user, cancelled=False)
 
         if not subscriptions_queryset.exists():
@@ -752,11 +729,14 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
 
         plan_subscription = subscriptions_queryset.first()
         plan_currency = plan_subscription.plan_currency
+
         try:
             if currency != plan_currency:
+                plan = helpers.get_plan(currency)
+
                 price = stripe.Price.create(
                     unit_amount=int(plan.unit_amount * 100),
-                    currency=currency,
+                    currency=plan.currency,
                     recurring={"interval": "month"},
                     product=plan_subscription.product_id
                 )
@@ -820,6 +800,7 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
 
         instance.default_payment_method = validated_data['payment_method_id']
+        instance.plan_default_payment_method = validated_data['payment_method_id']
         instance.save()
         return instance
 
@@ -845,20 +826,17 @@ class SellerChangePaymentMethodSerializer(serializers.Serializer):
         plan_currency = plan_subscription.plan_currency
         currency = user.currency
         try:
-            stripe.PaymentMethod.detach(
-                user.default_payment_method,
-            )
-        except:
-            pass
-        try:
             if currency != plan_currency:
-                plan = Plan.objects.get(currency=currency, type=Plan.BASIC)
+
+                plan = helpers.get_plan(currency)
+
                 price = stripe.Price.create(
                     unit_amount=int(plan.unit_amount * 100),
-                    currency=currency,
+                    currency=plan.currency,
                     recurring={"interval": "month"},
                     product=plan_subscription.product_id
                 )
+
                 subscription = stripe.Subscription.retrieve(plan_subscription.subscription_id)
 
                 stripe.Subscription.modify(
@@ -870,7 +848,8 @@ class SellerChangePaymentMethodSerializer(serializers.Serializer):
                             'id': subscription['items']['data'][0].id,
                             "price": price["id"],
                         },
-                    ]
+                    ],
+                    default_payment_method=payment_method_id
                 )
                 plan_subscription.plan_type = plan.type
                 plan_subscription.plan_currency = plan.currency
@@ -882,13 +861,7 @@ class SellerChangePaymentMethodSerializer(serializers.Serializer):
                 payment_method_id,
                 customer=user.stripe_customer_id,
             )
-            stripe.Customer.modify(
-                user.stripe_customer_id,
 
-                invoice_settings={
-                    "default_payment_method": payment_method_id
-                }
-            )
             stripe.PaymentMethod.modify(
                 payment_method_id,
                 billing_details={
@@ -910,7 +883,7 @@ class SellerChangePaymentMethodSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
 
-        instance.default_payment_method = validated_data['payment_method_id']
+        instance.plan_default_payment_method = validated_data['payment_method_id']
         instance.save()
         return instance
 
@@ -982,44 +955,13 @@ class BecomeASellerSerializer(serializers.Serializer):
         request = self.context['request']
         user = request.user
 
-        currency = user.currency
-        country_code = user.country
         if user.is_seller:
             raise serializers.ValidationError(
                 'User already is a seller')
 
-        if not currency:
-            # Get country
-            if not country_code:
-                current_login_ip = helpers.get_client_ip(request)
-                # Remove this line in production
-                current_login_ip = "37.133.187.101"
-                # Get country
-                try:
-                    with geoip2.database.Reader('geolite2-db/GeoLite2-Country.mmdb') as reader:
-                        response = reader.country(current_login_ip)
-                        country_code = response.country.iso_code
-                except Exception as e:
-                    print(e)
-                    pass
+        currency, country = helpers.get_currency_and_country(request)
 
-                # Get the currency by country
-                if country_code:
-
-                    try:
-                        country_currency = ccy.countryccy(country_code)
-                        if Plan.objects.filter(type=Plan.BASIC, currency=country_currency).exists():
-                            currency = country_currency
-                    except Exception as e:
-                        print(e)
-                        pass
-                else:
-                    currency = "USD"
-        try:
-            plan = Plan.objects.get(currency=currency, type=Plan.BASIC)
-        except Plan.DoesNotExist:
-            raise serializers.ValidationError(
-                'No plan available')
+        plan = helpers.get_plan(currency)
 
         try:
             new_customer = stripe.Customer.create(
@@ -1030,7 +972,7 @@ class BecomeASellerSerializer(serializers.Serializer):
             product = stripe.Product.create(name="Basic Plan for" + '_' + user.username)
             price = stripe.Price.create(
                 unit_amount=int(plan.unit_amount * 100),
-                currency=currency,
+                currency=plan.currency,
                 recurring={"interval": "month"},
                 product=product['id']
             )
@@ -1074,4 +1016,33 @@ class BecomeASellerSerializer(serializers.Serializer):
         instance.stripe_customer_id = new_customer_id
         instance.plan_subscriptions.add(plan_subscription)
         instance.save()
+        return instance
+
+
+class DetachPaymentMethodSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+    payment_method_id = serializers.CharField()
+
+    def validate(self, data):
+        """Update user's verified status."""
+        stripe = self.context['stripe']
+        user = self.context['request'].user
+        payment_method_id = data['payment_method_id']
+        if payment_method_id == user.plan_default_payment_method:
+            raise serializers.ValidationError(
+                'This payment method is attached to a plan subscription')
+        is_default_payment_method = False
+        if payment_method_id == user.default_payment_method:
+            is_default_payment_method = True
+        self.context['is_default_payment_method'] = is_default_payment_method
+        stripe.PaymentMethod.detach(
+            "pm_1ICOvTCob7soW4zYIiXsCA4C",
+        )
+
+        return data
+
+    def update(self, instance, validated_data):
+        if self.context['is_default_payment_method']:
+            instance.default_payment_method = None
+            instance.save()
         return instance
