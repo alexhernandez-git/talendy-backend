@@ -66,9 +66,15 @@ class OfferViewSet(
         return queryset
 
     def create(self, request, *args, **kwargs):
+
+        buyer_email = request.data.get("buyer_email", "")
         send_offer_by_email = request.data.get("send_offer_by_email", False)
-        serializer = OfferModelSerializer(data=request.data, context={
-            'request': request, 'send_offer_by_email': send_offer_by_email})
+        serializer = OfferModelSerializer(data=request.data,
+                                          context={
+                                              'request': request,
+                                              'send_offer_by_email': send_offer_by_email,
+                                              'buyer_email': buyer_email
+                                          })
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)

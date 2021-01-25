@@ -46,7 +46,8 @@ class OfferModelSerializer(serializers.ModelSerializer):
 
         optional_fields = ["first_payment", ]
         read_only_fields = ("id", "seller", "amount_at_delivery", "delivery_date", "accepted")
-        extra_kwargs = {"first_payment": {"required": False, "allow_null": True}}
+        extra_kwargs = {"first_payment": {"required": False, "allow_null": True},
+                        "buyer": {"required": False, "allow_null": True}}
 
     def validate(self, data):
         c = CurrencyRates()
@@ -61,6 +62,7 @@ class OfferModelSerializer(serializers.ModelSerializer):
             data["first_payment"] = converted_first_payment
         converted_total_amount = c.convert(user.currency, 'USD', total_amount)
         data["total_amount"] = converted_total_amount
+
         return super().validate(data)
 
     def create(self, validated_data):
@@ -80,10 +82,6 @@ class OfferModelSerializer(serializers.ModelSerializer):
         delivery_date = now + timedelta(days=days_for_delivery)
         validated_data['delivery_date'] = delivery_date
 
-        # Get the buyer
-        buyer = validated_data['buyer']
-        if send_offer_by_email:
-            buyer = validated_data.pop("buyer")
         offer = Offer.objects.create(**validated_data)
 
         # Create the actions
@@ -95,12 +93,16 @@ class OfferModelSerializer(serializers.ModelSerializer):
             offer=offer
         )
 
-        # Create the message
-        # Get or create the chat
+        buyer = validated_data['buyer']
+        buyer_email = None
+        # Get the buyer
         if send_offer_by_email:
-            send_offer(seller, buyer, True)
+            buyer_email = self.context["buyer_email"]
+            send_offer(seller, buyer_email, True)
         else:
             send_offer(seller, buyer.email, False)
+
+            # Get or create the chat
 
             chats = Chat.objects.filter(participants=seller)
             chats = chats.filter(participants=buyer)
@@ -117,6 +119,8 @@ class OfferModelSerializer(serializers.ModelSerializer):
                 chat_instance.participants.add(buyer)
                 chat_instance.participants.add(seller)
                 chat_instance.save()
+
+            # Create the message
 
             Message.objects.create(chat=chat_instance, activity=activity, sent_by=seller)
 
