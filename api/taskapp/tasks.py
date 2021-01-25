@@ -5,6 +5,7 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.module_loading import import_string
 
 # Models
 from api.users.models import User
@@ -88,6 +89,23 @@ def send_invitation_email(user, email, message, type):
     msg.send()
 
 
+@task(name='send_offer', max_retries=3)
+def send_offer(user, email, invitation):
+    """Send account verification link to given user."""
+
+    verification_token = helpers.get_invitation_offer_token(user, email)
+    subject = 'Welcome! @{} has invited you '.format(
+        user.username)
+    from_email = 'Full Order Tracker <no-reply@fullordertracker.com>'
+    content = render_to_string(
+        'emails/users/order_offer.html',
+        {'token': verification_token, 'user': user, 'invitation': invitation}
+    )
+    msg = EmailMultiAlternatives(subject, content, from_email, [email])
+    msg.attach_alternative(content, "text/html")
+    msg.send()
+
+
 @task(name='check_if_free_trial_have_ended')
 def check_if_free_trial_have_ended():
     """Check if the free trial has ended and turn off"""
@@ -104,3 +122,9 @@ def check_if_free_trial_have_ended():
     for user in users:
         print("---------------------------------")
         print(user.username)
+
+
+@task
+def update_rates(backend=settings.EXCHANGE_BACKEND, **kwargs):
+    backend = import_string(backend)()
+    backend.update_rates(**kwargs)

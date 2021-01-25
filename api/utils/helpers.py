@@ -78,6 +78,25 @@ def get_invitation_token(from_user, email):
     return token
 
 
+def get_invitation_offer_token(from_user, email):
+    """Create JWT token than the user change the email."""
+    exp_date = timezone.now() + timedelta(days=3)
+    payload = {
+        'from_user': str(from_user.pk),
+        'to_user_email': email,
+        'exp': int(exp_date.timestamp()),
+        'type': 'invitation_offer_token'
+    }
+    token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+
+    try:
+        token = token.decode()
+    except:
+        pass
+
+    return token
+
+
 def get_payment_methods(stripe, stripe_customer_id):
     if stripe_customer_id != None and stripe_customer_id != '':
         payment_methods = stripe.PaymentMethod.list(

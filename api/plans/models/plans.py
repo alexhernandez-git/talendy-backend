@@ -3,7 +3,7 @@ from django.db import models
 
 
 class Plan(CModel):
-    # Login Status
+
     BASIC = 'BA'
     TYPE_CHOICES = [
         (BASIC, 'Basic'),

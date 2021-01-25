@@ -4,6 +4,7 @@ from celery import Celery
 from django.apps import apps, AppConfig
 from django.conf import settings
 from datetime import timedelta
+from celery.schedules import crontab
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
@@ -24,6 +25,11 @@ app.conf.beat_schedule = {
         'task': 'check_if_free_trial_have_ended',
         'schedule': timedelta(minutes=30),
     },
+    'update_rates': {
+        'task': 'path.to.your.task',
+        'schedule': crontab(minute=0, hour=0),
+        'kwargs': {}  # For custom arguments
+    }
 }
 app.conf.timezone = 'UTC'
 

@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     "api.plans.apps.PlansAppConfig",
     "api.taskapp.celery.CeleryAppConfig",
     "api.notifications.apps.NotificationsConfig",
+    "api.orders.apps.OrdersAppConfig",
+    "api.activities.apps.ActivitiesAppConfig",
     "api.chats",
     # THIRD_PARTY_APPS
     "rest_framework",
@@ -64,7 +66,9 @@ INSTALLED_APPS = [
     "channels_redis",
     "corsheaders",
     "django_celery_beat",
-    "django_celery_results"
+    "django_celery_results",
+    "djmoney",
+    "djmoney.contrib.exchange",
 ]
 
 MIDDLEWARE = [
@@ -366,3 +370,10 @@ if "REDIS_URL" in os.environ:
     }
 else:
     CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
+
+# Exchange
+# OPEN_EXCHANGE_RATES_APP_ID =
+CURRENCIES = ('USD', 'EUR')
+EXCHANGE_BACKEND = 'djmoney.contrib.exchange.backends.FixerBackend'
+OPEN_EXCHANGE_RATES_URL = 'https://openexchangerates.org/api/historical/2017-01-01.json?symbols=USD,EUR,NOK,SEK,CZK'
+FIXER_URL = 'http://data.fixer.io/api/2013-12-24?symbols=USD,EUR,NOK,SEK,CZK'
