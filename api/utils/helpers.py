@@ -10,6 +10,19 @@ from django.utils import timezone
 
 # Models
 from api.users.models import User
+from api.activities.models import (
+    Activity,
+    CancelOrderActivity,
+    ChangeDeliveryTimeActivity,
+    DeliveryActivity,
+    IncreaseAmountActivity,
+    OfferActivity,
+    RevisionActivity,
+)
+
+# Serializers
+# Serializers
+from api.activities.serializers import OfferActivityModelSerializer
 
 # Utilities
 import jwt
@@ -78,14 +91,13 @@ def get_invitation_token(from_user, email):
     return token
 
 
-def get_invitation_offer_token(from_user, email):
+def get_offer_token(user_token):
     """Create JWT token than the user change the email."""
     exp_date = timezone.now() + timedelta(days=3)
     payload = {
-        'from_user': str(from_user.pk),
-        'to_user_email': email,
+        'user_token': user_token,
         'exp': int(exp_date.timestamp()),
-        'type': 'invitation_offer_token'
+        'type': 'offer_token'
     }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
 
@@ -195,3 +207,26 @@ def get_plan(currency):
             plan = plans_queryset.first()
 
     return plan
+
+
+def get_activity_classes(type):
+    switcher = {
+        Activity.OFFER: {
+            "model": OfferActivity,
+            "serializer": OfferActivityModelSerializer
+        },
+        Activity.CHANGE_DELIVERY_TIME: ChangeDeliveryTimeActivity,
+        Activity.INCREASE_AMOUNT: IncreaseAmountActivity,
+        Activity.DELIVERY: DeliveryActivity,
+        Activity.REVISION: RevisionActivity,
+        Activity.CANCEL: CancelOrderActivity,
+
+    }
+    activity_classes = switcher.get(type, None)
+    model = None
+    if "model" in activity_classes:
+        model = activity_classes["model"]
+    serializer = None
+    if "serializer" in activity_classes:
+        serializer = activity_classes["serializer"]
+    return model, serializer

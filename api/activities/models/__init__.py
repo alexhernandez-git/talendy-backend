@@ -1,4 +1,3 @@
-from .status_model import StatusModel
 from .activities import Activity
 from .cancel_orders_activity import CancelOrderActivity
 from .change_delivery_time_activity import ChangeDeliveryTimeActivity

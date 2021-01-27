@@ -1,9 +1,8 @@
-from api.activities.models import StatusModel
 from api.utils.models import CModel
 from django.db import models
 
 
-class DeliveryActivity(CModel, StatusModel):
+class DeliveryActivity(CModel):
 
     activity = models.OneToOneField(
         "activities.Activity", on_delete=models.CASCADE, null=True

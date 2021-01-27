@@ -164,6 +164,9 @@ class UserViewSet(mixins.RetrieveModelMixin,
             "user": user_serialized,
             "access_token": token
         }
+
+        stripe_customer_id = data['user']['stripe_customer_id']
+        data['user']['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
         return Response(data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['post'])

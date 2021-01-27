@@ -500,23 +500,23 @@
                                                 data-start-index="9089"
                                                 data-end-index="9208"
                                               >
-                                              {% if invitation == True %}
-                                                <a
-                                                  style="
-                                                    color: white;
-                                                    text-decoration: none;
-                                                  "
-                                                  href="https://fullordertracker.com/order/checkout/[id]/1/"
-                                                >
-                                                  View offer
-                                                </a>
+                                              {% if user_exists == True %}
+                                                  <a
+                                                    style="
+                                                      color: white;
+                                                      text-decoration: none;
+                                                    "
+                                                    href="https://fullordertracker.com/order/checkout/[id]/{{token}}"
+                                                  >
+                                                    View offer
+                                                  </a>
                                                 {% else %}
                                                   <a
                                                     style="
                                                       color: white;
                                                       text-decoration: none;
                                                     "
-                                                    href="https://fullordertracker.com/order/checkout/[id]/0/"
+                                                    href="https://fullordertracker.com/order/checkout/[id]/"
                                                   >
                                                     View offer
                                                   </a>

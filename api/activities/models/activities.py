@@ -29,6 +29,10 @@ class Activity(CModel):
         choices=TYPE_CHOICES,
     )
 
+    closed = models.BooleanField(default=False)
+
+    active = models.BooleanField(default=True)
+
     class Meta:
 
         ordering = ["-created"]

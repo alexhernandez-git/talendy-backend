@@ -36,7 +36,7 @@ from api.utils import helpers
 class OfferViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
+    mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
     """User view set.
@@ -58,22 +58,11 @@ class OfferViewSet(
         permissions = [IsAuthenticated]
         return [p() for p in permissions]
 
-    def get_queryset(self):
-        """Restrict list to public-only."""
-        user = self.request.user
-        queryset = Offer.objects.filter(from_user=user)
-
-        return queryset
-
     def create(self, request, *args, **kwargs):
 
-        buyer_email = request.data.get("buyer_email", "")
-        send_offer_by_email = request.data.get("send_offer_by_email", False)
         serializer = OfferModelSerializer(data=request.data,
                                           context={
                                               'request': request,
-                                              'send_offer_by_email': send_offer_by_email,
-                                              'buyer_email': buyer_email
                                           })
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)

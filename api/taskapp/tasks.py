@@ -9,6 +9,7 @@ from django.utils.module_loading import import_string
 
 # Models
 from api.users.models import User
+from rest_framework.authtoken.models import Token
 
 # Celery
 from celery.decorators import task
@@ -90,16 +91,22 @@ def send_invitation_email(user, email, message, type):
 
 
 @task(name='send_offer', max_retries=3)
-def send_offer(user, email, invitation):
+def send_offer(user, email, user_exists):
     """Send account verification link to given user."""
+    user_token = None
+    verification_token = None
 
-    verification_token = helpers.get_invitation_offer_token(user, email)
+    if user_exists:
+        user_token, _ = Token.objects.get_or_create(user=User.objects.get(email=email))
+        verification_token = helpers.get_offer_token(user_token.key)
+
     subject = 'Welcome! @{} has invited you '.format(
         user.username)
     from_email = 'Full Order Tracker <no-reply@fullordertracker.com>'
+
     content = render_to_string(
         'emails/users/order_offer.html',
-        {'token': verification_token, 'user': user, 'invitation': invitation}
+        {'token': verification_token, 'user': user, 'user_exists': user_exists}
     )
     msg = EmailMultiAlternatives(subject, content, from_email, [email])
     msg.attach_alternative(content, "text/html")

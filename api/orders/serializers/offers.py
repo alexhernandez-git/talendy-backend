@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404
 
 
 # Models
-from api.orders.models import Offer
+from api.orders.models import Offer, Order
 from api.activities.models import Activity, OfferActivity
 from api.users.models import User
 from api.chats.models import Message, Chat
@@ -19,7 +19,8 @@ from api.chats.models import Message, Chat
 from datetime import datetime, timedelta
 from djmoney.money import Money
 from forex_python.converter import CurrencyRates
-from api.taskapp.tasks import send_offer
+from api.taskapp import tasks
+import re
 
 
 class OfferModelSerializer(serializers.ModelSerializer):
@@ -31,30 +32,42 @@ class OfferModelSerializer(serializers.ModelSerializer):
         model = Offer
         fields = (
             "id",
+            "send_offer_by_email",
+            "buyer_email",
             "buyer",
             "seller",
             "title",
             "description",
             "total_amount",
-            "two_payments_order",
+            "type",
             "first_payment",
-            "amount_at_delivery",
             "delivery_date",
             "days_for_delivery",
-            "accepted"
+            "accepted",
+            "interval_subscription"
+
         )
 
-        optional_fields = ["first_payment", ]
-        read_only_fields = ("id", "seller", "amount_at_delivery", "delivery_date", "accepted")
+        read_only_fields = ("id", "seller", "delivery_date", "accepted")
         extra_kwargs = {"first_payment": {"required": False, "allow_null": True},
-                        "buyer": {"required": False, "allow_null": True}}
+                        "buyer": {"required": False, "allow_null": True},
+                        "buyer_email": {"required": False, "allow_null": True},
+                        "interval_subscription": {"required": False, "allow_null": True},
+                        }
 
     def validate(self, data):
         c = CurrencyRates()
         request = self.context['request']
         user = request.user
         total_amount = data["total_amount"]
-        if data['two_payments_order']:
+
+        # If the offer is by email check if the buyer email is correct
+        if data["send_offer_by_email"]:
+            regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+            if not re.search(regex,  data["buyer_email"]):
+                raise serializers.ValidationError("The buyer email address is not correct")
+
+        if data['type'] == Order.TWO_PAYMENTS_ORDER:
             first_payment = data["first_payment"]
             if total_amount < first_payment:
                 raise serializers.ValidationError("First payment can't be greater than total amount")
@@ -67,7 +80,7 @@ class OfferModelSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context['request']
-        send_offer_by_email = self.context['send_offer_by_email']
+        send_offer_by_email = validated_data['send_offer_by_email']
 
         # Create the offer
 
@@ -77,10 +90,11 @@ class OfferModelSerializer(serializers.ModelSerializer):
 
         # Get the amount at delivery
         days_for_delivery = validated_data['days_for_delivery']
-        now = datetime.now()
-        # Get delivery date
-        delivery_date = now + timedelta(days=days_for_delivery)
-        validated_data['delivery_date'] = delivery_date
+        if days_for_delivery:
+            now = datetime.now()
+            # Get delivery date
+            delivery_date = now + timedelta(days=days_for_delivery)
+            validated_data['delivery_date'] = delivery_date
 
         offer = Offer.objects.create(**validated_data)
 
@@ -96,13 +110,20 @@ class OfferModelSerializer(serializers.ModelSerializer):
         buyer = validated_data['buyer']
         buyer_email = None
         # Get the buyer
+
+        user_exists = True
         if send_offer_by_email:
-            buyer_email = self.context["buyer_email"]
-            send_offer(seller, buyer_email, True)
+            buyer_email = validated_data["buyer_email"]
+            try:
+                user_exists = User.objects.filter(email=buyer_email).exists()
+            except User.DoesNotExist:
+                user_exists = False
+            tasks.send_offer(seller, buyer_email, user_exists)
         else:
-            send_offer(seller, buyer.email, False)
+            tasks.send_offer(seller, buyer.email, True)
 
             # Get or create the chat
+        if user_exists:
 
             chats = Chat.objects.filter(participants=seller)
             chats = chats.filter(participants=buyer)
@@ -122,6 +143,7 @@ class OfferModelSerializer(serializers.ModelSerializer):
 
             # Create the message
 
-            Message.objects.create(chat=chat_instance, activity=activity, sent_by=seller)
-
+            message = Message.objects.create(chat=chat_instance, activity=activity, sent_by=seller)
+            chat_instance.last_message = message
+            chat_instance.save()
         return offer

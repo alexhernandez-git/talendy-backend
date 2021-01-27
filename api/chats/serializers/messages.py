@@ -4,17 +4,21 @@ from rest_framework import serializers
 # Models
 from api.chats.models import Message, Chat
 
+# Serializers
+from api.activities.serializers import ActivityModelSerializer
+
 
 class MessageModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
 
     sent_by = serializers.SerializerMethodField(read_only=True)
+    activity = ActivityModelSerializer(read_only=True)
 
     class Meta:
         """Meta class."""
 
         model = Message
-        fields = ("id", "text", "sent_by", "created")
+        fields = ("id", "text", "sent_by", "created", "activity")
 
         read_only_fields = ("id",)
 
