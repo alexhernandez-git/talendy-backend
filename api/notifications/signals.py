@@ -55,17 +55,27 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
 
                 }
             )
+            async_to_sync(channel_layer.group_send)(
+                "user-%s" % sent_by.id, {
+                    "type": "new.activity",
+                    "event": instance.activity.type+status,
+                    "message": instance,
+                    "chat": chat,
+                    "sent_by": sent_by,
+                    "notification": user_notification,
+
+                }
+            )
         else:
-            user_notification = None
-            try:
-                user_notification = NotificationUser.objects.get(
-                    user=sent_to,
-                    is_read=False,
-                    notification__type=Notification.MESSAGES,
-                    notification__chat=chat,
-                    notification__actor=sent_by,
-                )
-            except NotificationUser.DoesNotExist:
+            user_notification = NotificationUser.objects.filter(
+                user=sent_to,
+                is_read=False,
+                notification__type=Notification.MESSAGES,
+                notification__chat=chat,
+                notification__actor=sent_by,
+            ).first()
+
+            if not user_notification:
 
                 notification = Notification.objects.create(
                     type=Notification.MESSAGES,

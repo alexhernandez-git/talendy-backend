@@ -63,6 +63,7 @@ def create_message(self, text, sent_by):
 class MessageViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
     mixins.DestroyModelMixin,
     AddChatMixin,
 ):

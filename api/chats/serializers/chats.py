@@ -13,6 +13,9 @@ from api.notifications.models import NotificationUser
 # Serializers
 from api.users.serializers import UserModelSerializer
 
+# Utils
+from api.utils import helpers
+
 
 class ChatModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
@@ -49,7 +52,15 @@ class ChatModelSerializer(serializers.ModelSerializer):
     def get_last_message(self, obj):
 
         if obj.last_message:
-
+            if obj.last_message.activity:
+                activity = obj.last_message.activity
+                activityModel, _ = helpers.get_activity_classes(activity.type)
+                status = ""
+                if activityModel:
+                    activity_queryset = activityModel.objects.filter(activity=activity)
+                    if activity_queryset.exists():
+                        status = activity_queryset.first().status
+                        return activity.type+status
             return obj.last_message.text
 
         return None
