@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404
 # Serializers
 from api.users.serializers import UserModelSerializer
 from api.chats.serializers import MessageModelSerializer
+from api.activities.serializers import ActivityModelSerializer
 
 # Models
 from api.users.models import User
@@ -22,6 +23,7 @@ class NotificationModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
 
     actor = UserModelSerializer(read_only=True)
+    activity = ActivityModelSerializer(read_only=True)
     messages = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -33,7 +35,8 @@ class NotificationModelSerializer(serializers.ModelSerializer):
             "type",
             "actor",
             "messages",
-            "modified"
+            "modified",
+            "activity"
         )
 
         read_only_fields = ("id",)

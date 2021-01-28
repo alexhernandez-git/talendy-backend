@@ -6,6 +6,10 @@ from asgiref.sync import async_to_sync
 # Models
 from api.chats.models import Message, Chat
 from api.notifications.models import Notification, NotificationUser
+from api.orders.models import Offer
+
+# Utils
+from api.utils import helpers
 
 
 @receiver(post_save, sender=Message)
@@ -19,40 +23,73 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
     if created:
         # Get or Create the notification user
 
-        user_notification = None
-        try:
-            user_notification = NotificationUser.objects.get(
-                user=sent_to,
-                is_read=False,
-                notification__type=Notification.MESSAGES,
-                notification__chat=chat,
-                notification__actor=sent_by,
-            )
-        except NotificationUser.DoesNotExist:
+        if instance.activity:
 
             notification = Notification.objects.create(
-                type=Notification.MESSAGES,
+                type=Notification.ACTIVITY,
+                activity=instance.activity,
                 chat=chat,
                 actor=sent_by,
             )
-
             user_notification = NotificationUser.objects.create(
                 notification=notification,
                 user=sent_to
             )
 
-        user_notification.notification.messages.add(instance)
-        user_notification.notification.save()
+            activityModel, _ = helpers.get_activity_classes(instance.activity.type)
+            status = ""
+            if activityModel:
+                activity_queryset = activityModel.objects.filter(activity=instance.activity)
+                if activity_queryset.exists():
+                    status = activity_queryset.first().status
 
-        # Send the event of message to user websocket
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            "user-%s" % sent_to.id, {
-                "type": "message.sent",
-                "event": "New Message",
-                "message": instance,
-                "chat": chat,
-                "sent_by": sent_by,
-                "notification": user_notification
-            }
-        )
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "user-%s" % sent_to.id, {
+                    "type": "new.activity",
+                    "event": instance.activity.type+status,
+                    "message": instance,
+                    "chat": chat,
+                    "sent_by": sent_by,
+                    "notification": user_notification,
+
+                }
+            )
+        else:
+            user_notification = None
+            try:
+                user_notification = NotificationUser.objects.get(
+                    user=sent_to,
+                    is_read=False,
+                    notification__type=Notification.MESSAGES,
+                    notification__chat=chat,
+                    notification__actor=sent_by,
+                )
+            except NotificationUser.DoesNotExist:
+
+                notification = Notification.objects.create(
+                    type=Notification.MESSAGES,
+                    chat=chat,
+                    actor=sent_by,
+                )
+
+                user_notification = NotificationUser.objects.create(
+                    notification=notification,
+                    user=sent_to
+                )
+
+            user_notification.notification.messages.add(instance)
+            user_notification.notification.save()
+
+            # Send the event of message to user websocket
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "user-%s" % sent_to.id, {
+                    "type": "message.sent",
+                    "event": "New Message",
+                    "message": instance,
+                    "chat": chat,
+                    "sent_by": sent_by,
+                    "notification": user_notification
+                }
+            )

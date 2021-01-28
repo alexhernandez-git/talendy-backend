@@ -19,8 +19,8 @@ from api.activities.models import (
     OfferActivity,
     RevisionActivity,
 )
+from api.chats.models import Chat
 
-# Serializers
 # Serializers
 from api.activities.serializers import OfferActivityModelSerializer
 
@@ -230,3 +230,16 @@ def get_activity_classes(type):
     if "serializer" in activity_classes:
         serializer = activity_classes["serializer"]
     return model, serializer
+
+
+def get_chat(sent_by, sent_to):
+    if not sent_by or not sent_to:
+        return False
+
+    chats = Chat.objects.filter(participants=sent_by)
+    chats = chats.filter(participants=sent_to)
+    if chats.exists():
+        for chat in chats:
+            if chat.participants.all().count() == 2:
+                return chat
+    return False

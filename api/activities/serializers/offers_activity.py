@@ -19,6 +19,7 @@ class OfferActivityModelSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "offer",
+            "status"
         )
 
         read_only_fields = ("id",)
