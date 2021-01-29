@@ -91,21 +91,19 @@ def get_invitation_token(from_user, email):
     return token
 
 
-def get_offer_token(user_token):
-    """Create JWT token than the user change the email."""
+def get_user_token(user_id):
+    """Create JWT token than the user can use to verify its account."""
     exp_date = timezone.now() + timedelta(days=3)
     payload = {
-        'user_token': user_token,
+        'user': str(user_id),
         'exp': int(exp_date.timestamp()),
-        'type': 'offer_token'
+        'type': 'user_token'
     }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-
     try:
         token = token.decode()
     except:
         pass
-
     return token
 
 

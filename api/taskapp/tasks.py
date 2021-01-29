@@ -91,14 +91,13 @@ def send_invitation_email(user, email, message, type):
 
 
 @task(name='send_offer', max_retries=3)
-def send_offer(user, email, user_exists):
+def send_offer(user, email, user_exists, offer_id, buyer_id=None):
     """Send account verification link to given user."""
     user_token = None
     verification_token = None
 
     if user_exists:
-        user_token, _ = Token.objects.get_or_create(user=User.objects.get(email=email))
-        verification_token = helpers.get_offer_token(user_token.key)
+        verification_token = helpers.get_user_token(buyer_id)
 
     subject = 'Welcome! @{} has invited you '.format(
         user.username)
@@ -106,7 +105,7 @@ def send_offer(user, email, user_exists):
 
     content = render_to_string(
         'emails/users/order_offer.html',
-        {'token': verification_token, 'user': user, 'user_exists': user_exists}
+        {'token': verification_token, 'user': user, 'user_exists': user_exists, 'offer': offer_id}
     )
     msg = EmailMultiAlternatives(subject, content, from_email, [email])
     msg.attach_alternative(content, "text/html")

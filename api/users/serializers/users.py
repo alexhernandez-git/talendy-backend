@@ -97,6 +97,32 @@ class UserModelSerializer(serializers.ModelSerializer):
         return PlanSubscriptionModelSerializer(plan_subscription, many=False).data
 
 
+class GetUserByJwtSerializer(serializers.Serializer):
+    token = serializers.CharField()
+    user = UserModelSerializer(read_only=True)
+
+    def validate_token(self, data):
+        """Verifiy token is valid."""
+        try:
+            payload = jwt.decode(data, settings.SECRET_KEY,
+                                 algorithms=['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise serializers.ValidationError('Verification link has expired')
+        except jwt.PyJWTError:
+            raise serializers.ValidationError('Invalid token')
+        if payload['type'] != 'user_token':
+            raise serializers.ValidationError('Invalid token')
+
+        self.context['payload'] = payload
+        return data
+
+    def validate(self, data):
+        payload = self.context['payload']
+        user = User.objects.get(id=payload['user'])
+        data['user'] = user
+        return data
+
+
 class GetCurrencySerializer(serializers.Serializer):
     currency = serializers.CharField(required=False, allow_blank=True)
 
@@ -254,10 +280,12 @@ class UserSignUpSerializer(serializers.Serializer):
                                             is_verified=False,
                                             is_client=True,
                                             currency=currency,
-                                            country=country_code
+                                            country=country
                                             )
         token, created = Token.objects.get_or_create(
             user=user)
+
+        current_login_ip = helpers.get_client_ip(request)
 
         if UserLoginActivity.objects.filter(user=user).exists():
             user_login_activity = UserLoginActivity.objects.filter(

@@ -52,6 +52,7 @@ from api.users.serializers import (
     SellerReactivateSubscriptionSerializer,
     AttachPaymentMethodSerializer,
     DetachPaymentMethodSerializer,
+    GetUserByJwtSerializer
 )
 
 # Filters
@@ -361,6 +362,25 @@ class UserViewSet(mixins.RetrieveModelMixin,
         data['user']['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
 
         return Response(data)
+
+    @action(detail=False, methods=['post'])
+    def get_user_by_email_jwt(self, request, *args, **kwargs):
+        serializer = GetUserByJwtSerializer(
+            data=request.data,
+        )
+        serializer.is_valid(raise_exception=True)
+        user = serializer.data['user']
+
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
+        else:
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+
+        stripe_customer_id = user['stripe_customer_id']
+
+        user['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
+
+        return Response(user)
 
     @action(detail=False, methods=['post'])
     def invite_user(self, request, *args, **kwargs):

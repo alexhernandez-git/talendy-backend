@@ -27,7 +27,7 @@ class Offer(CModel):
     total_amount = MoneyField(max_digits=14, decimal_places=2, default_currency='USD')
 
     first_payment = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', null=True, blank=True)
-    last_payment = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', null=True, blank=True)
+    payment_at_delivery = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', null=True, blank=True)
     delivery_date = models.DateTimeField(null=True, blank=True)
-    days_for_delivery = models.FloatField(null=True, blank=True)
+    delivery_time = models.IntegerField(null=True, blank=True)
     accepted = models.BooleanField(default=False)

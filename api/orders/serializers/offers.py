@@ -42,7 +42,7 @@ class OfferModelSerializer(serializers.ModelSerializer):
             "type",
             "first_payment",
             "delivery_date",
-            "days_for_delivery",
+            "delivery_time",
             "accepted",
             "interval_subscription"
 
@@ -56,6 +56,7 @@ class OfferModelSerializer(serializers.ModelSerializer):
                         }
 
     def validate(self, data):
+
         c = CurrencyRates()
         request = self.context['request']
         user = request.user
@@ -67,14 +68,15 @@ class OfferModelSerializer(serializers.ModelSerializer):
             if not re.search(regex,  data["buyer_email"]):
                 raise serializers.ValidationError("The buyer email address is not correct")
 
+        converted_total_amount = c.convert(user.currency, 'USD', total_amount)
+        data["total_amount"] = converted_total_amount
         if data['type'] == Order.TWO_PAYMENTS_ORDER:
             first_payment = data["first_payment"]
             if total_amount < first_payment:
                 raise serializers.ValidationError("First payment can't be greater than total amount")
             converted_first_payment = c.convert(user.currency, 'USD', first_payment)
             data["first_payment"] = converted_first_payment
-        converted_total_amount = c.convert(user.currency, 'USD', total_amount)
-        data["total_amount"] = converted_total_amount
+            data["payment_at_delivery"] = converted_total_amount - converted_first_payment
 
         return super().validate(data)
 
@@ -89,11 +91,11 @@ class OfferModelSerializer(serializers.ModelSerializer):
         validated_data['seller'] = seller
 
         # Get the amount at delivery
-        days_for_delivery = validated_data['days_for_delivery']
-        if days_for_delivery:
+        delivery_time = validated_data['delivery_time']
+        if delivery_time:
             now = datetime.now()
             # Get delivery date
-            delivery_date = now + timedelta(days=days_for_delivery)
+            delivery_date = now + timedelta(days=delivery_time)
             validated_data['delivery_date'] = delivery_date
 
         offer = Offer.objects.create(**validated_data)
@@ -118,9 +120,10 @@ class OfferModelSerializer(serializers.ModelSerializer):
                 user_exists = User.objects.filter(email=buyer_email).exists()
             except User.DoesNotExist:
                 user_exists = False
-            tasks.send_offer(seller, buyer_email, user_exists)
+            tasks.send_offer(seller, buyer_email, user_exists, offer.id)
         else:
-            tasks.send_offer(seller, buyer.email, True)
+
+            tasks.send_offer(seller, buyer.email, True, offer.id, buyer.id)
 
             # Get or create the chat
         if user_exists:

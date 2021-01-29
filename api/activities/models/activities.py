@@ -33,6 +33,11 @@ class Activity(CModel):
 
     active = models.BooleanField(default=True)
 
+    def get_activity_item(self):
+        from api.utils import helpers
+        model, _ = helpers.get_activity_classes(self.type)
+        return model.objects.filter(activity=self).first()
+
     class Meta:
 
         ordering = ["-created"]

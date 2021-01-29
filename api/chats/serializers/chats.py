@@ -54,13 +54,8 @@ class ChatModelSerializer(serializers.ModelSerializer):
         if obj.last_message:
             if obj.last_message.activity:
                 activity = obj.last_message.activity
-                activityModel, _ = helpers.get_activity_classes(activity.type)
-                status = ""
-                if activityModel:
-                    activity_queryset = activityModel.objects.filter(activity=activity)
-                    if activity_queryset.exists():
-                        status = activity_queryset.first().status
-                        return activity.type+status
+                activity_item = activity.get_activity_item()
+                return activity.type+activity_item.status
             return obj.last_message.text
 
         return None

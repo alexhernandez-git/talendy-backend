@@ -54,8 +54,11 @@ class OfferViewSet(
 
     def get_permissions(self):
         """Assign permissions based on action."""
+        if self.action in ['retrieve']:
+            permissions = []
 
-        permissions = [IsAuthenticated]
+        else:
+            permissions = [IsAuthenticated]
         return [p() for p in permissions]
 
     def create(self, request, *args, **kwargs):
@@ -68,3 +71,15 @@ class OfferViewSet(
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        user = request.user
+
+        if not user.is_anonymous:
+
+            if not instance.send_offer_by_email and instance.buyer != user:
+                return Response("This user is not allowed to handle the offer", status=status.HTTP_401_UNAUTHORIZED)
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
