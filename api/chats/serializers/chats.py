@@ -24,12 +24,24 @@ class ChatModelSerializer(serializers.ModelSerializer):
     picture = serializers.SerializerMethodField(read_only=True)
     last_message = serializers.SerializerMethodField(read_only=True)
     last_message_seen = serializers.SerializerMethodField(read_only=True)
+    last_message_sent_by = serializers.SerializerMethodField(read_only=True)
+    last_message_sent_by_username = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
 
         model = Chat
-        fields = ("id", "room_name", "picture", "last_message", "created", "last_message_seen")
+        fields = (
+            "id",
+            "room_name",
+            "picture",
+            "last_message",
+            "created",
+            "last_message_seen",
+            "last_message_sent_by",
+            "last_message_sent_by_username"
+
+        )
 
         read_only_fields = ("id",)
 
@@ -75,6 +87,18 @@ class ChatModelSerializer(serializers.ModelSerializer):
         else:
             return True
 
+    def get_last_message_sent_by(self, obj):
+        if obj.last_message:
+            return obj.last_message.sent_by.pk
+
+        return None
+
+    def get_last_message_sent_by_username(self, obj):
+        if obj.last_message:
+            return obj.last_message.sent_by.username
+
+        return None
+
 
 class RetrieveChatModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
@@ -83,12 +107,23 @@ class RetrieveChatModelSerializer(serializers.ModelSerializer):
     to_user = serializers.SerializerMethodField(read_only=True)
     last_message = serializers.SerializerMethodField(read_only=True)
     last_message_seen = serializers.SerializerMethodField(read_only=True)
+    last_message_sent_by = serializers.SerializerMethodField(read_only=True)
+    last_message_sent_by_username = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
 
         model = Chat
-        fields = ("id", "room_name", "to_user", "last_message", "created", "last_message_seen")
+        fields = (
+            "id",
+            "room_name",
+            "to_user",
+            "last_message",
+            "created",
+            "last_message_seen",
+            "last_message_sent_by",
+            "last_message_sent_by_username"
+        )
 
         read_only_fields = ("id",)
 
@@ -111,7 +146,10 @@ class RetrieveChatModelSerializer(serializers.ModelSerializer):
     def get_last_message(self, obj):
 
         if obj.last_message:
-
+            if obj.last_message.activity:
+                activity = obj.last_message.activity
+                activity_item = activity.get_activity_item()
+                return activity.type+activity_item.status
             return obj.last_message.text
 
         return None
@@ -129,6 +167,18 @@ class RetrieveChatModelSerializer(serializers.ModelSerializer):
                     return seen_by.message == obj.last_message
 
         return False
+
+    def get_last_message_sent_by(self, obj):
+        if obj.last_message:
+            return obj.last_message.sent_by.pk
+
+        return None
+
+    def get_last_message_sent_by_username(self, obj):
+        if obj.last_message:
+            return obj.last_message.sent_by.username
+
+        return None
 
 
 class CreateChatSerializer(serializers.Serializer):

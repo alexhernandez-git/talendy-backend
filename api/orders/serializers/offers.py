@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404
 from api.orders.models import Offer, Order
 from api.activities.models import Activity, OfferActivity
 from api.users.models import User
-from api.chats.models import Message, Chat
+from api.chats.models import Message, Chat, SeenBy
 
 
 # Utils
@@ -114,19 +114,28 @@ class OfferModelSerializer(serializers.ModelSerializer):
         # Get the buyer
 
         user_exists = True
+
+        # Check if user exists
+
         if send_offer_by_email:
             buyer_email = validated_data["buyer_email"]
-            try:
-                user_exists = User.objects.filter(email=buyer_email).exists()
-            except User.DoesNotExist:
+            users_queryset = None
+            users_queryset = User.objects.filter(email=buyer_email)
+            if users_queryset.exists():
+                user_exists = True
+                buyer = users_queryset.first()
+                validated_data['buyer'] = buyer
+                validated_data['send_offer_by_email'] = False
+            else:
                 user_exists = False
-            tasks.send_offer(seller, buyer_email, user_exists, offer.id)
-        else:
 
+        if not user_exists:
+            tasks.send_offer(seller, buyer_email, user_exists, offer.id)
+
+        else:
             tasks.send_offer(seller, buyer.email, True, offer.id, buyer.id)
 
             # Get or create the chat
-        if user_exists:
 
             chats = Chat.objects.filter(participants=seller)
             chats = chats.filter(participants=buyer)
@@ -149,4 +158,11 @@ class OfferModelSerializer(serializers.ModelSerializer):
             message = Message.objects.create(chat=chat_instance, activity=activity, sent_by=seller)
             chat_instance.last_message = message
             chat_instance.save()
+
+            # Set message seen
+            seen_by, created = SeenBy.objects.get_or_create(chat=chat_instance, user=seller)
+            if seen_by.message != chat_instance.last_message:
+
+                seen_by.message = chat_instance.last_message
+                seen_by.save()
         return offer
