@@ -98,8 +98,9 @@ class UserModelSerializer(serializers.ModelSerializer):
 
 
 class GetUserByJwtSerializer(serializers.Serializer):
-    token = serializers.CharField()
     user = UserModelSerializer(read_only=True)
+    access_token = serializers.CharField(read_only=True)
+    token = serializers.CharField()
 
     def validate_token(self, data):
         """Verifiy token is valid."""
@@ -114,11 +115,15 @@ class GetUserByJwtSerializer(serializers.Serializer):
             raise serializers.ValidationError('Invalid token')
 
         self.context['payload'] = payload
+
         return data
 
     def validate(self, data):
         payload = self.context['payload']
         user = User.objects.get(id=payload['user'])
+        token, created = Token.objects.get_or_create(
+            user=user)
+        data['access_token'] = token
         data['user'] = user
         return data
 

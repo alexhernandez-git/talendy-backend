@@ -369,18 +369,18 @@ class UserViewSet(mixins.RetrieveModelMixin,
             data=request.data,
         )
         serializer.is_valid(raise_exception=True)
-        user = serializer.data['user']
+        data = serializer.data
 
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
             stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
 
-        stripe_customer_id = user['stripe_customer_id']
+        stripe_customer_id = data['user']['stripe_customer_id']
 
-        user['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
+        data['user']['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
 
-        return Response(user)
+        return Response(data)
 
     @action(detail=False, methods=['post'])
     def invite_user(self, request, *args, **kwargs):

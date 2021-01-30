@@ -93,10 +93,9 @@ def get_invitation_token(from_user, email):
 
 def get_user_token(user_id):
     """Create JWT token than the user can use to verify its account."""
-    exp_date = timezone.now() + timedelta(days=3)
     payload = {
         'user': str(user_id),
-        'exp': int(exp_date.timestamp()),
+        'expiresIn': 0,
         'type': 'user_token'
     }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')

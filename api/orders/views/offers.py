@@ -77,9 +77,10 @@ class OfferViewSet(
         user = request.user
 
         if not user.is_anonymous:
-
             if not instance.send_offer_by_email and instance.buyer != user:
                 return Response("This user is not allowed to handle the offer", status=status.HTTP_401_UNAUTHORIZED)
-
+        if user.is_anonymous:
+            if not instance.send_offer_by_email:
+                return Response("For see this offer you have to be logued", status=status.HTTP_401_UNAUTHORIZED)
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
