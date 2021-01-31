@@ -27,7 +27,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from api.orders.models import Order
 
 # Serializers
-from api.orders.serializers import OrderModelSerializer
+from api.orders.serializers import OrderModelSerializer, AcceptOrderSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -68,3 +68,23 @@ class OrderViewSet(
         queryset = Order.objects.filter(from_user=user)
 
         return queryset
+
+    def create(self, request, *args, **kwargs):
+        """Process stripe connect auth flow."""
+
+        user = request.user
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
+        else:
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+
+        serializer = AcceptOrderSerializer(
+            data=request.data,
+            context={"request": request, "stripe": stripe, "offer": request.data['offer']},
+        )
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        data = OrderModelSerializer(user, many=False).data
+
+        return Response(data, status=status.HTTP_200_OK)

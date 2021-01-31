@@ -5,3 +5,5 @@ from .offers import Offer
 from .orders import Order
 from .revisions import Revision
 from .cancel_order import CancelOrder
+from .order_payments import OrderBilling
+from .order_invoices import OrderInvoice

@@ -38,9 +38,10 @@ class OfferModelSerializer(serializers.ModelSerializer):
             "seller",
             "title",
             "description",
-            "total_amount",
+            "unit_amount",
             "type",
             "first_payment",
+            "payment_at_delivery",
             "delivery_date",
             "delivery_time",
             "accepted",
@@ -60,7 +61,7 @@ class OfferModelSerializer(serializers.ModelSerializer):
         c = CurrencyRates()
         request = self.context['request']
         user = request.user
-        total_amount = data["total_amount"]
+        unit_amount = data["unit_amount"]
 
         # If the offer is by email check if the buyer email is correct
         if data["send_offer_by_email"]:
@@ -68,15 +69,15 @@ class OfferModelSerializer(serializers.ModelSerializer):
             if not re.search(regex,  data["buyer_email"]):
                 raise serializers.ValidationError("The buyer email address is not correct")
 
-        converted_total_amount = c.convert(user.currency, 'USD', total_amount)
-        data["total_amount"] = converted_total_amount
+        converted_unit_amount = c.convert(user.currency, 'USD', unit_amount)
+        data["unit_amount"] = converted_unit_amount
         if data['type'] == Order.TWO_PAYMENTS_ORDER:
             first_payment = data["first_payment"]
-            if total_amount < first_payment:
+            if unit_amount < first_payment:
                 raise serializers.ValidationError("First payment can't be greater than total amount")
             converted_first_payment = c.convert(user.currency, 'USD', first_payment)
             data["first_payment"] = converted_first_payment
-            data["payment_at_delivery"] = converted_total_amount - converted_first_payment
+            data["payment_at_delivery"] = converted_unit_amount - converted_first_payment
 
         return super().validate(data)
 

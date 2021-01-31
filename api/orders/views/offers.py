@@ -44,7 +44,7 @@ class OfferViewSet(
     Handle sign up, login and account verification.
     """
 
-    queryset = Offer.objects.all()
+    queryset = Offer.objects.filter(accepted=False)
     lookup_field = "id"
     serializer_class = OfferModelSerializer
     filter_backends = (SearchFilter, DjangoFilterBackend)
