@@ -18,9 +18,9 @@ from api.chats.models import Message, Chat, SeenBy
 # Utils
 from datetime import datetime, timedelta
 from djmoney.money import Money
-from forex_python.converter import CurrencyRates
 from api.taskapp import tasks
 import re
+from api.utils import helpers
 
 
 class OfferModelSerializer(serializers.ModelSerializer):
@@ -45,7 +45,8 @@ class OfferModelSerializer(serializers.ModelSerializer):
             "delivery_date",
             "delivery_time",
             "accepted",
-            "interval_subscription"
+            "interval_subscription",
+            "rate_date"
 
         )
 
@@ -54,31 +55,32 @@ class OfferModelSerializer(serializers.ModelSerializer):
                         "buyer": {"required": False, "allow_null": True},
                         "buyer_email": {"required": False, "allow_null": True},
                         "interval_subscription": {"required": False, "allow_null": True},
+                        "rate_date": {"required": False, "allow_null": True},
                         }
 
     def validate(self, data):
 
-        c = CurrencyRates()
         request = self.context['request']
         user = request.user
         unit_amount = data["unit_amount"]
-
+        rate_date = None
         # If the offer is by email check if the buyer email is correct
         if data["send_offer_by_email"]:
             regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
             if not re.search(regex,  data["buyer_email"]):
                 raise serializers.ValidationError("The buyer email address is not correct")
 
-        converted_unit_amount = c.convert(user.currency, 'USD', unit_amount)
+        converted_unit_amount, rate_date = helpers.convert_currency('USD', user.currency, unit_amount)
         data["unit_amount"] = converted_unit_amount
         if data['type'] == Order.TWO_PAYMENTS_ORDER:
             first_payment = data["first_payment"]
             if unit_amount < first_payment:
                 raise serializers.ValidationError("First payment can't be greater than total amount")
-            converted_first_payment = c.convert(user.currency, 'USD', first_payment)
+            converted_first_payment, rate_date = helpers.convert_currency('USD', user.currency, first_payment)
+
             data["first_payment"] = converted_first_payment
             data["payment_at_delivery"] = converted_unit_amount - converted_first_payment
-
+        data['rate_date'] = rate_date
         return super().validate(data)
 
     def create(self, validated_data):

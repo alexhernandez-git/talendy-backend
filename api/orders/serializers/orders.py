@@ -1,8 +1,6 @@
 """Users serializers."""
 
 # Django REST Framework
-from api.orders.models.offers import Offer
-from api.orders.serializers.offers import OfferModelSerializer
 from rest_framework import serializers
 
 # Django
@@ -13,6 +11,12 @@ from django.shortcuts import get_object_or_404
 # Models
 from api.orders.models import Order
 from api.users.models import User
+from api.activities.models import OfferActivity, Activity
+from api.orders.models.offers import Offer
+from api.chats.models import Message, Chat, SeenBy
+
+# Serializers
+from api.orders.serializers.offers import OfferModelSerializer
 
 # Utils
 from api.utils import helpers
@@ -46,10 +50,12 @@ class AcceptOrderSerializer(serializers.Serializer):
         stripe = self.context['stripe']
         request = self.context['request']
         user = request.user
-        # Check if offer is not accepted
-        if 'accepted' in offer and offer['accepted']:
+        offer_object = get_object_or_404(Offer, id=offer['id'])
+        self.context['offer_object'] = offer_object
+        if offer_object.accepted:
             raise serializers.ValidationError(
-                "This offer is already accepted")
+                "This offer already has been accepted")
+        # Check if offer is not accepted
         try:
 
             if not user.stripe_customer_id:
@@ -176,7 +182,8 @@ class AcceptOrderSerializer(serializers.Serializer):
     def create(self, validated_data):
         offer = self.context['offer']
 
-        offer_object = Offer.objects.get(id=offer['id'])
+        offer_object = self.context['offer_object']
+
         new_order = Order.objects.create(
             buyer=offer_object.buyer,
             seller=offer_object.seller,
@@ -188,8 +195,56 @@ class AcceptOrderSerializer(serializers.Serializer):
             delivery_date=offer_object.delivery_date,
             delivery_time=offer_object.delivery_time,
             interval_subscription=offer_object.interval_subscription,
-            type=offer_object.type
+            type=offer_object.type,
+            rate_date=offer_object.rate_date
         )
         offer_object.accepted = True
         offer_object.save()
+
+        offer_activity_queryset = OfferActivity.objects.filter(offer=offer_object, status=OfferActivity.PENDENDT)
+        offer_activity = None
+        if offer_activity_queryset.exists():
+            offer_activity = offer_activity_queryset.first()
+        activity = offer_activity.activity
+        activity.closed = True
+        activity.active = False
+        activity = Activity.objects.create(
+            type=Activity.OFFER,
+            closed=True,
+            active=False
+        )
+        OfferActivity.objects.create(
+            activity=activity,
+            offer=offer_object,
+            status=OfferActivity.ACCEPTED
+        )
+
+        chats = Chat.objects.filter(participants=new_order.seller)
+        chats = chats.filter(participants=new_order.buyer)
+        chat_instance = None
+        if chats.exists():
+            for chat in chats:
+                if chat.participants.all().count() == 2:
+                    chat_instance = chat
+
+        if not chat_instance:
+
+            chat_instance = Chat.objects.create()
+
+            chat_instance.participants.add(new_order.buyer)
+            chat_instance.participants.add(new_order.seller)
+            chat_instance.save()
+
+        # Create the message
+
+        message = Message.objects.create(chat=chat_instance, activity=activity, sent_by=new_order.seller)
+        chat_instance.last_message = message
+        chat_instance.save()
+
+        # Set message seen
+        seen_by, created = SeenBy.objects.get_or_create(chat=chat_instance, user=new_order.seller)
+        if seen_by.message != chat_instance.last_message:
+
+            seen_by.message = chat_instance.last_message
+            seen_by.save()
         return new_order

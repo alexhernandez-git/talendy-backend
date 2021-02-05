@@ -31,3 +31,4 @@ class Offer(CModel):
     delivery_date = models.DateTimeField(null=True, blank=True)
     delivery_time = models.IntegerField(null=True, blank=True)
     accepted = models.BooleanField(default=False)
+    rate_date = models.CharField(max_length=20, null=True, blank=True)

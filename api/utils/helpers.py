@@ -8,6 +8,9 @@ from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
+# DRF
+from rest_framework import serializers
+
 # Models
 from api.users.models import User
 from api.activities.models import (
@@ -29,6 +32,7 @@ import jwt
 from datetime import timedelta
 import geoip2.database
 import ccy
+import requests
 
 
 def get_client_ip(request):
@@ -240,3 +244,32 @@ def get_chat(sent_by, sent_to):
             if chat.participants.all().count() == 2:
                 return chat
     return False
+
+
+def get_currency_rate(currency):
+    r = requests.get("https://api.exchangeratesapi.io/latest?base=USD")
+    status = r.status_code
+    if status == 200:
+        data = r.json()
+        currency_rate = data['rates'][currency.upper()]
+        currency_conversion_date = data['date']
+        if not currency_rate:
+            raise serializers.ValidationError("Currency rate not allowed")
+    else:
+        raise serializers.ValidationError("Rate conversion issue, try it later")
+    return currency_rate, currency_conversion_date
+
+
+def convert_currency(currency, base, price):
+    r = requests.get("https://api.exchangeratesapi.io/latest?base="+base.upper())
+    status = r.status_code
+    if status == 200:
+        data = r.json()
+        currency_rate = data['rates'][currency.upper()]
+        currency_conversion_date = data['date']
+        if not currency_rate:
+            raise serializers.ValidationError("Currency rate not allowed")
+        converted_currency = float(price) * currency_rate
+    else:
+        raise serializers.ValidationError("Rate conversion issue, try it later")
+    return converted_currency, currency_conversion_date
