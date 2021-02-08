@@ -65,6 +65,7 @@ class UserModelSerializer(serializers.ModelSerializer):
             'passed_free_trial_once',
             'free_trial_expiration',
             'have_active_plan',
+            'stripe_plan_customer_id',
             'stripe_customer_id',
             'currency',
             'stripe_account_id',
@@ -266,7 +267,7 @@ class UserSignUpSerializer(serializers.Serializer):
                 user.is_free_trial = True
                 user.free_trial_expiration = expiration_date
                 user.have_active_plan = True
-                user.stripe_customer_id = new_customer["id"]
+                user.stripe_plan_customer_id = new_customer["id"]
                 user.currency = currency
                 user.plan_subscriptions.add(plan_subscription)
                 user.save()
@@ -793,10 +794,10 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
                 plan_subscription.save()
             stripe.PaymentMethod.attach(
                 payment_method_id,
-                customer=user.stripe_customer_id,
+                customer=user.stripe_plan_customer_id,
             )
             stripe.Customer.modify(
-                user.stripe_customer_id,
+                user.stripe_plan_customer_id,
                 address={
                     "city": data.get('city', " "),
                     "country": data.get('country', " "),
@@ -832,7 +833,6 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
 
-        instance.default_payment_method = validated_data['payment_method_id']
         instance.plan_default_payment_method = validated_data['payment_method_id']
         instance.save()
         return instance
@@ -1035,16 +1035,52 @@ class BecomeASellerSerializer(serializers.Serializer):
         instance.is_free_trial = True
         instance.free_trial_expiration = expiration_date
         instance.have_active_plan = True
-        instance.stripe_customer_id = new_customer_id
+        instance.stripe_plan_customer_id = new_customer_id
         instance.plan_subscriptions.add(plan_subscription)
         instance.save()
+        return instance
+
+
+class AttachPlanPaymentMethodSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+    payment_method_id = serializers.CharField(required=True)
+    card_name = serializers.CharField(required=True)
+
+    def validate(self, data):
+        """Update user's verified status."""
+        stripe = self.context['stripe']
+        user = self.context['request'].user
+        payment_method_id = data['payment_method_id']
+        payment_method_object = stripe.PaymentMethod.retrieve(
+            payment_method_id,
+        )
+        payment_methods = helpers.get_payment_methods(stripe, user.stripe_plan_customer_id)
+        for payment_method in payment_methods:
+            if payment_method.card.fingerprint == payment_method_object.card.fingerprint:
+                raise serializers.ValidationError(
+                    'This payment method is already added')
+
+        stripe.PaymentMethod.attach(
+            payment_method_id,
+            customer=user.stripe_plan_customer_id,
+        )
+        stripe.PaymentMethod.modify(
+            payment_method_id,
+            billing_details={
+                "name": data.get('card_name', " "),
+            }
+        )
+
+        return data
+
+    def update(self, instance, validated_data):
+
         return instance
 
 
 class AttachPaymentMethodSerializer(serializers.Serializer):
     """Acount verification serializer."""
     payment_method_id = serializers.CharField(required=True)
-    card_name = serializers.CharField(required=True)
 
     def validate(self, data):
         """Update user's verified status."""
@@ -1090,10 +1126,7 @@ class DetachPaymentMethodSerializer(serializers.Serializer):
         if payment_method_id == user.plan_default_payment_method:
             raise serializers.ValidationError(
                 'This payment method is attached to a plan subscription')
-        is_default_payment_method = False
-        if payment_method_id == user.default_payment_method:
-            is_default_payment_method = True
-        self.context['is_default_payment_method'] = is_default_payment_method
+
         stripe.PaymentMethod.detach(
             "pm_1ICOvTCob7soW4zYIiXsCA4C",
         )
@@ -1101,7 +1134,5 @@ class DetachPaymentMethodSerializer(serializers.Serializer):
         return data
 
     def update(self, instance, validated_data):
-        if self.context['is_default_payment_method']:
-            instance.default_payment_method = None
-            instance.save()
+
         return instance

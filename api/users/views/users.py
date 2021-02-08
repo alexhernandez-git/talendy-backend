@@ -51,6 +51,7 @@ from api.users.serializers import (
     SellerCancelSubscriptionSerializer,
     SellerReactivateSubscriptionSerializer,
     AttachPaymentMethodSerializer,
+    AttachPlanPaymentMethodSerializer,
     DetachPaymentMethodSerializer,
     GetUserByJwtSerializer
 )
@@ -166,8 +167,14 @@ class UserViewSet(mixins.RetrieveModelMixin,
             "access_token": token
         }
 
+        stripe_plan_customer_id = data['user']['stripe_plan_customer_id']
         stripe_customer_id = data['user']['stripe_customer_id']
+
+        # Plan payment methods
+        data['user']['plan_payment_methods'] = helpers.get_payment_methods(stripe, stripe_plan_customer_id)
+        # Buyer payment methods
         data['user']['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
+
         return Response(data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['post'])
@@ -220,8 +227,12 @@ class UserViewSet(mixins.RetrieveModelMixin,
         else:
             stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
 
+        stripe_plan_customer_id = data['user']['stripe_plan_customer_id']
         stripe_customer_id = data['user']['stripe_customer_id']
 
+        # Plan payment methods
+        data['user']['plan_payment_methods'] = helpers.get_payment_methods(stripe, stripe_plan_customer_id)
+        # Buyer payment methods
         data['user']['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
 
         return Response(data, status=status.HTTP_201_CREATED)
@@ -338,8 +349,12 @@ class UserViewSet(mixins.RetrieveModelMixin,
         user = serializer.save()
 
         data = UserModelSerializer(user, many=False).data
+        stripe_plan_customer_id = data['stripe_plan_customer_id']
         stripe_customer_id = data['stripe_customer_id']
 
+        # Plan payment methods
+        data['plan_payment_methods'] = helpers.get_payment_methods(stripe, stripe_plan_customer_id)
+        # Buyer payment methods
         data['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
         return Response(data, status=status.HTTP_200_OK)
 
@@ -357,8 +372,12 @@ class UserViewSet(mixins.RetrieveModelMixin,
         else:
             stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
 
+        stripe_plan_customer_id = data['user']['stripe_plan_customer_id']
         stripe_customer_id = data['user']['stripe_customer_id']
 
+        # Plan payment methods
+        data['user']['plan_payment_methods'] = helpers.get_payment_methods(stripe, stripe_plan_customer_id)
+        # Buyer payment methods
         data['user']['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
 
         return Response(data)
@@ -376,8 +395,12 @@ class UserViewSet(mixins.RetrieveModelMixin,
         else:
             stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
 
+        stripe_plan_customer_id = data['user']['stripe_plan_customer_id']
         stripe_customer_id = data['user']['stripe_customer_id']
 
+        # Plan payment methods
+        data['user']['plan_payment_methods'] = helpers.get_payment_methods(stripe, stripe_plan_customer_id)
+        # Buyer payment methods
         data['user']['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
 
         return Response(data)
@@ -424,8 +447,41 @@ class UserViewSet(mixins.RetrieveModelMixin,
         user = serializer.save()
 
         data = UserModelSerializer(user, many=False).data
+        stripe_plan_customer_id = data['stripe_plan_customer_id']
         stripe_customer_id = data['stripe_customer_id']
 
+        # Plan payment methods
+        data['plan_payment_methods'] = helpers.get_payment_methods(stripe, stripe_plan_customer_id)
+        # Buyer payment methods
+        data['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
+        return Response(data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['patch'])
+    def buyer_change_payment_method(self, request, *args, **kwargs):
+        """Process stripe connect auth flow."""
+
+        user = request.user
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
+        else:
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+        partial = request.method == 'PATCH'
+        serializer = SellerChangePaymentMethodSerializer(
+            user,
+            data=request.data,
+            context={"request": request, "stripe": stripe},
+            partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        data = UserModelSerializer(user, many=False).data
+        stripe_plan_customer_id = data['stripe_plan_customer_id']
+        stripe_customer_id = data['stripe_customer_id']
+
+        # Plan payment methods
+        data['plan_payment_methods'] = helpers.get_payment_methods(stripe, stripe_plan_customer_id)
+        # Buyer payment methods
         data['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
         return Response(data, status=status.HTTP_200_OK)
 
@@ -468,8 +524,12 @@ class UserViewSet(mixins.RetrieveModelMixin,
         user = serializer.save()
 
         data = UserModelSerializer(user, many=False).data
+        stripe_plan_customer_id = data['stripe_plan_customer_id']
         stripe_customer_id = data['stripe_customer_id']
 
+        # Plan payment methods
+        data['plan_payment_methods'] = helpers.get_payment_methods(stripe, stripe_plan_customer_id)
+        # Buyer payment methods
         data['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
 
         return Response(data, status=status.HTTP_200_OK)
@@ -527,6 +587,37 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['patch'])
+    def attach_plan_payment_method(self, request, *args, **kwargs):
+        """Process stripe connect auth flow."""
+
+        user = request.user
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
+        else:
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+        partial = request.method == 'PATCH'
+        serializer = AttachPlanPaymentMethodSerializer(
+            user,
+            data=request.data,
+            context={"request": request, "stripe": stripe},
+            partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        data = UserModelSerializer(user, many=False).data
+
+        stripe_plan_customer_id = data['stripe_plan_customer_id']
+        stripe_customer_id = data['stripe_customer_id']
+
+        # Plan payment methods
+        data['plan_payment_methods'] = helpers.get_payment_methods(stripe, stripe_plan_customer_id)
+        # Buyer payment methods
+        data['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['patch'])
     def attach_payment_method(self, request, *args, **kwargs):
         """Process stripe connect auth flow."""
 
@@ -546,8 +637,13 @@ class UserViewSet(mixins.RetrieveModelMixin,
         user = serializer.save()
 
         data = UserModelSerializer(user, many=False).data
+
+        stripe_plan_customer_id = data['stripe_plan_customer_id']
         stripe_customer_id = data['stripe_customer_id']
 
+        # Plan payment methods
+        data['plan_payment_methods'] = helpers.get_payment_methods(stripe, stripe_plan_customer_id)
+        # Buyer payment methods
         data['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
 
         return Response(data, status=status.HTTP_200_OK)
@@ -574,6 +670,12 @@ class UserViewSet(mixins.RetrieveModelMixin,
         data = UserModelSerializer(user, many=False).data
         stripe_customer_id = data['stripe_customer_id']
 
+        stripe_plan_customer_id = data['stripe_plan_customer_id']
+        stripe_customer_id = data['stripe_customer_id']
+
+        # Plan payment methods
+        data['plan_payment_methods'] = helpers.get_payment_methods(stripe, stripe_plan_customer_id)
+        # Buyer payment methods
         data['payment_methods'] = helpers.get_payment_methods(stripe, stripe_customer_id)
 
         return Response(data, status=status.HTTP_200_OK)
@@ -660,6 +762,34 @@ class UserViewSet(mixins.RetrieveModelMixin,
             plan_subscription.update(cancelled=True)
             user.update(have_active_plan=False)
 
+            return HttpResponse(status=200)
+
+        else:
+            # Unexpected event type
+            return HttpResponse(status=400)
+
+    @action(detail=False, methods=['post'])
+    def stripe_webhooks(self, request, *args, **kwargs):
+        """Process stripe webhook notification for subscription cancellation"""
+        payload = request.body
+        event = None
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
+        else:
+            stripe.api_key = 'sk_test_51HCsUHIgGIa3w9CpMgSnYNk7ifsaahLoaD1kSpVHBCMKMueUb06dtKAWYGqhFEDb6zimiLmF8XwtLLeBt2hIvvW200YfRtDlPo'
+
+        try:
+            event = stripe.Event.construct_from(
+                json.loads(payload), stripe.api_key
+            )
+        except ValueError as e:
+            # Invalid payload
+            return HttpResponse(status=400)
+
+        # Handle the event
+        if event.type == 'invoice.payment_succeeded':
+            print(event)
+            invoice_success = event.data.object
             return HttpResponse(status=200)
 
         else:

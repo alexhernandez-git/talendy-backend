@@ -246,8 +246,8 @@ def get_chat(sent_by, sent_to):
     return False
 
 
-def get_currency_rate(currency):
-    r = requests.get("https://api.exchangeratesapi.io/latest?base=USD")
+def get_currency_rate(currency, rate_date='latest'):
+    r = requests.get("https://api.exchangeratesapi.io/"+rate_date+"?base=USD")
     status = r.status_code
     if status == 200:
         data = r.json()
@@ -260,8 +260,8 @@ def get_currency_rate(currency):
     return currency_rate, currency_conversion_date
 
 
-def convert_currency(currency, base, price):
-    r = requests.get("https://api.exchangeratesapi.io/latest?base="+base.upper())
+def convert_currency(currency, base, price, rate_date='latest'):
+    r = requests.get("https://api.exchangeratesapi.io/"+rate_date+"?base="+base.upper())
     status = r.status_code
     if status == 200:
         data = r.json()

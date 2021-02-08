@@ -62,3 +62,25 @@ class Order(CModel):
         choices=STATUS_CHOICES,
         default=ACTIVE
     )
+
+    price_id = models.CharField(max_length=100, blank=True, null=True)
+
+    service_fee = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', null=True, blank=True)
+
+    # (Normal order)
+    # Total due to seller at end of order
+    due_to_seller = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', null=True, blank=True)
+
+    # (Two payments order)
+    # Is first payment already paid
+    first_payment_paid = models.BooleanField(default=True)
+
+    payment_at_delivery = models.FloatField(null=True, blank=True)
+    payment_at_delivery_currency = models.CharField(max_length=3, null=True, blank=True)
+
+    # (Recurrent payments order)
+    subscription_id = models.CharField(max_length=100, blank=True, null=True)
+    to_be_cancelled = models.BooleanField(null=False, blank=False, default=False)
+    cancelled = models.BooleanField(null=False, blank=False, default=False)
+    payment_issue = models.BooleanField(null=False, blank=False, default=False)
+    current_period_end = models.IntegerField(blank=True, default=0)
