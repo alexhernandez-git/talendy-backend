@@ -1,6 +1,7 @@
 """Users views."""
 # Django
-from api.users.serializers.users import BecomeASellerSerializer
+from operator import sub
+from api.orders.models.orders import Order
 import pdb
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -30,6 +31,7 @@ from api.users.permissions import IsAccountOwner
 
 # Models
 from api.users.models import Contact
+from api.orders.models import OrderPayment
 # Serializers
 from api.users.serializers import (
     UserLoginSerializer,
@@ -53,7 +55,8 @@ from api.users.serializers import (
     AttachPaymentMethodSerializer,
     AttachPlanPaymentMethodSerializer,
     DetachPaymentMethodSerializer,
-    GetUserByJwtSerializer
+    GetUserByJwtSerializer,
+    BecomeASellerSerializer
 )
 
 # Filters
@@ -498,7 +501,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             Response("User have not a plan subscription", status=status.HTTP_404_NOT_FOUND)
         subscription = subscriptions_queryset.first()
         list_data = stripe.Invoice.list(
-            customer=user.stripe_customer_id,
+            customer=user.stripe_plan_customer_id,
             subscription=subscription.subscription_id
         )
 
@@ -769,7 +772,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             return HttpResponse(status=400)
 
     @action(detail=False, methods=['post'])
-    def stripe_webhooks(self, request, *args, **kwargs):
+    def stripe_webhooks_invoice_payment_secceeded(self, request, *args, **kwargs):
         """Process stripe webhook notification for subscription cancellation"""
         payload = request.body
         event = None
@@ -785,11 +788,29 @@ class UserViewSet(mixins.RetrieveModelMixin,
         except ValueError as e:
             # Invalid payload
             return HttpResponse(status=400)
-
+        print(event)
         # Handle the event
         if event.type == 'invoice.payment_succeeded':
             print(event)
             invoice_success = event.data.object
+            invoice_id = invoice_success['id']
+            charge_id = invoice_success['charge']
+            invoice_pdf = invoice_success['invoice_pdf']
+            subscription_id = invoice_success['subscription']
+            amount_paid = invoice_success['amount_paid']
+            currency = invoice_success['currency']
+            status = invoice_success['status']
+            orders = Order.objects.filter(subscription_id=subscription_id)
+            for order in orders:
+                OrderPayment.objects.create(
+                    order=order,
+                    invoice_id=invoice_id,
+                    invoice_pdf=invoice_pdf,
+                    charge_id=charge_id,
+                    amount_paid=float(amount_paid) / 100,
+                    currency=currency,
+                    status=status,
+                )
             return HttpResponse(status=200)
 
         else:

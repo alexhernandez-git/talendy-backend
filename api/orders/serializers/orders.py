@@ -135,6 +135,8 @@ class AcceptOrderSerializer(serializers.Serializer):
                 user.default_payment_method = payment_method_id
                 user.save()
                 invoice_paid = stripe.Invoice.pay(invoice['id'])
+                self.context['price'] = price
+                self.context['invoice_paid'] = invoice_paid
             elif offer['type'] == Order.RECURRENT_ORDER:
                 if not 'interval_subscription' in offer:
                     raise serializers.ValidationError(
@@ -153,12 +155,9 @@ class AcceptOrderSerializer(serializers.Serializer):
                     recurring={"interval": interval},
                     product=product['id']
                 )
-                subscription = stripe.Subscription.create(
-                    customer=user.stripe_customer_id,
-                    items=[
-                        {"price": price['id']}
-                    ],
-                )
+
+                self.context['price'] = price
+
             else:
                 raise serializers.ValidationError(
                     "Not a valid order type")
@@ -260,10 +259,7 @@ class AcceptOrderSerializer(serializers.Serializer):
             status = invoice_paid['status']
             invoice_pdf = invoice_paid['invoice_pdf']
 
-            new_order.invoice_id = invoice_id
-            new_order.charge_id = charge_id
             new_order.price_id = price['id']
-            new_order.service_fee = service_fee
             new_order.due_to_seller = offer_object.unit_amount
             new_order.save()
             OrderPayment.objects.create(
@@ -275,6 +271,58 @@ class AcceptOrderSerializer(serializers.Serializer):
                 currency=currency,
                 status=status,
             )
+        elif offer['type'] == Order.TWO_PAYMENTS_ORDER:
+            price = self.context['price']
+            invoice_paid = self.context['invoice_paid']
+            invoice_id = invoice_paid['id']
+            currency = invoice_paid['currency']
+            charge_id = invoice_paid['charge']
+            amount_paid = invoice_paid['amount_paid']
+            status = invoice_paid['status']
+            invoice_pdf = invoice_paid['invoice_pdf']
+
+            new_order.price_id = price['id']
+            new_order.payment_at_delivery = offer_object['payment_at_delivery']
+            new_order.save()
+            OrderPayment.objects.create(
+                order=new_order,
+                invoice_id=invoice_id,
+                invoice_pdf=invoice_pdf,
+                charge_id=charge_id,
+                amount_paid=float(amount_paid) / 100,
+                currency=currency,
+                status=status,
+            )
+        elif offer['type'] == Order.RECURRENT_ORDER:
+            price = self.context['price']
+            subscription = ""
+            try:
+                subscription = stripe.Subscription.create(
+                    customer=user.stripe_customer_id,
+                    items=[
+                        {"price": price['id']}
+                    ],
+                    expand=["latest_invoice.payment_intent"],
+                    application_fee_percent=5,
+                    transfer_data={
+                        "destination": offer_object.seller.stripe_account_id,
+                    },
+                    default_payment_method=validated_data['payment_method_id']
+                )
+
+            except stripe.error.StripeError as e:
+                print(e)
+                raise serializers.ValidationError(
+                    'Something went wrong with stripe')
+            except Exception as e:
+                print(e)
+                raise serializers.ValidationError(
+                    'Something went wrong')
+            subscription_id = subscription['id']
+
+            new_order.price_id = price['id']
+            new_order.subscription_id = subscription_id
+            new_order.save()
         return new_order
 
 

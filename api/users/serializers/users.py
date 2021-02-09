@@ -1081,6 +1081,7 @@ class AttachPlanPaymentMethodSerializer(serializers.Serializer):
 class AttachPaymentMethodSerializer(serializers.Serializer):
     """Acount verification serializer."""
     payment_method_id = serializers.CharField(required=True)
+    card_name = serializers.CharField(required=True)
 
     def validate(self, data):
         """Update user's verified status."""

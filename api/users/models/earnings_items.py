@@ -14,7 +14,7 @@ class EarningItem(CModel):
     WITHDRAWN = 'WI'
     EARNING_TYPES = [
         (ORDER_REVENUE, 'Order revenue'),
-        (WITHDRAWN, 'WITHDRAWN'),
+        (WITHDRAWN, 'Withdrawn'),
     ]
 
     interval_subscription = models.CharField(

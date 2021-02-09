@@ -8,6 +8,7 @@ class Order(CModel):
 
     buyer = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="buyer_order")
     seller = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="seller_order")
+
     title = models.CharField(max_length=256)
     description = models.TextField(max_length=1000)
     unit_amount = MoneyField(max_digits=14, decimal_places=2, default_currency='USD')
@@ -73,10 +74,7 @@ class Order(CModel):
 
     # (Two payments order)
     # Is first payment already paid
-    first_payment_paid = models.BooleanField(default=True)
-
-    payment_at_delivery = models.FloatField(null=True, blank=True)
-    payment_at_delivery_currency = models.CharField(max_length=3, null=True, blank=True)
+    payment_at_delivery = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', null=True, blank=True)
 
     # (Recurrent payments order)
     subscription_id = models.CharField(max_length=100, blank=True, null=True)
