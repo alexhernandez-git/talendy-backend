@@ -50,6 +50,7 @@ class AcceptOrderSerializer(serializers.Serializer):
         stripe = self.context['stripe']
         request = self.context['request']
         user = request.user
+
         offer_object = get_object_or_404(Offer, id=offer['id'])
         self.context['offer_object'] = offer_object
         if offer_object.accepted:
@@ -199,8 +200,6 @@ class AcceptOrderSerializer(serializers.Serializer):
             type=offer_object.type,
             rate_date=offer_object.rate_date
         )
-        offer_object.accepted = True
-        offer_object.save()
 
         offer_activity_queryset = OfferActivity.objects.filter(offer=offer_object, status=OfferActivity.PENDENDT)
         offer_activity = None
@@ -295,7 +294,6 @@ class AcceptOrderSerializer(serializers.Serializer):
             )
         elif offer['type'] == Order.RECURRENT_ORDER:
             price = self.context['price']
-            subscription = ""
             try:
                 subscription = stripe.Subscription.create(
                     customer=user.stripe_customer_id,
@@ -309,20 +307,20 @@ class AcceptOrderSerializer(serializers.Serializer):
                     },
                     default_payment_method=validated_data['payment_method_id']
                 )
+                subscription_id = subscription['id']
 
-            except stripe.error.StripeError as e:
-                print(e)
-                raise serializers.ValidationError(
-                    'Something went wrong with stripe')
+                new_order.price_id = price['id']
+                new_order.subscription_id = subscription_id
+                new_order.save()
+
             except Exception as e:
+                new_order.delete()
+                offer_object.save()
                 print(e)
                 raise serializers.ValidationError(
                     'Something went wrong')
-            subscription_id = subscription['id']
-
-            new_order.price_id = price['id']
-            new_order.subscription_id = subscription_id
-            new_order.save()
+        offer_object.accepted = True
+        offer_object.save()
         return new_order
 
 

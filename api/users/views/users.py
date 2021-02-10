@@ -87,7 +87,16 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     def get_permissions(self):
         """Assign permissions based on action."""
-        if self.action in ['signup', 'login', 'verify', 'list', 'retrieve', 'stripe_webhooks', 'forget_password']:
+        if self.action in [
+            'signup',
+            'login',
+            'verify',
+            'list',
+            'retrieve',
+            'stripe_webhooks',
+            'stripe_webhooks_invoice_payment_failed',
+            'stripe_webhooks_invoice_payment_failed',
+                'forget_password']:
             permissions = [AllowAny]
         elif self.action in ['update', 'delete', 'partial_update', 'change_password', 'change_email', 'stripe_connect']:
             permissions = [IsAccountOwner, IsAuthenticated]
@@ -772,7 +781,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             return HttpResponse(status=400)
 
     @action(detail=False, methods=['post'])
-    def stripe_webhooks_invoice_payment_secceeded(self, request, *args, **kwargs):
+    def stripe_webhooks_invoice_payment_succeeded(self, request, *args, **kwargs):
         """Process stripe webhook notification for subscription cancellation"""
         payload = request.body
         event = None
@@ -811,6 +820,47 @@ class UserViewSet(mixins.RetrieveModelMixin,
                     currency=currency,
                     status=status,
                 )
+            return HttpResponse(status=200)
+
+        else:
+            # Unexpected event type
+            return HttpResponse(status=400)
+
+    @action(detail=False, methods=['post'])
+    def stripe_webhooks_invoice_payment_failed(self, request, *args, **kwargs):
+        """Process stripe webhook notification for subscription cancellation"""
+        payload = request.body
+        event = None
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
+        else:
+            stripe.api_key = 'sk_test_51HCsUHIgGIa3w9CpMgSnYNk7ifsaahLoaD1kSpVHBCMKMueUb06dtKAWYGqhFEDb6zimiLmF8XwtLLeBt2hIvvW200YfRtDlPo'
+
+        try:
+            event = stripe.Event.construct_from(
+                json.loads(payload), stripe.api_key
+            )
+        except ValueError as e:
+            # Invalid payload
+            return HttpResponse(status=400)
+        print(event)
+        # Handle the event
+        if event.type == 'invoice.payment_failed':
+            invoice_failed = event.data.object
+            subscription_id = invoice_failed['subscription']
+
+            orders = Order.objects.filter(subscription_id=subscription_id)
+
+            for order in orders:
+                try:
+                    stripe.Subscription.delete(subscription_id)
+                except Exception as e:
+                    pass
+                order.status = Order.CANCELLED
+                order.cancelled = True
+                order.payment_issue = True
+                order.save()
+
             return HttpResponse(status=200)
 
         else:
