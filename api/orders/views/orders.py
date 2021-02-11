@@ -54,6 +54,14 @@ class OrderViewSet(
     filter_backends = (SearchFilter, DjangoFilterBackend)
     search_fields = (
         "title",
+        "seller__username",
+        "seller__first_name",
+        "seller__last_name",
+        "seller__email",
+        "buyer__username",
+        "buyer__first_name",
+        "buyer__last_name",
+        "buyer__email",
     )
 
     def get_permissions(self):
@@ -65,7 +73,10 @@ class OrderViewSet(
     def get_queryset(self):
         """Restrict list to public-only."""
         user = self.request.user
-        queryset = Order.objects.filter(from_user=user)
+        if user.seller_view:
+            queryset = Order.objects.filter(seller=user)
+        else:
+            queryset = Order.objects.filter(buyer=user)
 
         return queryset
 

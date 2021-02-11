@@ -17,7 +17,7 @@ from api.chats.models import Message, Chat, SeenBy
 from djmoney.models.fields import Money
 
 # Serializers
-from api.orders.serializers.offers import OfferModelSerializer
+from api.users.serializers import UserModelSerializer
 
 # Utils
 from api.utils import helpers
@@ -25,6 +25,8 @@ from api.utils import helpers
 
 class OrderModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
+    seller = UserModelSerializer()
+    buyer = UserModelSerializer()
 
     class Meta:
         """Meta class."""
