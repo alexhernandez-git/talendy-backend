@@ -70,7 +70,10 @@ class UserModelSerializer(serializers.ModelSerializer):
             'currency',
             'stripe_account_id',
             'stripe_dashboard_url',
-            'money_balance',
+            'net_income',
+            'withdrawn',
+            'used_for_purchases',
+            'available_for_withdawal',
             'pending_messages',
             'pending_notifications',
             'default_payment_method',
@@ -779,7 +782,7 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
                 stripe.Subscription.modify(
                     subscription["id"],
                     cancel_at_period_end=False,
-                    prorate=False,
+                    proration_behavior=None,
                     items=[
                         {
                             'id': subscription['items']['data'][0].id,
@@ -875,7 +878,7 @@ class SellerChangePaymentMethodSerializer(serializers.Serializer):
                 stripe.Subscription.modify(
                     subscription["id"],
                     cancel_at_period_end=False,
-                    prorate=False,
+                    proration_behavior=None,
                     items=[
                         {
                             'id': subscription['items']['data'][0].id,
@@ -891,11 +894,11 @@ class SellerChangePaymentMethodSerializer(serializers.Serializer):
                 plan_subscription.save()
 
         except stripe.error.StripeError as e:
-
+            print(e)
             raise serializers.ValidationError(
                 'Something went wrong with stripe')
         except Exception as e:
-
+            print(e)
             raise serializers.ValidationError(
                 'Something went wrong')
 

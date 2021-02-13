@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404
 # Models
 from api.orders.models import Order
 from api.users.models import User
-from api.activities.models import OfferActivity, Activity
+from api.activities.models import OfferActivity, Activity, MoneyReceivedActivity
 from api.orders.models import Offer, OrderPayment
 from api.chats.models import Message, Chat, SeenBy
 from djmoney.models.fields import Money
@@ -70,7 +70,12 @@ class AcceptOrderSerializer(serializers.Serializer):
                 )
                 user.stripe_customer_id = new_customer['id']
                 user.save()
-
+            stripe.Customer.modify(
+                user.stripe_customer_id,
+                invoice_settings={
+                    "default_payment_method": payment_method_id
+                }
+            )
             product = stripe.Product.create(name=offer['title'] + '_' + user.username)
 
             if not 'type' in offer:
@@ -112,6 +117,7 @@ class AcceptOrderSerializer(serializers.Serializer):
                 invoice_paid = stripe.Invoice.pay(invoice['id'])
 
                 # Invoice paid succesfully, do actions
+
                 self.context['price'] = price
                 self.context['invoice_paid'] = invoice_paid
 
@@ -128,12 +134,6 @@ class AcceptOrderSerializer(serializers.Serializer):
                 )
                 invoice = stripe.Invoice.create(
                     customer=user.stripe_customer_id,
-                    transfer_data={
-                        "destination": seller.stripe_account_id,
-                    },
-                    application_fee_amount=int(service_fee * 100),
-                    # application_fee=5,
-                    default_payment_method=payment_method_id
                 )
                 user.default_payment_method = payment_method_id
                 user.save()
@@ -166,11 +166,11 @@ class AcceptOrderSerializer(serializers.Serializer):
                     "Not a valid order type")
 
         except stripe.error.StripeError as e:
-
+            print(e)
             raise serializers.ValidationError(
                 'Something went wrong with stripe')
         except Exception as e:
-
+            print(e)
             raise serializers.ValidationError(
                 'Something went wrong')
 
@@ -272,6 +272,7 @@ class AcceptOrderSerializer(serializers.Serializer):
                 currency=currency,
                 status=status,
             )
+
         elif offer['type'] == Order.TWO_PAYMENTS_ORDER:
             price = self.context['price']
             invoice_paid = self.context['invoice_paid']
@@ -283,7 +284,7 @@ class AcceptOrderSerializer(serializers.Serializer):
             invoice_pdf = invoice_paid['invoice_pdf']
 
             new_order.price_id = price['id']
-            new_order.payment_at_delivery = offer_object['payment_at_delivery']
+            new_order.payment_at_delivery = offer_object.payment_at_delivery
             new_order.save()
             OrderPayment.objects.create(
                 order=new_order,
@@ -294,6 +295,12 @@ class AcceptOrderSerializer(serializers.Serializer):
                 currency=currency,
                 status=status,
             )
+            seller = new_order.seller
+            seller.net_income = seller.net_income + offer_object.first_payment
+            seller.available_for_withdawal = seller.available_for_withdawal + offer_object.first_payment
+            seller.save()
+            helpers.create_money_received_activity(new_order, offer_object.first_payment)
+
         elif offer['type'] == Order.RECURRENT_ORDER:
             price = self.context['price']
             try:
@@ -303,11 +310,6 @@ class AcceptOrderSerializer(serializers.Serializer):
                         {"price": price['id']}
                     ],
                     expand=["latest_invoice.payment_intent"],
-                    application_fee_percent=5,
-                    transfer_data={
-                        "destination": offer_object.seller.stripe_account_id,
-                    },
-                    default_payment_method=validated_data['payment_method_id']
                 )
                 subscription_id = subscription['id']
 

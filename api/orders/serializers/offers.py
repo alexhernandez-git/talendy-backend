@@ -17,10 +17,7 @@ from api.chats.models import Message, Chat, SeenBy
 
 # Utils
 from datetime import datetime, timedelta
-from djmoney.money import Money
-from api.taskapp import tasks
 import re
-from api.utils import helpers
 
 
 class OfferModelSerializer(serializers.ModelSerializer):
@@ -59,7 +56,7 @@ class OfferModelSerializer(serializers.ModelSerializer):
                         }
 
     def validate(self, data):
-
+        from api.utils.helpers import convert_currency
         request = self.context['request']
         user = request.user
         unit_amount = data["unit_amount"]
@@ -70,13 +67,13 @@ class OfferModelSerializer(serializers.ModelSerializer):
             if not re.search(regex,  data["buyer_email"]):
                 raise serializers.ValidationError("The buyer email address is not correct")
 
-        converted_unit_amount, rate_date = helpers.convert_currency('USD', user.currency, unit_amount)
+        converted_unit_amount, rate_date = convert_currency('USD', user.currency, unit_amount)
         data["unit_amount"] = converted_unit_amount
         if data['type'] == Order.TWO_PAYMENTS_ORDER:
             first_payment = data["first_payment"]
             if unit_amount < first_payment:
                 raise serializers.ValidationError("First payment can't be greater than total amount")
-            converted_first_payment, rate_date = helpers.convert_currency('USD', user.currency, first_payment)
+            converted_first_payment, rate_date = convert_currency('USD', user.currency, first_payment)
 
             data["first_payment"] = converted_first_payment
             data["payment_at_delivery"] = converted_unit_amount - converted_first_payment
@@ -84,6 +81,7 @@ class OfferModelSerializer(serializers.ModelSerializer):
         return super().validate(data)
 
     def create(self, validated_data):
+        from api.taskapp.tasks import send_offer
         request = self.context['request']
         send_offer_by_email = validated_data['send_offer_by_email']
 
@@ -133,10 +131,10 @@ class OfferModelSerializer(serializers.ModelSerializer):
                 user_exists = False
 
         if not user_exists:
-            tasks.send_offer(seller, buyer_email, user_exists, offer.id)
+            send_offer(seller, buyer_email, user_exists, offer.id)
 
         else:
-            tasks.send_offer(seller, buyer.email, True, offer.id, buyer.id)
+            send_offer(seller, buyer.email, True, offer.id, buyer.id)
 
             # Get or create the chat
 

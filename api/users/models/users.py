@@ -6,6 +6,9 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 
+# Models
+from djmoney.models.fields import MoneyField
+
 # Utilities
 from api.utils.models import CModel
 
@@ -121,13 +124,19 @@ class User(CModel, AbstractUser):
     # Stripe connect
     stripe_account_id = models.CharField(max_length=100, blank=True, null=True)
     stripe_dashboard_url = models.CharField(max_length=100, blank=True, null=True)
-    money_balance = models.FloatField(blank=True, null=True)
 
     # Notifications
 
     notifications = models.ManyToManyField(
         "notifications.Notification", through="notifications.NotificationUser", related_name="user_notifications"
     )
+
+    # Earnings
+
+    net_income = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
+    withdrawn = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
+    used_for_purchases = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
+    available_for_withdawal = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
 
     def __str__(self):
         """Return username."""

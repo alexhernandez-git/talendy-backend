@@ -16,6 +16,9 @@ class Activity(CModel):
     REVISION = 'RE'
     CANCEL = 'CA'
 
+    # Payments
+    MONEY_RECEIVED = 'MR'
+
     TYPE_CHOICES = [
         (OFFER, 'Offer order'),
         (CHANGE_DELIVERY_TIME, 'Change delivery time order'),
@@ -23,6 +26,7 @@ class Activity(CModel):
         (DELIVERY, 'Delivery order'),
         (REVISION, 'Revision order'),
         (CANCEL, 'Delivery order'),
+        (MONEY_RECEIVED, 'Money received'),
     ]
     type = models.CharField(
         max_length=2,

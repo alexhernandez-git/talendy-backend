@@ -21,11 +21,17 @@ from api.activities.models import (
     IncreaseAmountActivity,
     OfferActivity,
     RevisionActivity,
+    MoneyReceivedActivity
 )
 from api.chats.models import Chat
+from api.notifications.models import Notification, NotificationUser
+
 
 # Serializers
-from api.activities.serializers import OfferActivityModelSerializer
+from api.activities.serializers import (
+    OfferActivityModelSerializer,
+    MoneyReceivedActivityModelSerializer
+)
 
 # Utilities
 import jwt
@@ -221,6 +227,10 @@ def get_activity_classes(type):
         Activity.DELIVERY: DeliveryActivity,
         Activity.REVISION: RevisionActivity,
         Activity.CANCEL: CancelOrderActivity,
+        Activity.MONEY_RECEIVED: {
+            "model": MoneyReceivedActivity,
+            "serializer": MoneyReceivedActivityModelSerializer
+        }
 
     }
     activity_classes = switcher.get(type, None)
@@ -273,3 +283,23 @@ def convert_currency(currency, base, price, rate_date='latest'):
     else:
         raise serializers.ValidationError("Rate conversion issue, try it later")
     return converted_currency, currency_conversion_date
+
+
+def create_money_received_activity(order, amount):
+    activity = Activity.objects.create(
+        type=Activity.MONEY_RECEIVED
+    )
+    MoneyReceivedActivity.objects.create(
+        order=order,
+        activity=activity,
+        amount=amount
+    )
+    notification = Notification.objects.create(
+        type=Notification.ACTIVITY,
+        activity=activity,
+        actor=order.buyer,
+    )
+    NotificationUser.objects.create(
+        notification=notification,
+        user=order.seller
+    )

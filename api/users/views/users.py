@@ -32,6 +32,10 @@ from api.users.permissions import IsAccountOwner
 # Models
 from api.users.models import Contact
 from api.orders.models import OrderPayment
+from api.activities.models import MoneyReceivedActivity, Activity
+from djmoney.money import Money
+
+
 # Serializers
 from api.users.serializers import (
     UserLoginSerializer,
@@ -806,20 +810,40 @@ class UserViewSet(mixins.RetrieveModelMixin,
             charge_id = invoice_success['charge']
             invoice_pdf = invoice_success['invoice_pdf']
             subscription_id = invoice_success['subscription']
-            amount_paid = invoice_success['amount_paid']
+            amount_paid = float(invoice_success['amount_paid']) / 100
             currency = invoice_success['currency']
             status = invoice_success['status']
             orders = Order.objects.filter(subscription_id=subscription_id)
+
+            user = None
+            rate_date = None
+            due_to_seller = amount_paid * 0.05
+            service_fee = due_to_seller - amount_paid
+            order_object = None
             for order in orders:
                 OrderPayment.objects.create(
                     order=order,
                     invoice_id=invoice_id,
                     invoice_pdf=invoice_pdf,
                     charge_id=charge_id,
-                    amount_paid=float(amount_paid) / 100,
+                    amount_paid=amount_paid,
+                    service_fee=service_fee,
                     currency=currency,
                     status=status,
                 )
+                rate_date = order.rate_date
+                user = order.seller
+                order_object = order
+
+            converted_payment, _ = helpers.convert_currency('USD', currency, due_to_seller, rate_date)
+
+            user.net_income = user.net_income + Money(amount=converted_payment, currency='USD')
+            user.available_for_withdawal = user.available_for_withdawal + \
+                Money(amount=converted_payment, currency='USD')
+            user.save()
+
+            helpers.create_money_received_activity(order_object, converted_payment)
+
             return HttpResponse(status=200)
 
         else:
