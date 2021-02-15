@@ -823,12 +823,9 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
                     "name": data.get('card_name', " "),
                 }
             )
-        except stripe.error.StripeError as e:
 
-            raise serializers.ValidationError(
-                'Something went wrong with stripe')
         except Exception as e:
-
+            print(e)
             raise serializers.ValidationError(
                 'Something went wrong')
 
@@ -895,10 +892,6 @@ class SellerChangePaymentMethodSerializer(serializers.Serializer):
                 plan_subscription.plan_price_label = plan.price_label
                 plan_subscription.save()
 
-        except stripe.error.StripeError as e:
-            print(e)
-            raise serializers.ValidationError(
-                'Something went wrong with stripe')
         except Exception as e:
             print(e)
             raise serializers.ValidationError(
@@ -1060,10 +1053,11 @@ class AttachPlanPaymentMethodSerializer(serializers.Serializer):
             payment_method_id,
         )
         payment_methods = helpers.get_payment_methods(stripe, user.stripe_plan_customer_id)
-        for payment_method in payment_methods:
-            if payment_method.card.fingerprint == payment_method_object.card.fingerprint:
-                raise serializers.ValidationError(
-                    'This payment method is already added')
+        if payment_methods:
+            for payment_method in payment_methods:
+                if payment_method.card.fingerprint == payment_method_object.card.fingerprint:
+                    raise serializers.ValidationError(
+                        'This payment method is already added')
 
         stripe.PaymentMethod.attach(
             payment_method_id,
@@ -1096,16 +1090,35 @@ class AttachPaymentMethodSerializer(serializers.Serializer):
         payment_method_object = stripe.PaymentMethod.retrieve(
             payment_method_id,
         )
+        if not user.stripe_customer_id:
+            new_customer = stripe.Customer.create(
+                description="claCustomer_"+user.first_name+'_'+user.last_name,
+                name=user.first_name+' '+user.last_name,
+                email=user.email,
+            )
+            user.stripe_customer_id = new_customer['id']
+            user.save()
+
         payment_methods = helpers.get_payment_methods(stripe, user.stripe_customer_id)
-        for payment_method in payment_methods:
-            if payment_method.card.fingerprint == payment_method_object.card.fingerprint:
-                raise serializers.ValidationError(
-                    'This payment method is already added')
+        if payment_methods:
+            for payment_method in payment_methods:
+                if payment_method.card.fingerprint == payment_method_object.card.fingerprint:
+                    raise serializers.ValidationError(
+                        'This payment method is already added')
 
         stripe.PaymentMethod.attach(
             payment_method_id,
             customer=user.stripe_customer_id,
         )
+        if not payment_methods or len(payment_method) == 0:
+            stripe.Customer.modify(
+                user.stripe_customer_id,
+                invoice_settings={
+                    "default_payment_method": payment_method_id
+                }
+            )
+            user.default_payment_method = payment_method_id
+
         stripe.PaymentMethod.modify(
             payment_method_id,
             billing_details={

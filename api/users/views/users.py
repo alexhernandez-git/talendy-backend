@@ -813,23 +813,65 @@ class UserViewSet(mixins.RetrieveModelMixin,
             status = invoice_success['status']
             orders = Order.objects.filter(subscription_id=subscription_id)
 
-            user = None
-            rate_date = None
             due_to_seller = amount_paid * 0.05
             service_fee = due_to_seller - amount_paid
-            for order in orders:
-                OrderPayment.objects.create(
-                    order=order,
-                    invoice_id=invoice_id,
-                    invoice_pdf=invoice_pdf,
-                    charge_id=charge_id,
-                    amount_paid=amount_paid,
-                    service_fee=service_fee,
-                    currency=currency,
-                    status=status,
+            order = orders.first()
+            OrderPayment.objects.create(
+                order=order,
+                invoice_id=invoice_id,
+                invoice_pdf=invoice_pdf,
+                charge_id=charge_id,
+                amount_paid=amount_paid,
+                service_fee=service_fee,
+                currency=currency,
+                status=status,
+            )
+            rate_date = order.rate_date
+            user = order.seller
+            buyer = order.buyer
+            used_credits = order.used_credits
+            unit_amount = order.unit_amount
+
+            if used_credits:
+                buyer.available_for_withdawal = buyer.available_for_withdawal - \
+                    Money(amount=used_credits, currency="USD")
+                buyer.used_for_purchases = buyer.used_for_purchases + Money(amount=used_credits, currency="USD")
+                buyer.save()
+
+            if buyer.available_for_withdawal < unit_amount:
+
+                diff = buyer.available_for_withdawal - unit_amount
+
+                new_cost_of_subscription = abs(diff)
+
+                new_cost_of_subscription, _ = helpers.convert_currency(
+                    buyer.currency, "USD", new_cost_of_subscription, rate_date)
+
+                price = stripe.Price.create(
+                    unit_amount=int(new_cost_of_subscription * 100),
+                    currency=user.currency,
+                    product=order.product_id
                 )
-                rate_date = order.rate_date
-                user = order.seller
+
+                subscription = stripe.Subscription.retrieve(
+                    order.subscription_id)
+
+                stripe.Subscription.modify(
+                    order.subscription_id,
+                    cancel_at_period_end=False,
+                    proration_behavior=None,
+                    items=[
+                        {
+                            'id': subscription['items']['data'][0].id,
+                            "price": price['id']
+                        },
+                    ],
+                )
+                used_credits = unit_amount + diff
+                if used_credits < 0:
+                    used_credits = 0
+                order.used_credits = used_credits
+                order.save()
 
             converted_payment, _ = helpers.convert_currency('USD', currency, due_to_seller, rate_date)
 

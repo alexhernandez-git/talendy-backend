@@ -95,45 +95,9 @@ class AcceptOrderSerializer(serializers.Serializer):
 
             price = None
             if offer['type'] == Order.NORMAL_ORDER:
-                # Convert the withdawal to the user currency
-                available_for_withdawal_converted, _ = helpers.convert_currency(
-                    user.currency, "USD", user.available_for_withdawal.amount)
-                available_for_withdawal = Money(amount=available_for_withdawal_converted, currency=user.currency)
-
-                # Set the initial price to pay
-                current_price = unit_amount
-
-                new_available_for_withdawal = available_for_withdawal
-
-                # Check if user have available amount for withdawal
-                if available_for_withdawal > Money(amount=0, currency=user.currency):
-
-                    # Substract the current price to available for withdawal
-                    available_for_withdawal_substracted = available_for_withdawal - \
-                        Money(amount=current_price, currency=user.currency)
-
-                    if available_for_withdawal_substracted < Money(amount=0, currency=user.currency):
-
-                        # Get the price discounted
-                        current_price = abs(available_for_withdawal_substracted)
-
-                        # Set the new AFW to 0
-                        new_available_for_withdawal = Money(amount=0, currency="USD")
-
-                    else:
-                        # Set the current price to 0
-                        current_price = Money(amount=0, currency=user.currency)
-
-                        # Set the new AFW with the result of substract
-                        new_available_for_withdawal, _ = helpers.convert_currency(
-                            "USD", user.currency, available_for_withdawal_substracted.amount)
-
-                # Get the used for this purchase
-                used_for_this_purchase = user.available_for_withdawal - \
-                    Money(amount=new_available_for_withdawal, currency="USD")
 
                 price = stripe.Price.create(
-                    unit_amount=int(current_price.amount * 100),
+                    unit_amount=int(unit_amount * 100),
                     currency=user.currency,
                     product=product['id']
                 )
@@ -155,9 +119,8 @@ class AcceptOrderSerializer(serializers.Serializer):
                 # Invoice paid succesfully, do actions
 
                 self.context['price'] = price
+                self.context['product'] = product
                 self.context['invoice_paid'] = invoice_paid
-                self.context['available_for_withdawal'] = new_available_for_withdawal
-                self.context['used_for_this_purchase'] = used_for_this_purchase
 
             elif offer['type'] == Order.TWO_PAYMENTS_ORDER:
 
@@ -177,6 +140,8 @@ class AcceptOrderSerializer(serializers.Serializer):
                 user.save()
                 invoice_paid = stripe.Invoice.pay(invoice['id'])
                 self.context['price'] = price
+                self.context['product'] = product
+
                 self.context['invoice_paid'] = invoice_paid
             elif offer['type'] == Order.RECURRENT_ORDER:
                 if not 'interval_subscription' in offer:
@@ -196,6 +161,7 @@ class AcceptOrderSerializer(serializers.Serializer):
                     recurring={"interval": interval},
                     product=product['id']
                 )
+                self.context['product'] = product
 
                 self.context['price'] = price
 
@@ -219,11 +185,13 @@ class AcceptOrderSerializer(serializers.Serializer):
         request = self.context['request']
         user = request.user
         stripe = self.context['stripe']
+        product = self.context['product']
 
         offer_object = self.context['offer_object']
 
         service_fee, _ = helpers.convert_currency('USD', user.currency, offer['service_fee'], offer_object.rate_date)
         unit_amount, _ = helpers.convert_currency('USD', user.currency, offer['unit_amount'], offer_object.rate_date)
+        used_credits, _ = helpers.convert_currency("USD", user.currency, offer['used_credits'], offer_object.rate_date)
 
         new_order = Order.objects.create(
             buyer=offer_object.buyer,
@@ -231,6 +199,7 @@ class AcceptOrderSerializer(serializers.Serializer):
             title=offer_object.title,
             description=offer_object.description,
             unit_amount=unit_amount,
+            used_credits=used_credits,
             service_fee=service_fee,
             first_payment=offer_object.first_payment,
             payment_at_delivery=offer_object.payment_at_delivery,
@@ -238,7 +207,8 @@ class AcceptOrderSerializer(serializers.Serializer):
             delivery_time=offer_object.delivery_time,
             interval_subscription=offer_object.interval_subscription,
             type=offer_object.type,
-            rate_date=offer_object.rate_date
+            rate_date=offer_object.rate_date,
+            product_id=product['id']
         )
 
         offer_activity_queryset = OfferActivity.objects.filter(offer=offer_object, status=OfferActivity.PENDENDT)
@@ -291,8 +261,6 @@ class AcceptOrderSerializer(serializers.Serializer):
 
         if offer['type'] == Order.NORMAL_ORDER:
             price = self.context['price']
-            available_for_withdawal = self.context['available_for_withdawal']
-            used_for_this_purchase = self.context['used_for_this_purchase']
 
             invoice_paid = self.context['invoice_paid']
             invoice_id = invoice_paid['id']
@@ -316,12 +284,14 @@ class AcceptOrderSerializer(serializers.Serializer):
                 status=status,
             )
 
-            user.available_for_withdawal = available_for_withdawal
-            user.used_for_purchases = user.used_for_purchases + used_for_this_purchase
-            user.save()
-
         elif offer['type'] == Order.TWO_PAYMENTS_ORDER:
             price = self.context['price']
+
+            user.available_for_withdawal = user.available_for_withdawal - \
+                Money(amount=used_credits, currency="USD")
+            user.used_for_purchases = user.used_for_purchases + Money(amount=used_credits, currency="USD")
+            user.save()
+
             invoice_paid = self.context['invoice_paid']
             invoice_id = invoice_paid['id']
             currency = invoice_paid['currency']
@@ -333,6 +303,8 @@ class AcceptOrderSerializer(serializers.Serializer):
             new_order.price_id = price['id']
             new_order.payment_at_delivery = offer_object.payment_at_delivery
             new_order.save()
+            first_payment = float(amount_paid) / 100
+            first_payment_usd, _ = helpers.convert_currency("USD", user.currency, first_payment)
             OrderPayment.objects.create(
                 order=new_order,
                 invoice_id=invoice_id,
@@ -343,8 +315,9 @@ class AcceptOrderSerializer(serializers.Serializer):
                 status=status,
             )
             seller = new_order.seller
-            seller.net_income = seller.net_income + offer_object.first_payment
-            seller.available_for_withdawal = seller.available_for_withdawal + offer_object.first_payment
+            seller.net_income = seller.net_income + Money(amount=first_payment_usd, currency="USD")
+            seller.available_for_withdawal = seller.available_for_withdawal + \
+                Money(amount=first_payment_usd, currency="USD")
             seller.save()
             Earning.objects.create(
                 user=seller,
