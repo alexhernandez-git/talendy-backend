@@ -9,5 +9,6 @@ urlpatterns = [
     path("api/", include(("api.notifications.urls", "notifications"), namespace="notifications")),
     path("api/", include(("api.plans.urls", "plans"), namespace="plans")),
     path("api/", include(("api.orders.urls", "orders"), namespace="orders")),
+    path("api/", include(("api.activities.urls", "activities"), namespace="activities")),
     path("admin/", admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

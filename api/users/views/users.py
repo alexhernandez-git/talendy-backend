@@ -8,7 +8,6 @@ from django.template.loader import render_to_string
 
 
 # Django REST Framework
-from api.users.models import User, UserLoginActivity, PlanSubscription, plan_subscriptions
 import stripe
 import json
 import uuid
@@ -30,9 +29,8 @@ from rest_framework.permissions import (
 from api.users.permissions import IsAccountOwner
 
 # Models
-from api.users.models import Contact
+from api.users.models import User, UserLoginActivity, PlanSubscription, Earning, Contact
 from api.orders.models import OrderPayment
-from api.activities.models import MoneyReceivedActivity, Activity
 from djmoney.money import Money
 
 
@@ -819,7 +817,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
             rate_date = None
             due_to_seller = amount_paid * 0.05
             service_fee = due_to_seller - amount_paid
-            order_object = None
             for order in orders:
                 OrderPayment.objects.create(
                     order=order,
@@ -833,7 +830,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
                 )
                 rate_date = order.rate_date
                 user = order.seller
-                order_object = order
 
             converted_payment, _ = helpers.convert_currency('USD', currency, due_to_seller, rate_date)
 
@@ -842,7 +838,11 @@ class UserViewSet(mixins.RetrieveModelMixin,
                 Money(amount=converted_payment, currency='USD')
             user.save()
 
-            helpers.create_money_received_activity(order_object, converted_payment)
+            Earning.objects.create(
+                user=user,
+                type=Earning.ORDER_REVENUE,
+                amount=converted_payment
+            )
 
             return HttpResponse(status=200)
 
@@ -850,7 +850,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             # Unexpected event type
             return HttpResponse(status=400)
 
-    @action(detail=False, methods=['post'])
+    @ action(detail=False, methods=['post'])
     def stripe_webhooks_invoice_payment_failed(self, request, *args, **kwargs):
         """Process stripe webhook notification for subscription cancellation"""
         payload = request.body

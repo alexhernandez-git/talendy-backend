@@ -40,6 +40,8 @@ class ActivityModelSerializer(serializers.ModelSerializer):
 
         if model and serializer:
             activity_queryset = model.objects.filter(activity=obj)
+
             if activity_queryset.exists():
+
                 return serializer(activity_queryset.first(), many=False).data
         return None

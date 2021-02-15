@@ -17,7 +17,7 @@ from rest_framework.validators import UniqueValidator
 from api.users.models import User, UserLoginActivity, PlanSubscription, plan_subscriptions
 from api.notifications.models import Notification
 from api.plans.models import Plan
-
+from api.activities.models import Activity
 
 # Celery
 from api.taskapp.tasks import (
@@ -90,7 +90,9 @@ class UserModelSerializer(serializers.ModelSerializer):
 
     def get_pending_messages(self, obj):
         return obj.notifications.through.objects.filter(
-            user=obj, is_read=False, notification__type__in=[Notification.MESSAGES, Notification.ACTIVITY]).exists()
+            user=obj, is_read=False, notification__type__in=[Notification.MESSAGES, Notification.ACTIVITY],
+            notification__activity__type=[Activity.OFFER, Activity.CHANGE_DELIVERY_TIME, Activity.INCREASE_AMOUNT,
+                                          Activity.DELIVERY, Activity.REVISION, Activity.CANCEL]).exists()
 
     def get_current_plan_subscription(self, obj):
 

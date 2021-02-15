@@ -17,7 +17,7 @@ class Earning(CModel):
         (WITHDRAWN, 'Withdrawn'),
     ]
 
-    interval_subscription = models.CharField(
+    type = models.CharField(
         max_length=2,
         choices=EARNING_TYPES,
     )

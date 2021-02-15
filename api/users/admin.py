@@ -5,7 +5,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 # Models
-from api.users.models import User, Contact
+from api.users.models import User, Earning, Contact
 
 
 @admin.register(Contact)
@@ -18,8 +18,8 @@ class ContactAdmin(admin.ModelAdmin):
 class CustomUserAdmin(UserAdmin):
     """User model admin."""
 
-    fieldsets = UserAdmin.fieldsets + ((None, {"fields": ("is_verified",
-                                                          "stripe_account_id", "stripe_dashboard_url")}),)
+    fieldsets = UserAdmin.fieldsets + ((None, {"fields": ("is_verified", "stripe_account_id", "stripe_dashboard_url",
+                                                          "net_income", "withdrawn", "used_for_purchases", "available_for_withdawal")}),)
     list_display = ("email", "first_name", "last_name", "is_staff",
                     "is_client", "stripe_account_id", "stripe_dashboard_url")
     list_filter = (
@@ -28,6 +28,11 @@ class CustomUserAdmin(UserAdmin):
         "created",
         "modified",
     )
+
+
+@admin.register(Earning)
+class EarningAdmin(admin.ModelAdmin):
+    """Earning model admin."""
 
 
 admin.site.register(User, CustomUserAdmin)
