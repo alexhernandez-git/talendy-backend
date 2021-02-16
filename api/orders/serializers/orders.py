@@ -87,7 +87,10 @@ class AcceptOrderSerializer(serializers.Serializer):
             if not 'unit_amount' in offer:
                 raise serializers.ValidationError(
                     "Not unit amount in offer")
+
             unit_amount = float(offer['unit_amount'])
+            unit_amount_with_discount = unit_amount - float(offer['used_credits'])
+
             if not 'service_fee' in offer:
                 raise serializers.ValidationError(
                     "There is not service fee in this offer")
@@ -97,7 +100,7 @@ class AcceptOrderSerializer(serializers.Serializer):
             if offer['type'] == Order.NORMAL_ORDER:
 
                 price = stripe.Price.create(
-                    unit_amount=int(unit_amount * 100),
+                    unit_amount=int(unit_amount_with_discount * 100),
                     currency=user.currency,
                     product=product['id']
                 )
@@ -107,9 +110,6 @@ class AcceptOrderSerializer(serializers.Serializer):
                 )
                 invoice = stripe.Invoice.create(
                     customer=user.stripe_customer_id,
-                    # transfer_data={
-                    #     "destination": serialised_course.get('instructor').get('profile').get('stripe_account_id'),
-                    # },
                     default_payment_method=payment_method_id
                 )
                 user.default_payment_method = payment_method_id
@@ -125,7 +125,7 @@ class AcceptOrderSerializer(serializers.Serializer):
             elif offer['type'] == Order.TWO_PAYMENTS_ORDER:
 
                 price = stripe.Price.create(
-                    unit_amount=int(unit_amount * 100),
+                    unit_amount=int(unit_amount_with_discount * 100),
                     currency=user.currency,
                     product=product['id']
                 )
@@ -156,7 +156,7 @@ class AcceptOrderSerializer(serializers.Serializer):
                     raise serializers.ValidationError(
                         "Interval not valid")
                 price = stripe.Price.create(
-                    unit_amount=int(unit_amount * 100),
+                    unit_amount=int(unit_amount_with_discount * 100),
                     currency=user.currency,
                     recurring={"interval": interval},
                     product=product['id']
@@ -194,6 +194,7 @@ class AcceptOrderSerializer(serializers.Serializer):
         used_credits, _ = helpers.convert_currency("USD", user.currency, offer['used_credits'], offer_object.rate_date)
 
         new_order = Order.objects.create(
+            offer=offer_object,
             buyer=offer_object.buyer,
             seller=offer_object.seller,
             title=offer_object.title,

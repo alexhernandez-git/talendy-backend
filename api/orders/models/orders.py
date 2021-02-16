@@ -6,6 +6,9 @@ from djmoney.models.fields import MoneyField
 
 class Order(CModel):
 
+    offer = models.ForeignKey("orders.Offer", on_delete=models.SET_NULL,
+                              related_name="order_offer", null=True, blank=True)
+
     buyer = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="buyer_order")
     seller = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="seller_order")
 

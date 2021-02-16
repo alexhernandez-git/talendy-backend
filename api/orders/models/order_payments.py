@@ -17,4 +17,3 @@ class OrderPayment(CModel):
     paid = BooleanField(default=True)
     status = models.CharField(max_length=100, blank=True, null=True)
     invoice_pdf = models.CharField(max_length=150, blank=True, null=True)
-    service_fee = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', null=True, blank=True)

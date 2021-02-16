@@ -811,10 +811,12 @@ class UserViewSet(mixins.RetrieveModelMixin,
             amount_paid = float(invoice_success['amount_paid']) / 100
             currency = invoice_success['currency']
             status = invoice_success['status']
-            orders = Order.objects.filter(subscription_id=subscription_id)
+            orders = Order.objects.filter(subscription_id=subscription_id).exclude(subscription_id=None)
 
-            due_to_seller = amount_paid * 0.05
-            service_fee = due_to_seller - amount_paid
+            if not orders.exists():
+                return HttpResponse(status=400)
+            import pdb
+            pdb.set_trace()
             order = orders.first()
             OrderPayment.objects.create(
                 order=order,
@@ -822,7 +824,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
                 invoice_pdf=invoice_pdf,
                 charge_id=charge_id,
                 amount_paid=amount_paid,
-                service_fee=service_fee,
                 currency=currency,
                 status=status,
             )
@@ -831,13 +832,11 @@ class UserViewSet(mixins.RetrieveModelMixin,
             buyer = order.buyer
             used_credits = order.used_credits
             unit_amount = order.unit_amount
-
             if used_credits:
-                buyer.available_for_withdawal = buyer.available_for_withdawal - \
-                    Money(amount=used_credits, currency="USD")
-                buyer.used_for_purchases = buyer.used_for_purchases + Money(amount=used_credits, currency="USD")
-                buyer.save()
 
+                buyer.available_for_withdawal = buyer.available_for_withdawal - used_credits
+                buyer.used_for_purchases = buyer.used_for_purchases + used_credits
+                buyer.save()
             if buyer.available_for_withdawal < unit_amount:
 
                 diff = buyer.available_for_withdawal - unit_amount
@@ -873,17 +872,17 @@ class UserViewSet(mixins.RetrieveModelMixin,
                 order.used_credits = used_credits
                 order.save()
 
-            converted_payment, _ = helpers.convert_currency('USD', currency, due_to_seller, rate_date)
+            due_to_seller = order.unit_amount - order.service_fee
 
-            user.net_income = user.net_income + Money(amount=converted_payment, currency='USD')
+            user.net_income = user.net_income + due_to_seller
             user.available_for_withdawal = user.available_for_withdawal + \
-                Money(amount=converted_payment, currency='USD')
+                due_to_seller
             user.save()
 
             Earning.objects.create(
                 user=user,
                 type=Earning.ORDER_REVENUE,
-                amount=converted_payment
+                amount=due_to_seller
             )
 
             return HttpResponse(status=200)
