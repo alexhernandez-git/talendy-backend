@@ -8,6 +8,21 @@ class DeliveryActivity(CModel):
         "activities.Activity", on_delete=models.CASCADE, null=True
     )
 
-    increase_amount = models.ForeignKey(
-        "orders.IncreaseAmount", on_delete=models.CASCADE
+    delivery = models.ForeignKey(
+        "orders.Delivery", on_delete=models.CASCADE, null=True
+    )
+
+    PENDENDT = 'PE'
+    ACCEPTED = 'AC'
+
+    TYPE_CHOICES = [
+        (PENDENDT, 'Pendent'),
+        (ACCEPTED, 'Accepted'),
+    ]
+
+    status = models.CharField(
+        max_length=2,
+        choices=TYPE_CHOICES,
+        default=PENDENDT
+
     )

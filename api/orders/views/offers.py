@@ -66,6 +66,7 @@ class OfferViewSet(
         serializer = OfferModelSerializer(data=request.data,
                                           context={
                                               'request': request,
+                                              'buyer': request.data['buyer']
                                           })
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)

@@ -30,6 +30,7 @@ class ActivityModelSerializer(serializers.ModelSerializer):
             "id",
             "type",
             "activity",
+            "created"
         )
 
         read_only_fields = ("id",)

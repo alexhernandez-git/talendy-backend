@@ -19,7 +19,7 @@ class Activity(CModel):
     TYPE_CHOICES = [
         (OFFER, 'Offer order'),
         (CHANGE_DELIVERY_TIME, 'Change delivery time order'),
-        (INCREASE_AMOUNT, 'Increase amount order'),
+        (INCREASE_AMOUNT, 'Increase order amount'),
         (DELIVERY, 'Delivery order'),
         (REVISION, 'Revision order'),
         (CANCEL, 'Delivery order'),

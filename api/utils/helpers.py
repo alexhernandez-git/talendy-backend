@@ -1,5 +1,6 @@
 
 # Django
+
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -28,6 +29,7 @@ from api.notifications.models import Notification, NotificationUser
 # Serializers
 from api.activities.serializers import (
     OfferActivityModelSerializer,
+    DeliveryActivityModelSerializer
 )
 
 # Utilities
@@ -221,7 +223,7 @@ def get_activity_classes(type):
         },
         Activity.CHANGE_DELIVERY_TIME: ChangeDeliveryTimeActivity,
         Activity.INCREASE_AMOUNT: IncreaseAmountActivity,
-        Activity.DELIVERY: DeliveryActivity,
+        Activity.DELIVERY: {"model": DeliveryActivity, "serializer": DeliveryActivityModelSerializer},
         Activity.REVISION: RevisionActivity,
         Activity.CANCEL: CancelOrderActivity,
 

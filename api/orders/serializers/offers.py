@@ -14,6 +14,8 @@ from api.activities.models import Activity, OfferActivity
 from api.users.models import User
 from api.chats.models import Message, Chat, SeenBy
 
+# Serializers
+from api.users.serializers import UserModelSerializer
 
 # Utils
 from datetime import datetime, timedelta
@@ -22,6 +24,8 @@ import re
 
 class OfferModelSerializer(serializers.ModelSerializer):
     """Offer model serializer."""
+    seller = UserModelSerializer(read_only=True)
+    buyer = UserModelSerializer(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -109,8 +113,11 @@ class OfferModelSerializer(serializers.ModelSerializer):
             activity=activity,
             offer=offer
         )
+        try:
+            buyer = User.objects.get(pk=self.context['buyer'])
+        except:
+            buyer = None
 
-        buyer = validated_data['buyer']
         buyer_email = None
         # Get the buyer
 
@@ -134,6 +141,7 @@ class OfferModelSerializer(serializers.ModelSerializer):
             send_offer(seller, buyer_email, user_exists, offer.id)
 
         else:
+
             send_offer(seller, buyer.email, True, offer.id, buyer.id)
 
             # Get or create the chat
