@@ -29,6 +29,7 @@ class DeliveryModelSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "order",
+            "modification_requested",
             "response",
             "source_file"
         )

@@ -8,6 +8,8 @@ class Delivery(CModel):
 
     response = models.TextField(max_length=1000)
 
+    modification_requested = models.BooleanField(default=False)
+
     source_file = models.FileField(
         upload_to='orders/delivery/files/',
         max_length=500,

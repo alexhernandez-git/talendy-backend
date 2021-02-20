@@ -8,3 +8,4 @@ class CancelOrder(CModel):
     issued_by = models.ForeignKey("users.User", on_delete=models.CASCADE,
                                   related_name="cancel_order_issued_by")
     reason = models.TextField(max_length=1000)
+    accepted = models.BooleanField(default=False)
