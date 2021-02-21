@@ -29,7 +29,8 @@ from api.notifications.models import Notification, NotificationUser
 # Serializers
 from api.activities.serializers import (
     OfferActivityModelSerializer,
-    DeliveryActivityModelSerializer
+    DeliveryActivityModelSerializer,
+    CancelOrderActivityModelSerializer
 )
 
 # Utilities
@@ -225,7 +226,10 @@ def get_activity_classes(type):
         Activity.INCREASE_AMOUNT: IncreaseAmountActivity,
         Activity.DELIVERY: {"model": DeliveryActivity, "serializer": DeliveryActivityModelSerializer},
         Activity.REVISION: RevisionActivity,
-        Activity.CANCEL: CancelOrderActivity,
+        Activity.CANCEL: {
+            "model": CancelOrderActivity,
+            "serializer": CancelOrderActivityModelSerializer
+        },
 
     }
     activity_classes = switcher.get(type, {"model": None, "serializer": None})

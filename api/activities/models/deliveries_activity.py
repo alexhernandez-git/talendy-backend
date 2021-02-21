@@ -24,5 +24,4 @@ class DeliveryActivity(CModel):
         max_length=2,
         choices=TYPE_CHOICES,
         default=PENDENDT
-
     )

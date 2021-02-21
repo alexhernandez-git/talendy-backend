@@ -65,8 +65,11 @@ class ChatModelSerializer(serializers.ModelSerializer):
 
         if obj.last_message:
             if obj.last_message.activity:
+
                 activity = obj.last_message.activity
                 activity_item = activity.get_activity_item()
+                if not activity_item:
+                    return None
                 return activity.type+activity_item.status
             return obj.last_message.text
 
@@ -149,6 +152,9 @@ class RetrieveChatModelSerializer(serializers.ModelSerializer):
             if obj.last_message.activity:
                 activity = obj.last_message.activity
                 activity_item = activity.get_activity_item()
+
+                if not activity_item:
+                    return None
                 return activity.type+activity_item.status
             return obj.last_message.text
 

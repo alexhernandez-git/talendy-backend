@@ -103,6 +103,13 @@ class OfferModelSerializer(serializers.ModelSerializer):
             delivery_date = now + timedelta(days=delivery_time)
             validated_data['delivery_date'] = delivery_date
 
+        try:
+            buyer = User.objects.get(pk=self.context['buyer'])
+            validated_data['buyer'] = buyer
+
+        except:
+            buyer = None
+
         offer = Offer.objects.create(**validated_data)
 
         # Create the actions
@@ -113,10 +120,6 @@ class OfferModelSerializer(serializers.ModelSerializer):
             activity=activity,
             offer=offer
         )
-        try:
-            buyer = User.objects.get(pk=self.context['buyer'])
-        except:
-            buyer = None
 
         buyer_email = None
         # Get the buyer

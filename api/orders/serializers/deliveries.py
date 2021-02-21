@@ -33,6 +33,7 @@ class DeliveryModelSerializer(serializers.ModelSerializer):
             "response",
             "source_file"
         )
+        extra_kwargs = {"source_file": {"required": False, "allow_null": True}}
 
     def create(self, validated_data):
 
@@ -79,4 +80,5 @@ class DeliveryModelSerializer(serializers.ModelSerializer):
 
             seen_by.message = chat_instance.last_message
             seen_by.save()
+
         return delivery

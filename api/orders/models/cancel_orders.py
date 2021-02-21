@@ -9,3 +9,4 @@ class CancelOrder(CModel):
                                   related_name="cancel_order_issued_by")
     reason = models.TextField(max_length=1000)
     accepted = models.BooleanField(default=False)
+    cancelled = models.BooleanField(default=False)

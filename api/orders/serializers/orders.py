@@ -254,7 +254,7 @@ class AcceptOrderSerializer(serializers.Serializer):
         chat_instance.save()
 
         # Set message seen
-        seen_by, created = SeenBy.objects.get_or_create(chat=chat_instance, user=new_order.buyer)
+        seen_by, _ = SeenBy.objects.get_or_create(chat=chat_instance, user=new_order.buyer)
         if seen_by.message != chat_instance.last_message:
 
             seen_by.message = chat_instance.last_message
@@ -304,8 +304,7 @@ class AcceptOrderSerializer(serializers.Serializer):
             new_order.price_id = price['id']
             new_order.payment_at_delivery = offer_object.payment_at_delivery
             new_order.save()
-            first_payment = float(amount_paid) / 100
-            first_payment_usd, _ = helpers.convert_currency("USD", user.currency, first_payment)
+
             OrderPayment.objects.create(
                 order=new_order,
                 invoice_id=invoice_id,
@@ -315,10 +314,11 @@ class AcceptOrderSerializer(serializers.Serializer):
                 currency=currency,
                 status=status,
             )
+
             seller = new_order.seller
-            seller.net_income = seller.net_income + Money(amount=first_payment_usd, currency="USD")
+            seller.net_income = seller.net_income + offer_object.first_payment
             seller.available_for_withdawal = seller.available_for_withdawal + \
-                Money(amount=first_payment_usd, currency="USD")
+                offer_object.first_payment
             seller.save()
             Earning.objects.create(
                 user=seller,
@@ -351,132 +351,3 @@ class AcceptOrderSerializer(serializers.Serializer):
         offer_object.accepted = True
         offer_object.save()
         return new_order
-
-
-# Invoice example
-    # {
-    #     "account_country": "ES",
-    #     "account_name": "FullOrderTracker",
-    #     "account_tax_ids": null,
-    #     "amount_due": 2039,
-    #     "amount_paid": 2039,
-    #     "amount_remaining": 0,
-    #     "application_fee_amount": null,
-    #     "attempt_count": 1,
-    #     "attempted": true,
-    #     "auto_advance": false,
-    #     "billing_reason": "manual",
-    #     "charge": "ch_1IIEmeCob7soW4zY8WFSM12C",
-    #     "collection_method": "charge_automatically",
-    #     "created": 1612710162,
-    #     "currency": "eur",
-    #     "custom_fields": null,
-    #     "customer": "cus_IqgYqdbwbUskrM",
-    #     "customer_address": {
-    #         "city": "",
-    #         "country": "ES",
-    #         "line1": "",
-    #         "line2": "",
-    #         "postal_code": "08012",
-    #         "state": "Alex"
-    #     },
-    #     "customer_email": "ahernandezprat4675@gmail.com",
-    #     "customer_name": "Alex_Prat",
-    #     "customer_phone": null,
-    #     "customer_shipping": null,
-    #     "customer_tax_exempt": "none",
-    #     "customer_tax_ids": [],
-    #     "default_payment_method": "pm_1IIEmaCob7soW4zY9PS6Vaji",
-    #     "default_source": null,
-    #     "default_tax_rates": [],
-    #     "description": null,
-    #     "discount": null,
-    #     "discounts": [],
-    #     "due_date": null,
-    #     "ending_balance": 0,
-    #     "footer": null,
-    #     "hosted_invoice_url": "https://invoice.stripe.com/i/acct_1I4AQuCob7soW4zY/invst_Iu2s3Mxh5n78KYB39UlqYRvw2cBO2k2",
-    #     "id": "in_1IIEmcCob7soW4zY4TUb7YO0",
-    #     "invoice_pdf": "https://pay.stripe.com/invoice/acct_1I4AQuCob7soW4zY/invst_Iu2s3Mxh5n78KYB39UlqYRvw2cBO2k2/pdf",
-    #     "last_finalization_error": null,
-    #     "lines": {
-    #         "data": [
-    #             {
-    #                 "amount": 2039,
-    #                 "currency": "eur",
-    #                 "description": "Curso de finanzas avanzado_alexhernandez",
-    #                 "discount_amounts": [],
-    #                 "discountable": true,
-    #                 "discounts": [],
-    #                 "id": "il_1IIEmcCob7soW4zYIc6emWgq",
-    #                 "invoice_item": "ii_1IIEmcCob7soW4zYrq6WQVay",
-    #                 "livemode": false,
-    #                 "metadata": {},
-    #                 "object": "line_item",
-    #                 "period": {
-    #                     "end": 1612710162,
-    #                     "start": 1612710162
-    #                 },
-    #                 "plan": null,
-    #                 "price": {
-    #                     "active": true,
-    #                     "billing_scheme": "per_unit",
-    #                     "created": 1612710162,
-    #                     "currency": "eur",
-    #                     "id": "price_1IIEmcCob7soW4zYVYCyRxOg",
-    #                     "livemode": false,
-    #                     "lookup_key": null,
-    #                     "metadata": {},
-    #                     "nickname": null,
-    #                     "object": "price",
-    #                     "product": "prod_Iu2sCCxXHwCosO",
-    #                     "recurring": null,
-    #                     "tiers_mode": null,
-    #                     "transform_quantity": null,
-    #                     "type": "one_time",
-    #                     "unit_amount": 2039,
-    #                     "unit_amount_decimal": "2039"
-    #                 },
-    #                 "proration": false,
-    #                 "quantity": 1,
-    #                 "subscription": null,
-    #                 "tax_amounts": [],
-    #                 "tax_rates": [],
-    #                 "type": "invoiceitem"
-    #             }
-    #         ],
-    #         "has_more": false,
-    #         "object": "list",
-    #         "total_count": 1,
-    #         "url": "/v1/invoices/in_1IIEmcCob7soW4zY4TUb7YO0/lines"
-    #     },
-    #     "livemode": false,
-    #     "metadata": {},
-    #     "next_payment_attempt": null,
-    #     "number": "3024D4B5-0151",
-    #     "object": "invoice",
-    #     "paid": true,
-    #     "payment_intent": "pi_1IIEmdCob7soW4zY5TgR2zMP",
-    #     "period_end": 1613144816,
-    #     "period_start": 1611935216,
-    #     "post_payment_credit_notes_amount": 0,
-    #     "pre_payment_credit_notes_amount": 0,
-    #     "receipt_number": null,
-    #     "starting_balance": 0,
-    #     "statement_descriptor": null,
-    #     "status": "paid",
-    #     "status_transitions": {
-    #         "finalized_at": 1612710163,
-    #         "marked_uncollectible_at": null,
-    #         "paid_at": 1612710163,
-    #         "voided_at": null
-    #     },
-    #     "subscription": null,
-    #     "subtotal": 2039,
-    #     "tax": null,
-    #     "total": 2039,
-    #     "total_discount_amounts": [],
-    #     "total_tax_amounts": [],
-    #     "transfer_data": null,
-    #     "webhooks_delivered_at": null
-    # }

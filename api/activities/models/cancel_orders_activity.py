@@ -11,3 +11,19 @@ class CancelOrderActivity(CModel):
     cancel_order = models.ForeignKey(
         "orders.CancelOrder", on_delete=models.CASCADE
     )
+
+    PENDENDT = 'PE'
+    ACCEPTED = 'AC'
+    CANCELLED = 'CA'
+
+    TYPE_CHOICES = [
+        (PENDENDT, 'Pendent'),
+        (ACCEPTED, 'Accepted'),
+        (CANCELLED, 'Cancelled'),
+    ]
+
+    status = models.CharField(
+        max_length=2,
+        choices=TYPE_CHOICES,
+        default=PENDENDT
+    )
