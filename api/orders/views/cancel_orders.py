@@ -19,12 +19,17 @@ from django.http import HttpResponse
 
 # Permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from api.orders.permissions import IsPartOfOrder
 
 # Models
 from api.orders.models import CancelOrder
 
 # Serializers
-from api.orders.serializers import CancelOrderModelSerializer
+from api.orders.serializers import (
+    CancelOrderModelSerializer,
+    CancelOrderCancelationModelSerializer,
+    AcceptOrderCancelationModelSerializer
+)
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -36,6 +41,7 @@ from api.utils import helpers
 
 class CancelOrderViewSet(
     mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
     AddOrderMixin,
 ):
     """User view set.
@@ -49,12 +55,20 @@ class CancelOrderViewSet(
 
     def get_permissions(self):
         """Assign permissions based on action."""
-        if self.action in ['retrieve']:
-            permissions = []
-
-        else:
-            permissions = [IsAuthenticated]
+        # if self.action in ['retrieve']:
+        #     permissions = []
+        # else:
+        permissions = [IsAuthenticated, IsPartOfOrder]
         return [p() for p in permissions]
+
+    def get_serializer_class(self):
+        """Return serializer based on action."""
+
+        if self.action in ['cancel_order_cancelation']:
+            return CancelOrderCancelationModelSerializer
+        elif self.action in ['accept_order_cancelation']:
+            return AcceptOrderCancelationModelSerializer
+        return CancelOrderModelSerializer
 
     def create(self, request, *args, **kwargs):
 
@@ -67,3 +81,35 @@ class CancelOrderViewSet(
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @action(detail=True, methods=['patch'])
+    def cancel_order_cancelation(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['patch'])
+    def accept_order_cancelation(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)

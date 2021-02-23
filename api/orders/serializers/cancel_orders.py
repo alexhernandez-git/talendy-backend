@@ -33,11 +33,9 @@ class CancelOrderModelSerializer(serializers.ModelSerializer):
             "order",
             "issued_by",
             "reason",
-            "accepted",
-            "cancelled"
+            "status",
         )
-        extra_kwargs = {"accepted": {"required": False, "allow_null": True},
-                        "cancelled": {"required": False, "allow_null": True}}
+        extra_kwargs = {"status": {"required": False, "allow_null": True}}
 
     def create(self, validated_data):
         request = self.context['request']
@@ -94,3 +92,204 @@ class CancelOrderModelSerializer(serializers.ModelSerializer):
             seen_by.message = chat_instance.last_message
             seen_by.save()
         return cancel_order
+
+
+class CancelOrderCancelationModelSerializer(serializers.ModelSerializer):
+    """CancelOrder model serializer."""
+    order = OrderModelSerializer(read_only=True)
+    issued_by = UserModelSerializer(read_only=True)
+
+    class Meta:
+        """Meta class."""
+
+        model = CancelOrder
+        fields = (
+            "id",
+            "order",
+            "issued_by",
+            "reason",
+            "status",
+        )
+        read_only_fields = (
+            "id",
+            "order",
+            "issued_by",
+            "reason",
+            "status",
+        )
+
+    def validate(self, data):
+        cancel_order = self.instance
+        request = self.context['request']
+        user = request.user
+        if user == cancel_order.issued_by:
+            raise serializers.ValidationError('You are not allowed to do this action')
+        if cancel_order.status == CancelOrder.ACCEPTED:
+            raise serializers.ValidationError('This order is already accepted')
+        elif cancel_order.status == CancelOrder.CANCELLED:
+            raise serializers.ValidationError('This order is already cancelled')
+        return data
+
+    def update(self, instance,  validated_data):
+        order = instance.order
+        activity = Activity.objects.create(
+            type=Activity.CANCEL,
+            order=order
+        )
+        CancelOrderActivity.objects.create(
+            activity=activity,
+            cancel_order=instance,
+            status=CancelOrderActivity.CANCELLED
+        )
+
+        seller = order.seller
+        buyer = order.buyer
+
+        issued_by = instance.issued_by
+        issued_to = None
+        if issued_by == seller:
+            issued_to = buyer
+        else:
+            issued_to = seller
+
+        chats = Chat.objects.filter(participants=issued_by)
+        chats = chats.filter(participants=issued_to)
+
+        chat_instance = None
+        if chats.exists():
+            for chat in chats:
+                if chat.participants.all().count() == 2:
+                    chat_instance = chat
+
+        if not chat_instance:
+
+            chat_instance = Chat.objects.create()
+
+            chat_instance.participants.add(issued_to)
+            chat_instance.participants.add(issued_by)
+            chat_instance.save()
+
+        # Create the message
+
+        message = Message.objects.create(chat=chat_instance, activity=activity, sent_by=issued_by)
+        chat_instance.last_message = message
+        chat_instance.save()
+        # Set message seen
+        seen_by, created = SeenBy.objects.get_or_create(chat=chat_instance, user=issued_by)
+        if seen_by.message != chat_instance.last_message:
+
+            seen_by.message = chat_instance.last_message
+            seen_by.save()
+
+        instance.status = CancelOrder.CANCELLED
+        instance.save()
+        return instance
+
+
+class AcceptOrderCancelationModelSerializer(serializers.ModelSerializer):
+    """CancelOrder model serializer."""
+    order = OrderModelSerializer(read_only=True)
+    issued_by = UserModelSerializer(read_only=True)
+
+    class Meta:
+        """Meta class."""
+
+        model = CancelOrder
+        fields = (
+            "id",
+            "order",
+            "issued_by",
+            "reason",
+            "status",
+        )
+        read_only_fields = (
+            "id",
+            "order",
+            "issued_by",
+            "reason",
+            "status",
+        )
+
+    def validate(self, data):
+        cancel_order = self.instance
+        request = self.context['request']
+        user = request.user
+
+        if user == cancel_order.issued_by:
+            raise serializers.ValidationError('You are not allowed to do this action')
+
+        if cancel_order.order.type == Order.RECURRENT_ORDER:
+            raise serializers.ValidationError('Recurrent orders can`t be cancelled')
+
+        if cancel_order.status == CancelOrder.ACCEPTED:
+            raise serializers.ValidationError('This order is already accepted')
+
+        elif cancel_order.status == CancelOrder.CANCELLED:
+            raise serializers.ValidationError('This order is already cancelled')
+        return data
+
+    def update(self, instance,  validated_data):
+
+        order = instance.order
+
+        order.status = Order.CANCELLED
+        if order.type == Order.NORMAL_ORDER:
+            # Return de money to user as credits
+            buyer = order.buyer
+            buyer.net_income = buyer.net_income + order.due_to_seller
+            buyer.available_for_withdawal = buyer.available_for_withdawal + order.due_to_seller
+            buyer.save()
+        order.save()
+
+        activity = Activity.objects.create(
+            type=Activity.CANCEL,
+            order=order
+        )
+        CancelOrderActivity.objects.create(
+            activity=activity,
+            cancel_order=instance,
+            status=CancelOrderActivity.ACCEPTED
+        )
+
+        seller = order.seller
+        buyer = order.buyer
+
+        issued_by = instance.issued_by
+        issued_to = None
+        if issued_by == seller:
+            issued_to = buyer
+        else:
+            issued_to = seller
+
+        chats = Chat.objects.filter(participants=issued_by)
+        chats = chats.filter(participants=issued_to)
+
+        chat_instance = None
+        if chats.exists():
+            for chat in chats:
+                if chat.participants.all().count() == 2:
+                    chat_instance = chat
+
+        if not chat_instance:
+
+            chat_instance = Chat.objects.create()
+
+            chat_instance.participants.add(issued_to)
+            chat_instance.participants.add(issued_by)
+            chat_instance.save()
+
+        # Create the message
+
+        message = Message.objects.create(chat=chat_instance, activity=activity, sent_by=issued_by)
+        chat_instance.last_message = message
+        chat_instance.save()
+        # Set message seen
+        seen_by, created = SeenBy.objects.get_or_create(chat=chat_instance, user=issued_by)
+        if seen_by.message != chat_instance.last_message:
+
+            seen_by.message = chat_instance.last_message
+            seen_by.save()
+
+        instance.status = CancelOrder.ACCEPTED
+        instance.save()
+        return instance
