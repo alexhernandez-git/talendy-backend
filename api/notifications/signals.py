@@ -41,7 +41,10 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
             if activityModel:
                 activity_queryset = activityModel.objects.filter(activity=instance.activity)
                 if activity_queryset.exists():
-                    status = activity_queryset.first().status
+                    try:
+                        status = activity_queryset.first().status
+                    except Exception as e:
+                        pass
 
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(

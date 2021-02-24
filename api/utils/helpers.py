@@ -30,7 +30,8 @@ from api.notifications.models import Notification, NotificationUser
 from api.activities.serializers import (
     OfferActivityModelSerializer,
     DeliveryActivityModelSerializer,
-    CancelOrderActivityModelSerializer
+    CancelOrderActivityModelSerializer,
+    RevisionActivityModelSerializer
 )
 
 # Utilities
@@ -225,7 +226,7 @@ def get_activity_classes(type):
         Activity.CHANGE_DELIVERY_TIME: ChangeDeliveryTimeActivity,
         Activity.INCREASE_AMOUNT: IncreaseAmountActivity,
         Activity.DELIVERY: {"model": DeliveryActivity, "serializer": DeliveryActivityModelSerializer},
-        Activity.REVISION: RevisionActivity,
+        Activity.REVISION: {"model": RevisionActivity, "serializer": RevisionActivityModelSerializer},
         Activity.CANCEL: {
             "model": CancelOrderActivity,
             "serializer": CancelOrderActivityModelSerializer

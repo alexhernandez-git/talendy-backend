@@ -70,7 +70,10 @@ class ChatModelSerializer(serializers.ModelSerializer):
                 activity_item = activity.get_activity_item()
                 if not activity_item:
                     return None
-                return activity.type+activity_item.status
+                if hasattr(activity_item, 'status'):
+                    return activity.type+activity_item.status
+                else:
+                    return activity.type
             return obj.last_message.text
 
         return None
@@ -155,7 +158,10 @@ class RetrieveChatModelSerializer(serializers.ModelSerializer):
 
                 if not activity_item:
                     return None
-                return activity.type+activity_item.status
+                if hasattr(activity_item, 'status'):
+                    return activity.type+activity_item.status
+                else:
+                    return activity.type
             return obj.last_message.text
 
         return None

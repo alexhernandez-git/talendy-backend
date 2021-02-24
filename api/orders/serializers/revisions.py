@@ -9,50 +9,49 @@ from django.shortcuts import get_object_or_404
 
 
 # Models
-from api.orders.models import Delivery, Order
-from api.activities.models import Activity, DeliveryActivity
+from api.orders.models import Revision, Order
+from api.activities.models import Activity, RevisionActivity
 from api.users.models import User
 from api.chats.models import Message, Chat, SeenBy
 
 # Serializers
 from api.orders.serializers import OrderModelSerializer
+from api.users.serializers import UserModelSerializer
 
 
-class DeliveryModelSerializer(serializers.ModelSerializer):
-    """Delivery model serializer."""
+class RevisionModelSerializer(serializers.ModelSerializer):
+    """Revision model serializer."""
     order = OrderModelSerializer(read_only=True)
 
     class Meta:
         """Meta class."""
 
-        model = Delivery
+        model = Revision
         fields = (
             "id",
             "order",
-            "response",
-            "source_file"
+            "reason",
         )
-        extra_kwargs = {"source_file": {"required": False, "allow_null": True}}
 
     def create(self, validated_data):
-
+        request = self.context['request']
         order = self.context['order']
         validated_data['order'] = order
-        delivery = Delivery.objects.create(**validated_data)
+        revision = Revision.objects.create(**validated_data)
         activity = Activity.objects.create(
-            type=Activity.DELIVERY,
+            type=Activity.REVISION,
             order=order
         )
-        DeliveryActivity.objects.create(
+        RevisionActivity.objects.create(
             activity=activity,
-            delivery=delivery
+            revision=revision
         )
 
-        seller = order.seller
-        buyer = order.buyer
+        issued_by = order.seller
+        issued_to = order.buyer
 
-        chats = Chat.objects.filter(participants=seller)
-        chats = chats.filter(participants=buyer)
+        chats = Chat.objects.filter(participants=issued_by)
+        chats = chats.filter(participants=issued_to)
 
         chat_instance = None
         if chats.exists():
@@ -64,20 +63,19 @@ class DeliveryModelSerializer(serializers.ModelSerializer):
 
             chat_instance = Chat.objects.create()
 
-            chat_instance.participants.add(buyer)
-            chat_instance.participants.add(seller)
+            chat_instance.participants.add(issued_to)
+            chat_instance.participants.add(issued_by)
             chat_instance.save()
 
         # Create the message
 
-        message = Message.objects.create(chat=chat_instance, activity=activity, sent_by=seller)
+        message = Message.objects.create(chat=chat_instance, activity=activity, sent_by=issued_by)
         chat_instance.last_message = message
         chat_instance.save()
         # Set message seen
-        seen_by, created = SeenBy.objects.get_or_create(chat=chat_instance, user=seller)
+        seen_by, created = SeenBy.objects.get_or_create(chat=chat_instance, user=issued_by)
         if seen_by.message != chat_instance.last_message:
 
             seen_by.message = chat_instance.last_message
             seen_by.save()
-
-        return delivery
+        return revision
