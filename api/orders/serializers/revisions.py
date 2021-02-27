@@ -33,8 +33,16 @@ class RevisionModelSerializer(serializers.ModelSerializer):
             "reason",
         )
 
+    def validate(self, data):
+        order = self.context['order']
+
+        if order.status == Order.DELIVERED:
+            raise serializers.ValidationError('This order is delivered')
+        if order.status == Order.CANCELLED:
+            raise serializers.ValidationError('This order is cancelled')
+        return data
+
     def create(self, validated_data):
-        request = self.context['request']
         order = self.context['order']
         validated_data['order'] = order
         revision = Revision.objects.create(**validated_data)
@@ -47,8 +55,8 @@ class RevisionModelSerializer(serializers.ModelSerializer):
             revision=revision
         )
 
-        issued_by = order.seller
-        issued_to = order.buyer
+        issued_by = order.buyer
+        issued_to = order.seller
 
         chats = Chat.objects.filter(participants=issued_by)
         chats = chats.filter(participants=issued_to)
