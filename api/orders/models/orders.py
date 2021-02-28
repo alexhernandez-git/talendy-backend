@@ -81,6 +81,7 @@ class Order(CModel):
     # (Two payments order)
     # Is first payment already paid
     payment_at_delivery = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', null=True, blank=True)
+    payment_at_delivery_price_id = models.CharField(max_length=100, blank=True, null=True)
 
     # (Recurrent payments order)
     subscription_id = models.CharField(max_length=100, blank=True, null=True)

@@ -33,6 +33,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 import os
 from api.utils import helpers
+import stripe
 
 
 class DeliveryViewSet(
@@ -59,10 +60,6 @@ class DeliveryViewSet(
 
     def get_serializer_class(self):
         """Return serializer based on action."""
-
-        if self.action in ['accept_delivery']:
-            return AcceptDeliveryModelSerializer
-
         return DeliveryModelSerializer
 
     def create(self, request, *args, **kwargs):
@@ -79,10 +76,24 @@ class DeliveryViewSet(
 
     @action(detail=True, methods=['patch'])
     def accept_delivery(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
+        else:
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
 
+        partial = kwargs.pop('partial', False)
+        payment_method_id = None
+        if "payment_method_id" in request.data and request.data['payment_method_id']:
+            payment_method_id = request.data['payment_method_id']
+        order_checkout = None
+        if "order_checkout" in request.data and request.data['order_checkout']:
+            order_checkout = request.data['order_checkout']
         instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer = AcceptDeliveryModelSerializer(instance, data=request.data, context={
+                                                   'request': request,
+                                                   'payment_method_id': payment_method_id,
+                                                   'order_checkout': order_checkout,
+                                                   'stripe': stripe}, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 

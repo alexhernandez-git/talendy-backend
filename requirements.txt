@@ -85,6 +85,9 @@ pycodestyle==2.6.0
 # GeoIp
 geoip2==4.1.0
 
+# Geopy
+geopy==2.1.0
+
 # Currency by country
 ccy==1.2.2
 

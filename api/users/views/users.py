@@ -755,7 +755,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51HCsUHIgGIa3w9CpMgSnYNk7ifsaahLoaD1kSpVHBCMKMueUb06dtKAWYGqhFEDb6zimiLmF8XwtLLeBt2hIvvW200YfRtDlPo'
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
 
         try:
             event = stripe.Event.construct_from(
@@ -790,7 +790,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51HCsUHIgGIa3w9CpMgSnYNk7ifsaahLoaD1kSpVHBCMKMueUb06dtKAWYGqhFEDb6zimiLmF8XwtLLeBt2hIvvW200YfRtDlPo'
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
 
         try:
             event = stripe.Event.construct_from(
@@ -815,8 +815,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
             if not orders.exists():
                 return HttpResponse(status=400)
-            import pdb
-            pdb.set_trace()
+
             order = orders.first()
             OrderPayment.objects.create(
                 order=order,
@@ -828,7 +827,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
                 status=status,
             )
             rate_date = order.rate_date
-            user = order.seller
+            seller = order.seller
             buyer = order.buyer
             used_credits = order.used_credits
             unit_amount = order.unit_amount
@@ -848,7 +847,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
                 price = stripe.Price.create(
                     unit_amount=int(new_cost_of_subscription * 100),
-                    currency=user.currency,
+                    currency=buyer.currency,
                     product=order.product_id
                 )
 
@@ -874,13 +873,13 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
             due_to_seller = order.unit_amount - order.service_fee
 
-            user.net_income = user.net_income + due_to_seller
-            user.available_for_withdawal = user.available_for_withdawal + \
+            seller.net_income = seller.net_income + due_to_seller
+            seller.available_for_withdawal = seller.available_for_withdawal + \
                 due_to_seller
-            user.save()
+            seller.save()
 
             Earning.objects.create(
-                user=user,
+                user=seller,
                 type=Earning.ORDER_REVENUE,
                 amount=due_to_seller
             )
@@ -899,7 +898,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51HCsUHIgGIa3w9CpMgSnYNk7ifsaahLoaD1kSpVHBCMKMueUb06dtKAWYGqhFEDb6zimiLmF8XwtLLeBt2hIvvW200YfRtDlPo'
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
 
         try:
             event = stripe.Event.construct_from(

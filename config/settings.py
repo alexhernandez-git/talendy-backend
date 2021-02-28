@@ -390,3 +390,7 @@ CURRENCIES = ('USD', 'EUR')
 EXCHANGE_BACKEND = 'djmoney.contrib.exchange.backends.FixerBackend'
 OPEN_EXCHANGE_RATES_URL = 'https://openexchangerates.org/api/historical/2017-01-01.json?symbols=USD,EUR,NOK,SEK,CZK'
 FIXER_URL = 'http://data.fixer.io/api/2013-12-24?symbols=USD,EUR,NOK,SEK,CZK'
+
+
+# GeoIP2
+GEOIP_PATH = os.path.join(BASE_DIR, 'geolite2-db')
