@@ -28,7 +28,8 @@ from api.orders.models import CancelOrder
 from api.orders.serializers import (
     CancelOrderModelSerializer,
     CancelOrderCancelationModelSerializer,
-    AcceptOrderCancelationModelSerializer
+    AcceptOrderCancelationModelSerializer,
+    UnsubscribeOrderModelSerializer
 )
 
 # Filters
@@ -37,6 +38,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 import os
 from api.utils import helpers
+import stripe
 
 
 class CancelOrderViewSet(
@@ -113,3 +115,20 @@ class CancelOrderViewSet(
             instance._prefetched_objects_cache = {}
 
         return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def unsubscribe_order(self, request, *args, **kwargs):
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
+        else:
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+        serializer = UnsubscribeOrderModelSerializer(data=request.data,
+                                                     context={
+                                                         'order': self.order,
+                                                         'stripe': stripe,
+                                                         'request': request,
+                                                     })
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

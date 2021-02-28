@@ -293,3 +293,101 @@ class AcceptOrderCancelationModelSerializer(serializers.ModelSerializer):
         instance.status = CancelOrder.ACCEPTED
         instance.save()
         return instance
+
+
+class UnsubscribeOrderModelSerializer(serializers.ModelSerializer):
+    """CancelOrder model serializer."""
+    order = OrderModelSerializer(read_only=True)
+    issued_by = UserModelSerializer(read_only=True)
+
+    class Meta:
+        """Meta class."""
+
+        model = CancelOrder
+        fields = (
+            "id",
+            "order",
+            "issued_by",
+            "reason",
+            "status",
+        )
+        extra_kwargs = {"status": {"required": False, "allow_null": True}}
+
+    def validate(self, data):
+        order = self.context['order']
+        request = self.context['request']
+        user = request.user
+        if order.type != Order.RECURRENT_ORDER:
+            raise serializers.ValidationError('This order type is not allowed')
+
+        if user != order.buyer:
+            raise serializers.ValidationError('You are not allowed to do this action')
+
+        if order.status == Order.CANCELLED:
+            raise serializers.ValidationError('This order is cancelled')
+
+        return data
+
+    def create(self, validated_data):
+        stripe = self.context['stripe']
+        request = self.context['request']
+        user = request.user
+        validated_data['issued_by'] = user
+        order = self.context['order']
+        validated_data['order'] = order
+
+        stripe.Subscription.delete(order.subscription_id)
+        order.status = Order.CANCELLED
+        order.cancelled = True
+        order.save()
+
+        cancel_order = CancelOrder.objects.create(**validated_data)
+        activity = Activity.objects.create(
+            type=Activity.CANCEL,
+            order=order
+        )
+        CancelOrderActivity.objects.create(
+            activity=activity,
+            cancel_order=cancel_order,
+            status=CancelOrderActivity.ACCEPTED
+        )
+
+        seller = order.seller
+        buyer = order.buyer
+
+        issued_by = user
+        issued_to = None
+        if issued_by == seller:
+            issued_to = buyer
+        else:
+            issued_to = seller
+
+        chats = Chat.objects.filter(participants=issued_by)
+        chats = chats.filter(participants=issued_to)
+
+        chat_instance = None
+        if chats.exists():
+            for chat in chats:
+                if chat.participants.all().count() == 2:
+                    chat_instance = chat
+
+        if not chat_instance:
+
+            chat_instance = Chat.objects.create()
+
+            chat_instance.participants.add(issued_to)
+            chat_instance.participants.add(issued_by)
+            chat_instance.save()
+
+        # Create the message
+
+        message = Message.objects.create(chat=chat_instance, activity=activity, sent_by=issued_by)
+        chat_instance.last_message = message
+        chat_instance.save()
+        # Set message seen
+        seen_by, created = SeenBy.objects.get_or_create(chat=chat_instance, user=issued_by)
+        if seen_by.message != chat_instance.last_message:
+
+            seen_by.message = chat_instance.last_message
+            seen_by.save()
+        return cancel_order

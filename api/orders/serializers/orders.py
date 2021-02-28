@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404
 # Models
 from api.orders.models import Order
 from api.users.models import User, Earning
-from api.activities.models import OfferActivity, Activity
+from api.activities.models import OfferActivity, Activity, CancelOrderActivity
 from api.orders.models import Offer, OrderPayment
 from api.chats.models import Message, Chat, SeenBy
 from djmoney.models.fields import Money
@@ -33,8 +33,7 @@ class OrderModelSerializer(serializers.ModelSerializer):
 
         model = Order
         fields = (
-            "__all__"
-        )
+            "__all__")
 
         read_only_fields = ("id",)
 
