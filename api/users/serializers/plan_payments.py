@@ -12,28 +12,27 @@ from django.shortcuts import get_object_or_404
 
 
 # Models
-from api.users.models import PlanSubscription, User
+from api.users.models import PlanPayment, User
 
 
-class PlanSubscriptionModelSerializer(serializers.ModelSerializer):
+class PlanPaymentModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
 
     class Meta:
         """Meta class."""
 
-        model = PlanSubscription
+        model = PlanPayment
         fields = (
             "id",
+            "invoice_id",
+            "charge_id",
             "subscription_id",
-            "product_id",
-            "to_be_cancelled",
-            "cancelled",
-            "payment_issue",
-            "current_period_end",
-            "plan_type",
-            "plan_unit_amount",
-            "plan_currency",
-            "plan_price_label"
+            "amount_paid",
+            "currency",
+            "paid",
+            "status",
+            "invoice_pdf",
+            "created"
         )
 
         read_only_fields = ("id",)

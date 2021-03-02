@@ -29,7 +29,7 @@ from rest_framework.permissions import (
 from api.users.permissions import IsAccountOwner
 
 # Models
-from api.users.models import User, UserLoginActivity, PlanSubscription, Earning, Contact
+from api.users.models import User, UserLoginActivity, PlanSubscription, Earning, Contact, PlanPayment
 from api.orders.models import OrderPayment
 from djmoney.money import Money
 
@@ -811,6 +811,21 @@ class UserViewSet(mixins.RetrieveModelMixin,
             amount_paid = float(invoice_success['amount_paid']) / 100
             currency = invoice_success['currency']
             status = invoice_success['status']
+
+            # Get plan subscription
+            plan_users = User.objects.filter(plan_subscriptions__subscription_id=subscription_id)
+            if plan_users.exists():
+                plan_user = plan_users.first()
+                PlanPayment.objects.create(
+                    user=plan_user,
+                    invoice_id=invoice_id,
+                    subscription_id=subscription_id,
+                    invoice_pdf=invoice_pdf,
+                    charge_id=charge_id,
+                    amount_paid=amount_paid,
+                    currency=currency,
+                    status=status,
+                )
             orders = Order.objects.filter(subscription_id=subscription_id).exclude(subscription_id=None)
 
             if not orders.exists():

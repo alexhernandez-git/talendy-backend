@@ -109,12 +109,14 @@ class User(CModel, AbstractUser):
     )
 
     # Plan
+
     stripe_plan_customer_id = models.CharField(
         max_length=100, blank=True, null=True)
     plan_subscriptions = ManyToManyField("users.PlanSubscription", related_name="user_plan_subscription", blank=True)
     plan_default_payment_method = models.CharField(max_length=100, blank=True, null=True)
 
     # Payments
+
     stripe_customer_id = models.CharField(
         max_length=100, blank=True, null=True)
 
@@ -122,6 +124,7 @@ class User(CModel, AbstractUser):
     default_payment_method = models.CharField(max_length=100, blank=True, null=True)
 
     # Stripe connect
+
     stripe_account_id = models.CharField(max_length=100, blank=True, null=True)
     stripe_dashboard_url = models.CharField(max_length=100, blank=True, null=True)
 

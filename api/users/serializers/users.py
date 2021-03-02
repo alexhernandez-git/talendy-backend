@@ -78,7 +78,7 @@ class UserModelSerializer(serializers.ModelSerializer):
             'pending_notifications',
             'default_payment_method',
             'plan_default_payment_method',
-            'current_plan_subscription'
+            'current_plan_subscription',
         )
 
         read_only_fields = (

@@ -127,7 +127,6 @@ class ChatViewSet(
 
     @action(detail=True, methods=['get'])
     def retrieve_chat_feed(self, request, *args, **kwargs):
-
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
