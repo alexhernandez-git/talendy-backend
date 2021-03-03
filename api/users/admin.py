@@ -19,7 +19,7 @@ class CustomUserAdmin(UserAdmin):
     """User model admin."""
 
     fieldsets = UserAdmin.fieldsets + ((None, {"fields": ("is_verified", "stripe_account_id", "stripe_dashboard_url", "stripe_customer_id",
-                                                          "net_income", "withdrawn", "used_for_purchases", "available_for_withdawal")}),)
+                                                          "net_income", "withdrawn", "used_for_purchases", "available_for_withdawal", "active_month")}),)
     list_display = ("email", "first_name", "last_name", "is_staff",
                     "is_client", "stripe_account_id", "stripe_dashboard_url")
     list_filter = (

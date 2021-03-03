@@ -290,7 +290,7 @@ class AcceptOrderSerializer(serializers.Serializer):
             user.available_for_withdawal = user.available_for_withdawal - \
                 Money(amount=used_credits, currency="USD")
             user.used_for_purchases = user.used_for_purchases + Money(amount=used_credits, currency="USD")
-
+            user.save()
             invoice_paid = self.context['invoice_paid']
             invoice_id = invoice_paid['id']
             currency = invoice_paid['currency']
@@ -348,6 +348,6 @@ class AcceptOrderSerializer(serializers.Serializer):
                     'Something went wrong')
         offer_object.accepted = True
         offer_object.save()
-        user.active_month = True
-        user.save()
+        new_order.seller.active_month = True
+        new_order.seller.save()
         return new_order
