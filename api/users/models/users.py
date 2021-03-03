@@ -114,6 +114,7 @@ class User(CModel, AbstractUser):
         max_length=100, blank=True, null=True)
     plan_subscriptions = ManyToManyField("users.PlanSubscription", related_name="user_plan_subscription", blank=True)
     plan_default_payment_method = models.CharField(max_length=100, blank=True, null=True)
+    active_month = models.BooleanField(default=False)
 
     # Payments
 

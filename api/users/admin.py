@@ -5,7 +5,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 # Models
-from api.users.models import User, Earning, Contact, PlanPayment
+from api.users.models import User, Earning, Contact, PlanPayment, PlanSubscription
 
 
 @admin.register(Contact)
@@ -38,6 +38,11 @@ class EarningAdmin(admin.ModelAdmin):
 @admin.register(PlanPayment)
 class PlanPaymentAdmin(admin.ModelAdmin):
     """PlanPayment model admin."""
+
+
+@admin.register(PlanSubscription)
+class PlanSubscriptionAdmin(admin.ModelAdmin):
+    """PlanSubscription model admin."""
 
 
 admin.site.register(User, CustomUserAdmin)

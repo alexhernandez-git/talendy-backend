@@ -29,7 +29,7 @@ from rest_framework.permissions import (
 from api.users.permissions import IsAccountOwner
 
 # Models
-from api.users.models import User, UserLoginActivity, PlanSubscription, Earning, Contact, PlanPayment
+from api.users.models import User, UserLoginActivity, PlanSubscription, Earning, Contact, PlanPayment, plan_subscriptions
 from api.orders.models import OrderPayment
 from djmoney.money import Money
 
@@ -802,7 +802,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
         print(event)
         # Handle the event
         if event.type == 'invoice.payment_succeeded':
-            print(event)
             invoice_success = event.data.object
             invoice_id = invoice_success['id']
             charge_id = invoice_success['charge']
@@ -814,6 +813,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
             # Get plan subscription
             plan_users = User.objects.filter(plan_subscriptions__subscription_id=subscription_id)
+            plan_subscription = PlanSubscription.objects.filter(subscription_id=subscription_id)
             if plan_users.exists():
                 plan_user = plan_users.first()
                 PlanPayment.objects.create(
@@ -826,6 +826,59 @@ class UserViewSet(mixins.RetrieveModelMixin,
                     currency=currency,
                     status=status,
                 )
+                if plan_user.active_month:
+                    product_id = plan_subscription.product_id
+
+                    price = stripe.Price.create(
+                        unit_amount=int(plan_subscription.plan_unit_amount * 100),
+                        currency=plan_subscription.plan_currency,
+                        product=product_id,
+                        recurring={"interval": "month"},
+                    )
+
+                    subscription = stripe.Subscription.retrieve(
+                        subscription_id)
+
+                    stripe.Subscription.modify(
+                        subscription_id,
+                        cancel_at_period_end=False,
+                        proration_behavior=None,
+                        items=[
+                            {
+                                'id': subscription['items']['data'][0]['id'],
+                                "price": price['id']
+                            },
+                        ],
+                    )
+
+                    plan_user.active_month = False
+                    plan_user.save()
+                else:
+                    product_id = plan_subscription.product_id
+
+                    price = stripe.Price.create(
+                        unit_amount=0,
+                        currency=plan_user.currency,
+                        recurring={"interval": "month"},
+
+                        product=product_id
+                    )
+
+                    subscription = stripe.Subscription.retrieve(
+                        subscription_id)
+
+                    stripe.Subscription.modify(
+                        subscription_id,
+                        cancel_at_period_end=False,
+                        proration_behavior=None,
+                        items=[
+                            {
+                                'id': subscription['items']['data'][0]['id'],
+                                "price": price['id']
+                            },
+                        ],
+                    )
+
                 return HttpResponse(status=200)
 
             orders = Order.objects.filter(subscription_id=subscription_id).exclude(subscription_id=None)
@@ -848,11 +901,13 @@ class UserViewSet(mixins.RetrieveModelMixin,
             buyer = order.buyer
             used_credits = order.used_credits
             unit_amount = order.unit_amount
+
             if used_credits:
 
                 buyer.available_for_withdawal = buyer.available_for_withdawal - used_credits
                 buyer.used_for_purchases = buyer.used_for_purchases + used_credits
                 buyer.save()
+
             if buyer.available_for_withdawal < unit_amount:
 
                 diff = buyer.available_for_withdawal - unit_amount
@@ -869,15 +924,15 @@ class UserViewSet(mixins.RetrieveModelMixin,
                 )
 
                 subscription = stripe.Subscription.retrieve(
-                    order.subscription_id)
+                    subscription_id)
 
                 stripe.Subscription.modify(
-                    order.subscription_id,
+                    subscription_id,
                     cancel_at_period_end=False,
                     proration_behavior=None,
                     items=[
                         {
-                            'id': subscription['items']['data'][0].id,
+                            'id': subscription['items']['data'][0]['id'],
                             "price": price['id']
                         },
                     ],
@@ -946,3 +1001,80 @@ class UserViewSet(mixins.RetrieveModelMixin,
         else:
             # Unexpected event type
             return HttpResponse(status=400)
+
+# {
+#   "id": "sub_IlnjqhWRBzlgmq",
+#   "object": "subscription",
+#   "application_fee_percent": None,
+#   "billing_cycle_anchor": 1612018313,
+#   "billing_thresholds": None,
+#   "cancel_at": None,
+#   "cancel_at_period_end": False,
+#   "canceled_at": 1610808975,
+#   "collection_method": "charge_automatically",
+#   "created": 1610808713,
+#   "current_period_end": 1612018313,
+#   "current_period_start": 1610808713,
+#   "customer": "cus_IlnhrxdXMms1ao",
+#   "days_until_due": None,
+#   "default_payment_method": None,
+#   "default_source": None,
+#   "default_tax_rates": [],
+#   "discount": None,
+#   "ended_at": 1610808975,
+#   "items": {
+#     "object": "list",
+#     "data": [
+#       {
+#         "id": "si_Ilnj5Ut5sI4IBp",
+#         "object": "subscription_item",
+#         "billing_thresholds": None,
+#         "created": 1610808713,
+#         "metadata": {},
+#         "price": {
+#           "id": "price_1IAG7VCob7soW4zYt7WFhGOr",
+#           "object": "price",
+#           "active": True,
+#           "billing_scheme": "per_unit",
+#           "created": 1610808677,
+#           "currency": "eur",
+#           "livemode": False,
+#           "lookup_key": None,
+#           "metadata": {},
+#           "nickname": None,
+#           "product": "prod_IlnimGxTUwdFZb",
+#           "recurring": {
+#             "aggregate_usage": None,
+#             "interval": "month",
+#             "interval_count": 1,
+#             "usage_type": "licensed"
+#           },
+#           "tiers_mode": None,
+#           "transform_quantity": None,
+#           "type": "recurring",
+#           "unit_amount": 999,
+#           "unit_amount_decimal": "999"
+#         },
+#         "quantity": 1,
+#         "subscription": "sub_IlnjqhWRBzlgmq",
+#         "tax_rates": []
+#       }
+#     ],
+#     "has_more": False,
+#     "url": "/v1/subscription_items?subscription=sub_IlnjqhWRBzlgmq"
+#   },
+#   "latest_invoice": "in_1IAG85Cob7soW4zYJ8uQqSV1",
+#   "livemode": False,
+#   "metadata": {},
+#   "next_pending_invoice_item_invoice": None,
+#   "pause_collection": None,
+#   "pending_invoice_item_interval": None,
+#   "pending_setup_intent": None,
+#   "pending_update": None,
+#   "schedule": None,
+#   "start_date": 1610808713,
+#   "status": "canceled",
+#   "transfer_data": None,
+#   "trial_end": 1612018313,
+#   "trial_start": 1610808713
+# }

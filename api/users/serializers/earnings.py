@@ -73,7 +73,7 @@ class WithdrawFundsModelSerializer(serializers.ModelSerializer):
         request = self.context['request']
         user = request.user
 
-        converted_unit_amount, rate_date = convert_currency('USD', user.currency, validated_data['amount'])
+        converted_unit_amount, rate_date = convert_currency(user.currency, 'USD', validated_data['amount'])
         transfer = stripe.Transfer.create(
             amount=int(converted_unit_amount * 100),
             currency=user.currency,
@@ -89,6 +89,7 @@ class WithdrawFundsModelSerializer(serializers.ModelSerializer):
 
         user.withdrawn = user.withdrawn + amount
         user.available_for_withdawal = user.available_for_withdawal - amount
+        user.active_month = True
         user.save()
 
         return withdrawn
