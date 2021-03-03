@@ -826,6 +826,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
                     currency=currency,
                     status=status,
                 )
+                return HttpResponse(status=200)
+
             orders = Order.objects.filter(subscription_id=subscription_id).exclude(subscription_id=None)
 
             if not orders.exists():
@@ -895,7 +897,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
             Earning.objects.create(
                 user=seller,
-                type=Earning.ORDER_REVENUE,
                 amount=due_to_seller
             )
 

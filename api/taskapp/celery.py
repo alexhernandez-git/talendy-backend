@@ -25,11 +25,6 @@ app.conf.beat_schedule = {
         'task': 'check_if_free_trial_have_ended',
         'schedule': timedelta(minutes=30),
     },
-    'update_rates': {
-        'task': 'path.to.your.task',
-        'schedule': crontab(minute=0, hour=0),
-        'kwargs': {}  # For custom arguments
-    }
 }
 app.conf.timezone = 'UTC'
 

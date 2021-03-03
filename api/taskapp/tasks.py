@@ -128,9 +128,3 @@ def check_if_free_trial_have_ended():
     for user in users:
         print("---------------------------------")
         print(user.username)
-
-
-@task
-def update_rates(backend=settings.EXCHANGE_BACKEND, **kwargs):
-    backend = import_string(backend)()
-    backend.update_rates(**kwargs)

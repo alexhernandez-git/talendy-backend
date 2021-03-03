@@ -20,5 +20,9 @@ class Earning(CModel):
     type = models.CharField(
         max_length=2,
         choices=EARNING_TYPES,
+        default=ORDER_REVENUE
     )
+
     amount = MoneyField(max_digits=14, decimal_places=2, default_currency='USD')
+
+    transfer_id = models.CharField(max_length=100, blank=True, null=True)
