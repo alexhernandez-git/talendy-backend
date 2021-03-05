@@ -260,6 +260,12 @@ class AcceptOrderSerializer(serializers.Serializer):
             seen_by.save()
 
         if offer['type'] == Order.NORMAL_ORDER:
+
+            user.available_for_withdawal = user.available_for_withdawal - \
+                Money(amount=used_credits, currency="USD")
+            user.used_for_purchases = user.used_for_purchases + Money(amount=used_credits, currency="USD")
+            user.save()
+
             price = self.context['price']
 
             invoice_paid = self.context['invoice_paid']

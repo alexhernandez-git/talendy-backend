@@ -10,6 +10,7 @@ from api.orders.models import Offer
 
 # Utils
 from api.utils import helpers
+from api.taskapp.tasks import send_activity_notification
 
 
 @receiver(post_save, sender=Message)
@@ -37,12 +38,17 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
             )
 
             activityModel, _ = helpers.get_activity_classes(instance.activity.type)
+
             status = ""
             if activityModel:
                 activity_queryset = activityModel.objects.filter(activity=instance.activity)
                 if activity_queryset.exists():
                     try:
-                        status = activity_queryset.first().status
+                        activity = activity_queryset.first()
+                        # import pdb
+                        # pdb.set_trace()
+                        status = activity.status
+                        # send_activity_notification(activity, instance.activity.type+status)
                     except Exception as e:
                         pass
 
@@ -70,6 +76,11 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
                 }
             )
         else:
+            # Let celery send have more messages notification
+            sent_to.messages_notificatoin_sent = False
+            sent_to.save()
+            ################################################
+
             user_notification = NotificationUser.objects.filter(
                 user=sent_to,
                 is_read=False,

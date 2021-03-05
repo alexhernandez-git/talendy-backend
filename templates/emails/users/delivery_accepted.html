@@ -127,7 +127,7 @@
       }
       .bg-indigo-600 {
         --tw-bg-opacity: 1;
-          background-color: #14b8a6;
+             background-color: #14b8a6;
 
       }
     </style>
@@ -451,7 +451,6 @@
                                                   font-size: 26px;
                                                   text-align: center;
                                                   padding: 51px 20px 51px 20px;
-
                                                   color: #fff;
                                                 "
                                                 class="bg-indigo-600"
@@ -460,9 +459,7 @@
                                                 data-start-index="9089"
                                                 data-end-index="9208"
                                               >
-                                                Bienvenido {{user.first_name}}
-                                                {{user.last_name}} a Full Order
-                                                Tracker
+                                                {{user.username}} has accepted the delivery
                                               </td>
                                             </tr>
                                           </tbody>
@@ -496,7 +493,6 @@
                                                   text-align: center;
                                                   border-radius: 10px;
                                                   padding: 10px;
-
                                                   color: #fff;
                                                 "
                                                 class="bg-indigo-600"
@@ -505,15 +501,16 @@
                                                 data-start-index="9089"
                                                 data-end-index="9208"
                                               >
-                                                <a
-                                                  style="
-                                                    color: white;
-                                                    text-decoration: none;
-                                                  "
-                                                  href="https://fullordertracker.com/verified-account/{{token|safe}}"
-                                                >
-                                                  Verificar cuenta
-                                                </a>
+                         
+                                                  <a
+                                                    style="
+                                                      color: white;
+                                                      text-decoration: none;
+                                                    "
+                                                    href="https://freelanium.com/dashboard/orders/{{order}}/"
+                                                  >
+                                                    View order
+                                                  </a>
                                               </td>
                                             </tr>
                                           </tbody>

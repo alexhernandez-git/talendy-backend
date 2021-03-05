@@ -142,6 +142,10 @@ class User(CModel, AbstractUser):
     used_for_purchases = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
     available_for_withdawal = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
 
+    # Email notifications
+
+    messages_notificatoin_sent = models.BooleanField(default=False)
+
     def __str__(self):
         """Return username."""
         return '{} {}'.format(self.first_name, self.last_name)

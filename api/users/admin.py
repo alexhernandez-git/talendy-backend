@@ -5,7 +5,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 # Models
-from api.users.models import User, Earning, Contact, PlanPayment, PlanSubscription
+from api.users.models import User, Earning, Contact, PlanPayment, PlanSubscription, UserLoginActivity
 
 
 @admin.register(Contact)
@@ -43,6 +43,12 @@ class PlanPaymentAdmin(admin.ModelAdmin):
 @admin.register(PlanSubscription)
 class PlanSubscriptionAdmin(admin.ModelAdmin):
     """PlanSubscription model admin."""
+
+
+@admin.register(UserLoginActivity)
+class UserLoginActivityAdmin(admin.ModelAdmin):
+    """UserLoginActivity model admin."""
+    list_display = ("login_username", "created")
 
 
 admin.site.register(User, CustomUserAdmin)

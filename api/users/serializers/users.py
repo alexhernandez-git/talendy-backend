@@ -6,7 +6,7 @@ from django.conf import settings
 from django.contrib.auth import password_validation, authenticate
 from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
-
+from django.db.models import Sum
 
 # Django REST Framework
 from rest_framework import serializers
@@ -14,7 +14,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.validators import UniqueValidator
 
 # Models
-from api.users.models import User, UserLoginActivity, PlanSubscription, plan_subscriptions
+from api.users.models import User, UserLoginActivity, PlanSubscription, Earning
 from api.notifications.models import Notification
 from api.plans.models import Plan
 from api.activities.models import Activity
@@ -31,6 +31,8 @@ from api.taskapp.tasks import (
 # Utilities
 import jwt
 import datetime
+from django.utils import timezone
+
 from api.utils import helpers
 import re
 import geoip2.database
@@ -42,6 +44,7 @@ class UserModelSerializer(serializers.ModelSerializer):
     pending_notifications = serializers.SerializerMethodField(read_only=True)
     pending_messages = serializers.SerializerMethodField(read_only=True)
     current_plan_subscription = serializers.SerializerMethodField(read_only=True)
+    earned_this_month = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -79,6 +82,7 @@ class UserModelSerializer(serializers.ModelSerializer):
             'default_payment_method',
             'plan_default_payment_method',
             'current_plan_subscription',
+            'earned_this_month',
         )
 
         read_only_fields = (
@@ -86,6 +90,7 @@ class UserModelSerializer(serializers.ModelSerializer):
         )
 
     def get_pending_notifications(self, obj):
+
         return obj.notifications.through.objects.filter(user=obj, is_read=False).exists()
 
     def get_pending_messages(self, obj):
@@ -99,6 +104,15 @@ class UserModelSerializer(serializers.ModelSerializer):
             return None
         plan_subscription = subscriptions_queryset.first()
         return PlanSubscriptionModelSerializer(plan_subscription, many=False).data
+
+    def get_earned_this_month(self, obj):
+
+        today = datetime.datetime.now()
+
+        earnings = Earning.objects.filter(
+            created__month=today.month, user=obj, type=Earning.ORDER_REVENUE).aggregate(
+            Sum('amount'))
+        return earnings.get('amount__sum', None)
 
 
 class GetUserByJwtSerializer(serializers.Serializer):

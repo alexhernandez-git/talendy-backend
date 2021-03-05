@@ -25,6 +25,10 @@ app.conf.beat_schedule = {
         'task': 'check_if_free_trial_have_ended',
         'schedule': timedelta(minutes=30),
     },
+    'check_if_users_have_messages_to_read': {
+        'task': 'check_if_users_have_messages_to_read',
+        'schedule': timedelta(seconds=20),
+    },
 }
 app.conf.timezone = 'UTC'
 

@@ -13,6 +13,8 @@ from api.orders.models import CancelOrder, Order
 from api.activities.models import Activity, CancelOrderActivity
 from api.users.models import User
 from api.chats.models import Message, Chat, SeenBy
+from djmoney.models.fields import Money
+
 
 # Serializers
 from api.orders.serializers import OrderModelSerializer
@@ -238,6 +240,10 @@ class AcceptOrderCancelationModelSerializer(serializers.ModelSerializer):
             buyer = order.buyer
             buyer.net_income = buyer.net_income + order.due_to_seller
             buyer.available_for_withdawal = buyer.available_for_withdawal + order.due_to_seller
+            buyer.save()
+            buyer.available_for_withdawal = buyer.available_for_withdawal + \
+                Money(amount=order.used_credits, currency="USD")
+            buyer.used_for_purchases = buyer.used_for_purchases - Money(amount=order.used_credits, currency="USD")
             buyer.save()
         order.save()
 

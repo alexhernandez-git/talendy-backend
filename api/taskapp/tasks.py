@@ -10,6 +10,8 @@ from django.utils.module_loading import import_string
 # Models
 from api.users.models import User
 from rest_framework.authtoken.models import Token
+from api.notifications.models import NotificationUser, notifications
+from api.activities.models import Activity
 
 # Celery
 from celery.decorators import task
@@ -128,3 +130,66 @@ def check_if_free_trial_have_ended():
     for user in users:
         print("---------------------------------")
         print(user.username)
+
+
+@task(name='check_if_users_have_messages_to_read')
+def check_if_users_have_messages_to_read():
+    """Check if the free trial has ended and turn off"""
+    notifications_user = NotificationUser.objects.filter(
+        is_read=False, user__messages_notificatoin_sent=False)
+    emails = []
+    for notification_user in notifications_user:
+        emails.append(notification_user.user.email)
+        notification_user.user.messages_notificatoin_sent = True
+        notification_user.user.save()
+
+    subject = 'New messages in freelanium'
+    from_email = 'Freelanium <no-reply@frelanium.com>'
+    content = render_to_string(
+        'emails/users/new_messages.html',
+        {}
+    )
+    msg = EmailMultiAlternatives(subject, content, from_email, emails)
+    msg.attach_alternative(content, "text/html")
+    msg.send()
+
+
+@task(name='send_activity_notification', max_retries=3)
+def send_activity_notification(activity, type):
+    """send_activity_notification."""
+
+    def offer_accepted_email():
+        user = User.objects.get(id=activity.offer.sent_to)
+        return render_to_string(
+            'emails/users/order_offer.html',
+            {'user': user, 'offer': activity.order}
+        )
+
+    switcher = {
+        Activity.OFFER: "emails/users/order_offer.html",
+        Activity.DELIVERY: "emails/users/order_offer.html",
+        Activity.REVISION: "emails/users/order_offer.html",
+        Activity.CANCEL: "emails/users/order_offer.html",
+
+    }
+    activity_classes = switcher.get(type, {"model": None, "serializer": None})
+
+    subject = 'Welcome! @{} has invited you '.format(
+        user.username)
+    from_email = 'Full Order Tracker <no-reply@fullordertracker.com>'
+
+    switcher = {
+        Activity.OFFER: "emails/users/order_offer.html",
+        Activity.DELIVERY: "emails/users/order_offer.html",
+        Activity.REVISION: "emails/users/order_offer.html",
+        Activity.CANCEL: "emails/users/order_offer.html",
+
+    }
+    content = switcher.get(type, {"model": None, "serializer": None})
+    content = render_to_string(
+        'emails/users/order_offer.html',
+        {'token': verification_token, 'user': user, 'user_exists': user_exists, 'offer': offer_id}
+    )
+    msg = EmailMultiAlternatives(subject, content, from_email, [email])
+    msg.attach_alternative(content, "text/html")
+    msg.send()

@@ -813,7 +813,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
             # Get plan subscription
             plan_users = User.objects.filter(plan_subscriptions__subscription_id=subscription_id)
-            plan_subscription = PlanSubscription.objects.filter(subscription_id=subscription_id)
+            plan_subscriptions = PlanSubscription.objects.filter(subscription_id=subscription_id)
             if plan_users.exists():
                 plan_user = plan_users.first()
                 PlanPayment.objects.create(
@@ -826,58 +826,62 @@ class UserViewSet(mixins.RetrieveModelMixin,
                     currency=currency,
                     status=status,
                 )
-                if plan_user.active_month:
-                    product_id = plan_subscription.product_id
+                if plan_subscriptions.exists():
+                    plan_subscription = plan_subscriptions.first()
 
-                    price = stripe.Price.create(
-                        unit_amount=int(plan_subscription.plan_unit_amount * 100),
-                        currency=plan_subscription.plan_currency,
-                        product=product_id,
-                        recurring={"interval": "month"},
-                    )
+                    if plan_user.active_month:
 
-                    subscription = stripe.Subscription.retrieve(
-                        subscription_id)
+                        product_id = plan_subscription.product_id
 
-                    stripe.Subscription.modify(
-                        subscription_id,
-                        cancel_at_period_end=False,
-                        proration_behavior=None,
-                        items=[
-                            {
-                                'id': subscription['items']['data'][0]['id'],
-                                "price": price['id']
-                            },
-                        ],
-                    )
+                        price = stripe.Price.create(
+                            unit_amount=int(plan_subscription.plan_unit_amount * 100),
+                            currency=plan_subscription.plan_currency,
+                            product=product_id,
+                            recurring={"interval": "month"},
+                        )
 
-                    plan_user.active_month = False
-                    plan_user.save()
-                else:
-                    product_id = plan_subscription.product_id
+                        subscription = stripe.Subscription.retrieve(
+                            subscription_id)
 
-                    price = stripe.Price.create(
-                        unit_amount=0,
-                        currency=plan_user.currency,
-                        recurring={"interval": "month"},
+                        stripe.Subscription.modify(
+                            subscription_id,
+                            cancel_at_period_end=False,
+                            proration_behavior=None,
+                            items=[
+                                {
+                                    'id': subscription['items']['data'][0]['id'],
+                                    "price": price['id']
+                                },
+                            ],
+                        )
 
-                        product=product_id
-                    )
+                        plan_user.active_month = False
+                        plan_user.save()
+                    else:
+                        product_id = plan_subscription.product_id
 
-                    subscription = stripe.Subscription.retrieve(
-                        subscription_id)
+                        price = stripe.Price.create(
+                            unit_amount=0,
+                            currency=plan_user.currency,
+                            recurring={"interval": "month"},
 
-                    stripe.Subscription.modify(
-                        subscription_id,
-                        cancel_at_period_end=False,
-                        proration_behavior=None,
-                        items=[
-                            {
-                                'id': subscription['items']['data'][0]['id'],
-                                "price": price['id']
-                            },
-                        ],
-                    )
+                            product=product_id
+                        )
+
+                        subscription = stripe.Subscription.retrieve(
+                            subscription_id)
+
+                        stripe.Subscription.modify(
+                            subscription_id,
+                            cancel_at_period_end=False,
+                            proration_behavior=None,
+                            items=[
+                                {
+                                    'id': subscription['items']['data'][0]['id'],
+                                    "price": price['id']
+                                },
+                            ],
+                        )
 
                 return HttpResponse(status=200)
 
