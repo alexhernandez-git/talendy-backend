@@ -241,9 +241,9 @@ class AcceptOrderCancelationModelSerializer(serializers.ModelSerializer):
             buyer.net_income = buyer.net_income + order.due_to_seller
             buyer.available_for_withdawal = buyer.available_for_withdawal + order.due_to_seller
             buyer.save()
-            buyer.available_for_withdawal = buyer.available_for_withdawal + \
-                Money(amount=order.used_credits, currency="USD")
-            buyer.used_for_purchases = buyer.used_for_purchases - Money(amount=order.used_credits, currency="USD")
+
+            buyer.available_for_withdawal = buyer.available_for_withdawal + order.used_credits
+            buyer.used_for_purchases = buyer.used_for_purchases - order.used_credits
             buyer.save()
         order.save()
 

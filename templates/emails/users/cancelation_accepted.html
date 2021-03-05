@@ -125,9 +125,10 @@
         position: relative;
         top: 1px;
       }
-      .bg-cyan-600 {
+      .bg-indigo-600 {
         --tw-bg-opacity: 1;
-        background-color: #14b8a6;
+             background-color: #14b8a6;
+
       }
     </style>
     <!--user entered Head Start-->
@@ -450,17 +451,15 @@
                                                   font-size: 26px;
                                                   text-align: center;
                                                   padding: 51px 20px 51px 20px;
-
                                                   color: #fff;
                                                 "
-                                                class="bg-cyan-600"
+                                                class="bg-indigo-600"
                                                 valign="top"
                                                 align="left"
                                                 data-start-index="9089"
                                                 data-end-index="9208"
                                               >
-                                                {{user.username}} has invited
-                                                you to freelanium
+                                                {{user.username}} has accepted the cancelation
                                               </td>
                                             </tr>
                                           </tbody>
@@ -496,21 +495,22 @@
                                                   padding: 10px;
                                                   color: #fff;
                                                 "
-                                                class="bg-cyan-600"
+                                                class="bg-indigo-600"
                                                 valign="top"
                                                 align="left"
                                                 data-start-index="9089"
                                                 data-end-index="9208"
                                               >
-                                                <a
-                                                  style="
-                                                    color: white;
-                                                    text-decoration: none;
-                                                  "
-                                                  href="https://freelanium.com/invited-{{type}}/{{token|safe}}"
-                                                >
-                                                  Click here to enroll
-                                                </a>
+                         
+                                                  <a
+                                                    style="
+                                                      color: white;
+                                                      text-decoration: none;
+                                                    "
+                                                    href="https://freelanium.com/dashboard/order/{{order}}/"
+                                                  >
+                                                    View order
+                                                  </a>
                                               </td>
                                             </tr>
                                           </tbody>

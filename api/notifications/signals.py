@@ -6,7 +6,7 @@ from asgiref.sync import async_to_sync
 # Models
 from api.chats.models import Message, Chat
 from api.notifications.models import Notification, NotificationUser
-from api.orders.models import Offer
+from api.orders.models import Offer, Order
 
 # Utils
 from api.utils import helpers
@@ -45,10 +45,9 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
                 if activity_queryset.exists():
                     try:
                         activity = activity_queryset.first()
-                        # import pdb
-                        # pdb.set_trace()
+
                         status = activity.status
-                        # send_activity_notification(activity, instance.activity.type+status)
+                        send_activity_notification(activity, instance.activity.type+status)
                     except Exception as e:
                         pass
 

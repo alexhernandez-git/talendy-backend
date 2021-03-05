@@ -11,7 +11,8 @@ from django.utils.module_loading import import_string
 from api.users.models import User
 from rest_framework.authtoken.models import Token
 from api.notifications.models import NotificationUser, notifications
-from api.activities.models import Activity
+from api.activities.models import Activity, OfferActivity, DeliveryActivity, CancelOrderActivity
+from api.orders.models import Order
 
 # Celery
 from celery.decorators import task
@@ -157,39 +158,110 @@ def check_if_users_have_messages_to_read():
 @task(name='send_activity_notification', max_retries=3)
 def send_activity_notification(activity, type):
     """send_activity_notification."""
+    print(type)
 
     def offer_accepted_email():
-        user = User.objects.get(id=activity.offer.sent_to)
+        order = Order.objects.get(offer=activity.offer)
         return render_to_string(
             'emails/users/order_offer.html',
-            {'user': user, 'offer': activity.order}
-        )
+            {'user': order.buyer, 'order': order.id}
+        ), order.seller, '@{} has accepted the offer '.format(
+            order.buyer.username)
+
+    def order_delivery_email():
+
+        order = activity.delivery.order
+        return render_to_string(
+            'emails/users/order_delivery.html',
+            {'user': order.buyer, 'order': order.id}
+        ), order.seller.email, '@{} has delivered the offer '.format(
+            order.buyer.username)
+
+    def order_delivery_accepted_email():
+        order = activity.delivery.order
+        return render_to_string(
+            'emails/users/delivery_accepted.html',
+            {'user': order.buyer, 'order': order.id}
+        ), order.seller.email, '@{} has accepted the delivery '.format(
+            order.buyer.username)
+
+    def order_delivery_revision_email():
+        order = activity.revision.order
+        return render_to_string(
+            'emails/users/delivery_revision.html',
+            {'user': order.buyer, 'order': order.id}
+        ), order.seller.email, '@{} has requested a delivery revision '.format(
+            order.buyer.username)
+
+    def order_cancelation_email():
+        cancel_order = activity.cancel_order
+        order = cancel_order.order
+        issued_by = cancel_order.issued_by
+
+        sent_to = None
+        if issued_by == order.buyer:
+            sent_to = order.seller
+        else:
+            sent_to = order.buyer
+
+        return render_to_string(
+            'emails/users/cancelation_request.html',
+            {'user': issued_by, 'order': order.id}
+        ), sent_to.email, '@{} has requested a cancelation '.format(
+            issued_by.username)
+
+    def cancelation_accepted_email():
+        cancel_order = activity.cancel_order
+        order = cancel_order.order
+        issued_by = cancel_order.issued_by
+
+        sent_by = None
+        if issued_by == order.buyer:
+            sent_by = order.seller
+        else:
+            sent_by = order.buyer
+
+        return render_to_string(
+            'emails/users/cancelation_request.html',
+            {'user': issued_by, 'order': order.id}
+        ), issued_by.email, '@{} has accepted the cancelation '.format(
+            sent_by.username)
+
+    def cancelation_not_accepted_email():
+        cancel_order = activity.cancel_order
+        order = cancel_order.order
+        issued_by = cancel_order.issued_by
+
+        sent_by = None
+        if issued_by == order.buyer:
+            sent_by = order.seller
+        else:
+            sent_by = order.buyer
+
+        return render_to_string(
+            'emails/users/cancelation_request.html',
+            {'user': issued_by, 'order': order.id}
+        ), sent_by.email, '@{} has not accepted the cancelation '.format(
+            issued_by.username)
+
+    from_email = 'Freelanium <no-reply@fullordertracker.com>'
 
     switcher = {
-        Activity.OFFER: "emails/users/order_offer.html",
-        Activity.DELIVERY: "emails/users/order_offer.html",
-        Activity.REVISION: "emails/users/order_offer.html",
-        Activity.CANCEL: "emails/users/order_offer.html",
-
+        Activity.OFFER+OfferActivity.ACCEPTED: offer_accepted_email,
+        Activity.DELIVERY+DeliveryActivity.PENDENDT: order_delivery_email,
+        Activity.DELIVERY+DeliveryActivity.ACCEPTED: order_delivery_accepted_email,
+        Activity.REVISION: order_delivery_revision_email,
+        Activity.CANCEL+CancelOrderActivity.PENDENDT: order_cancelation_email,
+        Activity.CANCEL+CancelOrderActivity.ACCEPTED: cancelation_accepted_email,
+        Activity.CANCEL+CancelOrderActivity.CANCELLED: cancelation_not_accepted_email,
     }
-    activity_classes = switcher.get(type, {"model": None, "serializer": None})
 
-    subject = 'Welcome! @{} has invited you '.format(
-        user.username)
-    from_email = 'Full Order Tracker <no-reply@fullordertracker.com>'
+    get_email_data_function = switcher.get(type, None)
 
-    switcher = {
-        Activity.OFFER: "emails/users/order_offer.html",
-        Activity.DELIVERY: "emails/users/order_offer.html",
-        Activity.REVISION: "emails/users/order_offer.html",
-        Activity.CANCEL: "emails/users/order_offer.html",
+    content, email, subject = get_email_data_function()
 
-    }
-    content = switcher.get(type, {"model": None, "serializer": None})
-    content = render_to_string(
-        'emails/users/order_offer.html',
-        {'token': verification_token, 'user': user, 'user_exists': user_exists, 'offer': offer_id}
-    )
-    msg = EmailMultiAlternatives(subject, content, from_email, [email])
-    msg.attach_alternative(content, "text/html")
-    msg.send()
+    if content and email and subject:
+
+        msg = EmailMultiAlternatives(subject, content, from_email, [email])
+        msg.attach_alternative(content, "text/html")
+        msg.send()

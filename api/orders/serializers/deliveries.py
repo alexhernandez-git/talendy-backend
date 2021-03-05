@@ -166,6 +166,7 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
             seller.net_income = seller.net_income + order.due_to_seller
             seller.available_for_withdawal = seller.available_for_withdawal + order.due_to_seller
             seller.save()
+
         elif order.type == Order.TWO_PAYMENTS_ORDER:
             if not user.stripe_customer_id:
 
