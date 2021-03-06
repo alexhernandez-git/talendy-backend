@@ -72,7 +72,8 @@ class WithdrawFundsModelSerializer(serializers.ModelSerializer):
         user = request.user
         if amount > user.available_for_withdawal:
             raise serializers.ValidationError('The amount is greater than your budget')
-
+        if amount > Money(amount=5000, currency="USD"):
+            raise serializers.ValidationError('The amount is too large')
         if not user.paypal_email:
             raise serializers.ValidationError('You don\'t have a PayPal account asociated')
 
@@ -98,6 +99,7 @@ class WithdrawFundsModelSerializer(serializers.ModelSerializer):
             string.ascii_uppercase + string.digits, k=7)))
         # Construct a request object and set desired parameters
         # Here, PayoutsPostRequest() creates a POST request to /v1/payments/payouts
+        str_amount = str(validated_data['amount'])
         body = {
             "sender_batch_header": {
                 "recipient_type": "EMAIL",
@@ -107,12 +109,12 @@ class WithdrawFundsModelSerializer(serializers.ModelSerializer):
                 "email_subject": "This is a test transaction from SDK"
             },
             "items": [{
-                "note": "Your 1$ Payout!",
+                "note": "Your {}$ Payout!".format(str_amount),
                 "amount": {
                     "currency": "USD",
-                    "value": str(validated_data['amount'])
+                    "value": str_amount
                 },
-                "receiver": "vlexhndz@gmail.com",
+                "receiver": user.paypal_email,
                 "sender_item_id": "Test_txn_1"
             }]
         }
@@ -136,10 +138,11 @@ class WithdrawFundsModelSerializer(serializers.ModelSerializer):
             print("Information link: " + error["information_link"])
             print("Debug id: " + error["debug_id"])
             print("Details: ")
-            for detail in error["details"]:
-                print("Error location: " + detail["location"])
-                print("Error field: " + detail["field"])
-                print("Error issue: " + detail["issue"])
+            if "details" in error:
+                for detail in error["details"]:
+                    print("Error location: " + detail["location"])
+                    print("Error field: " + detail["field"])
+                    print("Error issue: " + detail["issue"])
             raise serializers.ValidationError('Withdraw error')
 
         except IOError as ioe:
@@ -177,7 +180,6 @@ class WithdrawFundsModelSerializer(serializers.ModelSerializer):
 
         user.withdrawn = user.withdrawn + amount
         user.available_for_withdawal = user.available_for_withdawal - amount
-        user.active_month = True
         user.save()
 
         return withdrawn

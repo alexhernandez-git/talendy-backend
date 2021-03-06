@@ -798,72 +798,98 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
         currency, country = helpers.get_currency_and_country(request)
         subscriptions_queryset = PlanSubscription.objects.filter(user_plan_subscription=user, cancelled=False)
 
-        if not subscriptions_queryset.exists():
-            raise serializers.ValidationError(
-                "User have not a plan subscription")
+        if subscriptions_queryset.exists():
 
-        plan_subscription = subscriptions_queryset.first()
-        plan_currency = plan_subscription.plan_currency
+            plan_subscription = subscriptions_queryset.first()
+            plan_currency = plan_subscription.plan_currency
 
-        try:
-            if currency != plan_currency:
-                plan = helpers.get_plan(currency)
+            try:
+                if currency != plan_currency:
+                    plan = helpers.get_plan(currency)
 
-                price = stripe.Price.create(
-                    unit_amount=int(plan.unit_amount * 100),
-                    currency=plan.currency,
-                    recurring={"interval": "month"},
-                    product=plan_subscription.product_id
+                    price = stripe.Price.create(
+                        unit_amount=int(plan.unit_amount * 100),
+                        currency=plan.currency,
+                        recurring={"interval": "month"},
+                        product=plan_subscription.product_id
+                    )
+                    subscription = stripe.Subscription.retrieve(plan_subscription.subscription_id)
+
+                    stripe.Subscription.modify(
+                        subscription["id"],
+                        cancel_at_period_end=False,
+                        proration_behavior=None,
+                        items=[
+                            {
+                                'id': subscription['items']['data'][0].id,
+                                "price": price["id"],
+                            },
+                        ]
+                    )
+                    plan_subscription.plan_type = plan.type
+                    plan_subscription.plan_currency = plan.currency
+                    plan_subscription.plan_unit_amount = plan.unit_amount
+                    plan_subscription.plan_price_label = plan.price_label
+                    plan_subscription.save()
+                stripe.PaymentMethod.attach(
+                    payment_method_id,
+                    customer=user.stripe_plan_customer_id,
                 )
-                subscription = stripe.Subscription.retrieve(plan_subscription.subscription_id)
-
-                stripe.Subscription.modify(
-                    subscription["id"],
-                    cancel_at_period_end=False,
-                    proration_behavior=None,
-                    items=[
-                        {
-                            'id': subscription['items']['data'][0].id,
-                            "price": price["id"],
-                        },
-                    ]
+                stripe.Customer.modify(
+                    user.stripe_plan_customer_id,
+                    address={
+                        "city": data.get('city', " "),
+                        "country": data.get('country', " "),
+                        "line1": data.get('line1', " "),
+                        "line2": data.get('line2', " "),
+                        "postal_code": data.get('postal_code', " "),
+                        "state": data.get('state', " "),
+                    },
+                    email=data.get('email', " "),
+                    name=data.get('first_name', " ")+"_"+data.get('last_name', " "),
+                    invoice_settings={
+                        "default_payment_method": payment_method_id
+                    }
                 )
-                plan_subscription.plan_type = plan.type
-                plan_subscription.plan_currency = plan.currency
-                plan_subscription.plan_unit_amount = plan.unit_amount
-                plan_subscription.plan_price_label = plan.price_label
-                plan_subscription.save()
-            stripe.PaymentMethod.attach(
-                payment_method_id,
-                customer=user.stripe_plan_customer_id,
-            )
-            stripe.Customer.modify(
-                user.stripe_plan_customer_id,
-                address={
-                    "city": data.get('city', " "),
-                    "country": data.get('country', " "),
-                    "line1": data.get('line1', " "),
-                    "line2": data.get('line2', " "),
-                    "postal_code": data.get('postal_code', " "),
-                    "state": data.get('state', " "),
-                },
-                email=data.get('email', " "),
-                name=data.get('first_name', " ")+"_"+data.get('last_name', " "),
-                invoice_settings={
-                    "default_payment_method": payment_method_id
-                }
-            )
-            stripe.PaymentMethod.modify(
-                payment_method_id,
-                billing_details={
-                    "name": data.get('card_name', " "),
-                }
-            )
+                stripe.PaymentMethod.modify(
+                    payment_method_id,
+                    billing_details={
+                        "name": data.get('card_name', " "),
+                    }
+                )
+            except Exception as e:
+                print(e)
+                raise serializers.ValidationError(
+                    'Something went wrong')
+        else:
+            plan = helpers.get_plan(user.currency)
 
-        except Exception as e:
-            print(e)
-            raise serializers.ValidationError(
-                'Something went wrong')
+            product = stripe.Product.create(name="Basic Plan for" + '_' + user.username)
+            price = stripe.Price.create(
+                unit_amount=int(plan.unit_amount * 100),
+                currency=plan.currency,
+                recurring={"interval": "month"},
+                product=product['id']
+            )
+            subscription = stripe.Subscription.create(
+                customer=user.stripe_customer_id,
+                items=[
+                    {"price": price['id']}
+                ],
+            )
+            plan_subscription = PlanSubscription.objects.create(
+                subscription_id=subscription["id"],
+                plan_unit_amount=plan.unit_amount,
+                plan_currency=plan.currency,
+                plan_price_label=plan.price_label,
+                plan_type=plan.type,
+                product_id=product["id"]
+            )
+            user.seller_view = True
+            user.is_seller = True
+            user.have_active_plan = True
+            user.plan_subscriptions.add(plan_subscription)
+            user.save()
 
         # Create customer if not exists
         user.have_active_plan = True
@@ -982,15 +1008,42 @@ class SellerReactivateSubscriptionSerializer(serializers.Serializer):
         user = self.context['request'].user
         subscriptions_queryset = PlanSubscription.objects.filter(user_plan_subscription=user, cancelled=False)
 
-        if not subscriptions_queryset.exists():
-            raise serializers.ValidationError(
-                "User have not a plan subscription")
+        if subscriptions_queryset.exists():
 
-        plan_subscription = subscriptions_queryset.first()
-        stripe.Subscription.modify(
-            plan_subscription.subscription_id,
-            cancel_at_period_end=False
-        )
+            plan_subscription = subscriptions_queryset.first()
+            stripe.Subscription.modify(
+                plan_subscription.subscription_id,
+                cancel_at_period_end=False
+            )
+        else:
+            plan = helpers.get_plan(user.currency)
+
+            product = stripe.Product.create(name="Basic Plan for" + '_' + user.username)
+            price = stripe.Price.create(
+                unit_amount=int(plan.unit_amount * 100),
+                currency=plan.currency,
+                recurring={"interval": "month"},
+                product=product['id']
+            )
+            subscription = stripe.Subscription.create(
+                customer=user.stripe_customer_id,
+                items=[
+                    {"price": price['id']}
+                ],
+            )
+            plan_subscription = PlanSubscription.objects.create(
+                subscription_id=subscription["id"],
+                plan_unit_amount=plan.unit_amount,
+                plan_currency=plan.currency,
+                plan_price_label=plan.price_label,
+                plan_type=plan.type,
+                product_id=product["id"]
+            )
+            user.seller_view = True
+            user.is_seller = True
+            user.have_active_plan = True
+            user.plan_subscriptions.add(plan_subscription)
+            user.save()
         self.context['plan_subscription'] = plan_subscription
 
         return data
