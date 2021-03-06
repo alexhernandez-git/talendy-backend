@@ -283,7 +283,6 @@ class UserSignUpSerializer(serializers.Serializer):
                 user.is_seller = True
                 user.is_free_trial = True
                 user.free_trial_expiration = expiration_date
-                user.have_active_plan = True
                 user.stripe_plan_customer_id = new_customer["id"]
                 user.currency = currency
                 user.plan_subscriptions.add(plan_subscription)
@@ -842,7 +841,7 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
                 'Something went wrong')
 
         # Create customer if not exists
-
+        user.have_active_plan = True
         return data
 
     def update(self, instance, validated_data):

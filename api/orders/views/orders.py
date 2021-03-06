@@ -74,11 +74,18 @@ class OrderViewSet(
     def get_queryset(self):
         """Restrict list to public-only."""
         user = self.request.user
+        queryset = self.queryset
         if user.seller_view:
             queryset = Order.objects.filter(seller=user)
         else:
             queryset = Order.objects.filter(buyer=user)
 
+        if self.action == "active_orders":
+            return queryset.filter(status=Order.ACTIVE)[:10]
+        if self.action == "completed_orders":
+            return queryset.filter(status=Order.DELIVERED)[:10]
+        if self.action == "cancelled_orders":
+            return queryset.filter(status=Order.CANCELLED)[:10]
         return queryset
 
     def create(self, request, *args, **kwargs):
@@ -100,3 +107,24 @@ class OrderViewSet(
         data = OrderModelSerializer(user, many=False).data
 
         return Response(data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'])
+    def active_orders(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def completed_orders(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def cancelled_orders(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

@@ -79,9 +79,12 @@ class ChatViewSet(
         return ChatModelSerializer
 
     def get_queryset(self):
+        user = self.request.user
         if self.action == "list":
-            user = self.request.user
             return Chat.objects.filter(participants=user).exclude(last_message=None)
+        if self.action == "last_messages":
+            return Chat.objects.filter(participants=user).exclude(last_message=None)[:5]
+
         return Chat.objects.all()
 
     def retrieve(self, request, *args, **kwargs):
@@ -129,4 +132,16 @@ class ChatViewSet(
     def retrieve_chat_feed(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def last_messages(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
