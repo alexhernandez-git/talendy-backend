@@ -25,4 +25,4 @@ class Earning(CModel):
 
     amount = MoneyField(max_digits=14, decimal_places=2, default_currency='USD')
 
-    transfer_id = models.CharField(max_length=100, blank=True, null=True)
+    batch_id = models.CharField(max_length=100, blank=True, null=True)

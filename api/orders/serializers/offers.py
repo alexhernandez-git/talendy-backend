@@ -65,7 +65,7 @@ class OfferModelSerializer(serializers.ModelSerializer):
         user = request.user
         unit_amount = data["unit_amount"]
         rate_date = None
-        if user.have_active_plan == False and not user.is_free_trial:
+        if not user.have_active_plan and not user.is_free_trial:
             raise serializers.ValidationError("For send offers you must have a seller plan")
 
         # If the offer is by email check if the buyer email is correct

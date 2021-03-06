@@ -16,6 +16,18 @@ from djmoney.models.fields import Money
 
 # Utils
 
+from paypalpayoutssdk.core import PayPalHttpClient, SandboxEnvironment
+from paypalpayoutssdk.payouts import PayoutsPostRequest
+from paypalhttp import HttpError
+from paypalhttp.encoder import Encoder
+from paypalhttp.serializers.json_serializer import Json
+from paypalpayoutssdk.payouts import PayoutsGetRequest
+
+import json
+import random
+import string
+import sys
+
 
 class EarningModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
@@ -61,29 +73,105 @@ class WithdrawFundsModelSerializer(serializers.ModelSerializer):
         if amount > user.available_for_withdawal:
             raise serializers.ValidationError('The amount is greater than your budget')
 
-        if not user.stripe_account_id:
-            raise serializers.ValidationError('You don\'t have a stripe account')
+        if not user.paypal_email:
+            raise serializers.ValidationError('You don\'t have a PayPal account asociated')
 
         return data
 
     def create(self, validated_data):
-        from api.utils.helpers import convert_currency
         amount = Money(amount=validated_data['amount'], currency="USD")
-        stripe = self.context['stripe']
         request = self.context['request']
         user = request.user
 
-        converted_unit_amount, rate_date = convert_currency(user.currency, 'USD', validated_data['amount'])
-        transfer = stripe.Transfer.create(
-            amount=int(converted_unit_amount * 100),
-            currency=user.currency,
-            destination=user.stripe_account_id,
-        )
+        # transfer = stripe.Transfer.create(
+        #     amount=int(converted_unit_amount * 100),
+        #     currency=user.currency,
+        #     destination=user.stripe_account_id,
+        # )
+        # Creating Access Token for Sandbox
+        client_id = "AbhmcP2IEj-X9YIyhPCeMApdZa8LiRaDFN8dCzG4OdMzrOuGPJC4hQ2KMvuNY7zWF-sxavTP-qmX9XWU"
+        client_secret = "EHkQZP9Qiw0G4EmmiPK2NS2qAOeG-rgp9_yq_h9kIWgdE9G__qq72OAwZNfFn3x8na2GX8F4lydn9XG2"
+        # Creating an environment
+        environment = SandboxEnvironment(client_id=client_id, client_secret=client_secret)
+        client = PayPalHttpClient(environment)
+        senderBatchId = str(''.join(random.sample(
+            string.ascii_uppercase + string.digits, k=7)))
+        # Construct a request object and set desired parameters
+        # Here, PayoutsPostRequest() creates a POST request to /v1/payments/payouts
+        body = {
+            "sender_batch_header": {
+                "recipient_type": "EMAIL",
+                "email_message": "SDK payouts test txn",
+                "note": "Enjoy your Payout!!",
+                "sender_batch_id": senderBatchId,
+                "email_subject": "This is a test transaction from SDK"
+            },
+            "items": [{
+                "note": "Your 1$ Payout!",
+                "amount": {
+                    "currency": "USD",
+                    "value": str(validated_data['amount'])
+                },
+                "receiver": "vlexhndz@gmail.com",
+                "sender_item_id": "Test_txn_1"
+            }]
+        }
+
+        request = PayoutsPostRequest()
+        request.request_body(body)
+
+        try:
+            # Call API with your client and get a response for your call
+            response = client.execute(request)
+            # If call returns body in response, you can get the deserialized version from the result attribute of the response
+            batch_id = response.result.batch_header.payout_batch_id
+            print(batch_id)
+
+        except HttpError as httpe:
+            # Handle server side API failure
+            encoder = Encoder([Json()])
+            error = encoder.deserialize_response(httpe.message, httpe.headers)
+            print("Error: " + error["name"])
+            print("Error message: " + error["message"])
+            print("Information link: " + error["information_link"])
+            print("Debug id: " + error["debug_id"])
+            print("Details: ")
+            for detail in error["details"]:
+                print("Error location: " + detail["location"])
+                print("Error field: " + detail["field"])
+                print("Error issue: " + detail["issue"])
+            raise serializers.ValidationError('Withdraw error')
+
+        except IOError as ioe:
+            # Handle cient side connection failures
+            print(ioe.message)
+            raise serializers.ValidationError('Withdraw error')
+
+        # Here, PayoutsGetRequest() creates a GET request to /v1/payments/payouts/<batch-id>
+        request = PayoutsGetRequest(batch_id)
+
+        try:
+            # Call API with your client and get a response for your call
+            response = client.execute(request)
+
+            # If call returns body in response, you can get the deserialized version from the result attribute of the response
+            batch_status = response.result.batch_header.batch_status
+            print(batch_status)
+        except IOError as ioe:
+            if isinstance(ioe, HttpError):
+                # Something went wrong server-side
+                print(ioe.status_code)
+                print(ioe.headers)
+                print(ioe)
+            else:
+                # Something went wrong client side
+                print(ioe)
+            raise serializers.ValidationError('Withdraw error')
 
         withdrawn = Earning.objects.create(
             type=Earning.WITHDRAWN,
             amount=amount,
-            transfer_id=transfer['id'],
+            batch_id=batch_id,
             user=user
         )
 

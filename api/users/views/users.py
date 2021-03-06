@@ -58,7 +58,8 @@ from api.users.serializers import (
     AttachPlanPaymentMethodSerializer,
     DetachPaymentMethodSerializer,
     GetUserByJwtSerializer,
-    BecomeASellerSerializer
+    BecomeASellerSerializer,
+    PaypalConnectSerializer
 )
 
 # Filters
@@ -100,7 +101,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             'stripe_webhooks_invoice_payment_failed',
                 'forget_password']:
             permissions = [AllowAny]
-        elif self.action in ['update', 'delete', 'partial_update', 'change_password', 'change_email', 'stripe_connect']:
+        elif self.action in ['update', 'delete', 'partial_update', 'change_password', 'change_email', 'stripe_connect', 'paypal_connect']:
             permissions = [IsAccountOwner, IsAuthenticated]
 
         else:
@@ -337,6 +338,22 @@ class UserViewSet(mixins.RetrieveModelMixin,
             user,
             data=request.data,
             context={"request": request, "stripe": stripe},
+            partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+        data = serializer.save()
+        return Response(data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
+    def paypal_connect(self, request, *args, **kwargs):
+        """Process stripe connect auth flow."""
+        user = request.user
+
+        partial = request.method == 'PATCH'
+        serializer = PaypalConnectSerializer(
+            user,
+            data=request.data,
+            context={"request": request},
             partial=partial
         )
         serializer.is_valid(raise_exception=True)

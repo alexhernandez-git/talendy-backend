@@ -124,10 +124,9 @@ class User(CModel, AbstractUser):
     currency = models.CharField(max_length=3, blank=True, null=True)
     default_payment_method = models.CharField(max_length=100, blank=True, null=True)
 
-    # Stripe connect
+    # Paypal connect
 
-    stripe_account_id = models.CharField(max_length=100, blank=True, null=True)
-    stripe_dashboard_url = models.CharField(max_length=100, blank=True, null=True)
+    paypal_email = models.CharField(max_length=100, blank=True, null=True)
 
     # Notifications
 

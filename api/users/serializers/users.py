@@ -4,7 +4,7 @@
 from api.users.serializers.plan_subscriptions import PlanSubscriptionModelSerializer
 from django.conf import settings
 from django.contrib.auth import password_validation, authenticate
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, validate_email
 from django.shortcuts import get_object_or_404
 from django.db.models import Sum
 
@@ -71,8 +71,7 @@ class UserModelSerializer(serializers.ModelSerializer):
             'stripe_plan_customer_id',
             'stripe_customer_id',
             'currency',
-            'stripe_account_id',
-            'stripe_dashboard_url',
+            'paypal_email',
             'net_income',
             'withdrawn',
             'used_for_purchases',
@@ -152,11 +151,13 @@ class GetCurrencySerializer(serializers.Serializer):
     def validate(self, data):
         current_login_ip = helpers.get_client_ip(self.context["request"])
         # Remove this line in production
-        current_login_ip = "37.133.187.101"
+        current_login_ip = "161.185.160.93"
         try:
             with geoip2.database.Reader('geolite2-db/GeoLite2-Country.mmdb') as reader:
                 response = reader.country(current_login_ip)
                 country_code = response.country.iso_code
+                import pdb
+                pdb.set_trace()
                 country_currency = ccy.countryccy(country_code)
                 if Plan.objects.filter(type=Plan.BASIC, currency=country_currency).exists():
                     data['currency'] = country_currency
@@ -740,6 +741,30 @@ class StripeConnectSerializer(serializers.Serializer):
         user.stripe_dashboard_url = stripe_dashboard_url["url"]
         user.save()
         return {"stripe_account_id": user.stripe_account_id, "stripe_dashboard_url": user.stripe_dashboard_url}
+
+
+class PaypalConnectSerializer(serializers.Serializer):
+    """Paypal connect serializer serializer."""
+
+    email = serializers.CharField()
+    email_confirmation = serializers.CharField()
+
+    def validate(self, data):
+        """Update user's verified status."""
+        email = data['email']
+        email_confirmation = data['email_confirmation']
+        if email != email_confirmation:
+            raise serializers.ValidationError('Emails don\'t match')
+
+        return data
+
+    def update(self, instance, validated_data):
+        user = instance
+        email = validated_data['email']
+        user.paypal_email = email
+        user.save()
+
+        return {"email": email}
 
 
 class StripeSellerSubscriptionSerializer(serializers.Serializer):

@@ -94,3 +94,6 @@ ccy==1.2.2
 django-money[exchange]==1.3
 
 forex-python==1.5
+
+# Paypal
+paypal-payouts-sdk==1.0.0
