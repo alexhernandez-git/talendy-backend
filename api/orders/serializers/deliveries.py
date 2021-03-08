@@ -164,7 +164,11 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
         if order.type == Order.NORMAL_ORDER:
             # Return de money to user as credits
             seller.net_income = seller.net_income + order.due_to_seller
-            seller.available_for_withdawal = seller.available_for_withdawal + order.due_to_seller
+            Earning.objects.create(
+                user=seller,
+                amount=order.due_to_seller+order.due_to_seller,
+                type=Earning.REFUND
+            )
             seller.save()
 
         elif order.type == Order.TWO_PAYMENTS_ORDER:
@@ -219,8 +223,7 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
                 status=status,
             )
             seller.net_income = seller.net_income + order.payment_at_delivery
-            seller.available_for_withdawal = seller.available_for_withdawal + \
-                order.payment_at_delivery
+
             seller.save()
             Earning.objects.create(
                 user=seller,

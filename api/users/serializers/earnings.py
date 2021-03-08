@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib.auth import password_validation, authenticate
 from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
+from django.db.models import Sum
 
 # Models
 from api.users.models import Earning, User
@@ -23,10 +24,8 @@ from paypalhttp.encoder import Encoder
 from paypalhttp.serializers.json_serializer import Json
 from paypalpayoutssdk.payouts import PayoutsGetRequest
 
-import json
 import random
 import string
-import sys
 
 
 class EarningModelSerializer(serializers.ModelSerializer):
@@ -67,10 +66,14 @@ class WithdrawFundsModelSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
+        from api.utils.helpers import get_available_for_withdrawal
+
         amount = Money(amount=data['amount'], currency="USD")
         request = self.context['request']
         user = request.user
-        if amount > user.available_for_withdawal:
+
+        available_for_withdrawal = get_available_for_withdrawal(user)
+        if amount > Money(amount=available_for_withdrawal, currency="USD"):
             raise serializers.ValidationError('The amount is greater than your budget')
         if amount > Money(amount=5000, currency="USD"):
             raise serializers.ValidationError('The amount is too large')
@@ -179,7 +182,6 @@ class WithdrawFundsModelSerializer(serializers.ModelSerializer):
         )
 
         user.withdrawn = user.withdrawn + amount
-        user.available_for_withdawal = user.available_for_withdawal - amount
         user.save()
 
         return withdrawn

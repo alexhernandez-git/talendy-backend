@@ -261,10 +261,16 @@ class AcceptOrderSerializer(serializers.Serializer):
 
         if offer['type'] == Order.NORMAL_ORDER:
 
-            user.available_for_withdawal = user.available_for_withdawal - \
-                Money(amount=used_credits, currency="USD")
-            user.used_for_purchases = user.used_for_purchases + Money(amount=used_credits, currency="USD")
-            user.save()
+            # user.available_for_withdrawal = user.available_for_withdrawal - \
+            #     Money(amount=used_credits, currency="USD")
+            if used_credits > 0:
+                Earning.objects.create(
+                    user=user,
+                    type=Earning.SPENT,
+                    amount=Money(amount=used_credits, currency="USD")
+                )
+                user.used_for_purchases = user.used_for_purchases + Money(amount=used_credits, currency="USD")
+                user.save()
 
             price = self.context['price']
 
@@ -293,8 +299,13 @@ class AcceptOrderSerializer(serializers.Serializer):
         elif offer['type'] == Order.TWO_PAYMENTS_ORDER:
             price = self.context['price']
 
-            user.available_for_withdawal = user.available_for_withdawal - \
-                Money(amount=used_credits, currency="USD")
+            # user.available_for_withdrawal = user.available_for_withdrawal - \
+            #     Money(amount=used_credits, currency="USD")
+            Earning.objects.create(
+                user=user,
+                type=Earning.SPENT,
+                amount=Money(amount=used_credits, currency="USD")
+            )
             user.used_for_purchases = user.used_for_purchases + Money(amount=used_credits, currency="USD")
             user.save()
             invoice_paid = self.context['invoice_paid']
@@ -321,12 +332,9 @@ class AcceptOrderSerializer(serializers.Serializer):
 
             seller = new_order.seller
             seller.net_income = seller.net_income + offer_object.first_payment
-            seller.available_for_withdawal = seller.available_for_withdawal + \
-                offer_object.first_payment
             seller.save()
             Earning.objects.create(
                 user=seller,
-                type=Earning.ORDER_REVENUE,
                 amount=offer_object.first_payment
             )
 

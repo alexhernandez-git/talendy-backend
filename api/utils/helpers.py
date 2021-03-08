@@ -6,6 +6,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.db.models import Sum
 
 # DRF
 from rest_framework import serializers
@@ -40,6 +41,7 @@ from datetime import timedelta
 import geoip2.database
 import ccy
 import requests
+import datetime
 
 
 def get_client_ip(request):
@@ -283,3 +285,43 @@ def convert_currency(currency, base, price, rate_date='latest'):
     else:
         raise serializers.ValidationError("Rate conversion issue, try it later")
     return converted_currency, currency_conversion_date
+
+
+def get_available_for_withdrawal(user):
+    today = datetime.datetime.now()
+
+    # Total earned
+    earnings = Earning.objects.filter(
+        user=user, type=Earning.ORDER_REVENUE, available_for_withdrawn_date__gt=today).aggregate(
+        Sum('amount'))
+    total_earned = earnings.get('amount__sum', None)
+
+    # Total refunded
+    refunded = Earning.objects.filter(
+        user=user, type=Earning.REFUND, available_for_withdrawn_date__gt=today).aggregate(
+        Sum('amount'))
+    total_refunded = refunded.get('amount__sum', None)
+
+    # Total spent
+    spent = Earning.objects.filter(
+        user=user, type=Earning.SPENT).aggregate(
+        Sum('amount'))
+    total_spent = spent.get('amount__sum', None)
+
+    # Total withdrawn
+    withdrawn = Earning.objects.filter(
+        user=user, type=Earning.WITHDRAWN).aggregate(
+        Sum('amount'))
+
+    total_withdrawn = withdrawn.get('amount__sum', None)
+
+    if not total_earned:
+        total_earned = 0
+    if not total_refunded:
+        total_refunded = 0
+    if not total_spent:
+        total_spent = 0
+    if not total_withdrawn:
+        total_withdrawn = 0
+
+    return total_earned + total_refunded - total_spent - total_withdrawn

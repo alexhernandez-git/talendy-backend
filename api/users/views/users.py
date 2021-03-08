@@ -29,7 +29,7 @@ from rest_framework.permissions import (
 from api.users.permissions import IsAccountOwner
 
 # Models
-from api.users.models import User, UserLoginActivity, PlanSubscription, Earning, Contact, PlanPayment, plan_subscriptions
+from api.users.models import User, UserLoginActivity, PlanSubscription, Earning, Contact, PlanPayment
 from api.orders.models import OrderPayment
 from djmoney.money import Money
 
@@ -524,7 +524,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
             stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
-        subscriptions_queryset = PlanSubscription.objects.filter(user_plan_subscription=user, cancelled=False)
+        subscriptions_queryset = PlanSubscription.objects.filter(user=user, cancelled=False)
         if not subscriptions_queryset.exists():
             Response("User have not a plan subscription", status=status.HTTP_404_NOT_FOUND)
         subscription = subscriptions_queryset.first()
@@ -800,6 +800,76 @@ class UserViewSet(mixins.RetrieveModelMixin,
             return HttpResponse(status=400)
 
     @action(detail=False, methods=['post'])
+    def stripe_webhook_subscription_cancelled(self, request, *args, **kwargs):
+        """Process stripe webhook notification for subscription cancellation"""
+        payload = request.body
+        event = None
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
+        else:
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+
+        try:
+            event = stripe.Event.construct_from(
+                json.loads(payload), stripe.api_key
+            )
+        except ValueError as e:
+            # Invalid payload
+            return HttpResponse(status=400)
+
+        # Handle the event
+        if event.type == 'customer.subscription.deleted':
+            subscription = event.data.object  # contains a stripe.Subscription
+            subscriptions_queryset = PlanSubscription.objects.filter(subscription_id=subscription.id, cancelled=False)
+            if not subscriptions_queryset.exists():
+                Response("Plan subscription does not exist", status=status.HTTP_404_NOT_FOUND)
+            plan_subscription = subscriptions_queryset.first()
+            user = plan_subscription.user_plan_subscription
+            plan_subscription.update(cancelled=True)
+            user.update(have_active_plan=False)
+
+            return HttpResponse(status=200)
+
+        else:
+            # Unexpected event type
+            return HttpResponse(status=400)
+
+    @action(detail=False, methods=['post'])
+    def stripe_webhook_subscription_updated(self, request, *args, **kwargs):
+        """Process stripe webhook notification for subscription cancellation"""
+        payload = request.body
+        event = None
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
+        else:
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+
+        try:
+            event = stripe.Event.construct_from(
+                json.loads(payload), stripe.api_key
+            )
+        except ValueError as e:
+            # Invalid payload
+            return HttpResponse(status=400)
+
+        # Handle the event
+        if event.type == 'customer.subscription.deleted':
+            subscription = event.data.object  # contains a stripe.Subscription
+            subscriptions_queryset = PlanSubscription.objects.filter(subscription_id=subscription.id, status="trialing")
+            if not subscriptions_queryset.exists():
+                Response("Plan subscription does not exist", status=status.HTTP_404_NOT_FOUND)
+            plan_subscription = subscriptions_queryset.first()
+            user = plan_subscription.user
+            plan_subscription.update(status="active")
+            user.update(have_active_plan=True, passed_free_trial_once=True, is_free_trial=False)
+
+            return HttpResponse(status=200)
+
+        else:
+            # Unexpected event type
+            return HttpResponse(status=400)
+
+    @action(detail=False, methods=['post'])
     def stripe_webhooks_invoice_payment_succeeded(self, request, *args, **kwargs):
         """Process stripe webhook notification for subscription cancellation"""
         payload = request.body
@@ -829,10 +899,11 @@ class UserViewSet(mixins.RetrieveModelMixin,
             status = invoice_success['status']
 
             # Get plan subscription
-            plan_users = User.objects.filter(plan_subscriptions__subscription_id=subscription_id)
             plan_subscriptions = PlanSubscription.objects.filter(subscription_id=subscription_id)
-            if plan_users.exists():
-                plan_user = plan_users.first()
+
+            if plan_subscriptions.exists():
+                plan_subscription = plan_subscriptions.first()
+                plan_user = plan_subscription.user
                 PlanPayment.objects.create(
                     user=plan_user,
                     invoice_id=invoice_id,
@@ -843,62 +914,60 @@ class UserViewSet(mixins.RetrieveModelMixin,
                     currency=currency,
                     status=status,
                 )
-                if plan_subscriptions.exists():
-                    plan_subscription = plan_subscriptions.first()
 
-                    if plan_user.active_month:
+                if plan_user.active_month:
 
-                        product_id = plan_subscription.product_id
+                    product_id = plan_subscription.product_id
 
-                        price = stripe.Price.create(
-                            unit_amount=int(plan_subscription.plan_unit_amount * 100),
-                            currency=plan_subscription.plan_currency,
-                            product=product_id,
-                            recurring={"interval": "month"},
-                        )
+                    price = stripe.Price.create(
+                        unit_amount=int(plan_subscription.plan_unit_amount * 100),
+                        currency=plan_subscription.plan_currency,
+                        product=product_id,
+                        recurring={"interval": "month"},
+                    )
 
-                        subscription = stripe.Subscription.retrieve(
-                            subscription_id)
+                    subscription = stripe.Subscription.retrieve(
+                        subscription_id)
 
-                        stripe.Subscription.modify(
-                            subscription_id,
-                            cancel_at_period_end=False,
-                            proration_behavior=None,
-                            items=[
-                                {
-                                    'id': subscription['items']['data'][0]['id'],
-                                    "price": price['id']
-                                },
-                            ],
-                        )
+                    stripe.Subscription.modify(
+                        subscription_id,
+                        cancel_at_period_end=False,
+                        proration_behavior=None,
+                        items=[
+                            {
+                                'id': subscription['items']['data'][0]['id'],
+                                "price": price['id']
+                            },
+                        ],
+                    )
 
-                        plan_user.active_month = False
-                        plan_user.save()
-                    else:
-                        product_id = plan_subscription.product_id
+                    plan_user.active_month = False
+                    plan_user.save()
+                else:
+                    product_id = plan_subscription.product_id
 
-                        price = stripe.Price.create(
-                            unit_amount=0,
-                            currency=plan_user.currency,
-                            recurring={"interval": "month"},
+                    price = stripe.Price.create(
+                        unit_amount=0,
+                        currency=plan_user.currency,
+                        recurring={"interval": "month"},
 
-                            product=product_id
-                        )
+                        product=product_id
+                    )
 
-                        subscription = stripe.Subscription.retrieve(
-                            subscription_id)
+                    subscription = stripe.Subscription.retrieve(
+                        subscription_id)
 
-                        stripe.Subscription.modify(
-                            subscription_id,
-                            cancel_at_period_end=False,
-                            proration_behavior=None,
-                            items=[
-                                {
-                                    'id': subscription['items']['data'][0]['id'],
-                                    "price": price['id']
-                                },
-                            ],
-                        )
+                    stripe.Subscription.modify(
+                        subscription_id,
+                        cancel_at_period_end=False,
+                        proration_behavior=None,
+                        items=[
+                            {
+                                'id': subscription['items']['data'][0]['id'],
+                                "price": price['id']
+                            },
+                        ],
+                    )
 
                 return HttpResponse(status=200)
 
@@ -925,13 +994,20 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
             if used_credits:
 
-                buyer.available_for_withdawal = buyer.available_for_withdawal - used_credits
+                Earning.objects.create(
+                    user=buyer,
+                    type=Earning.SPENT,
+                    amount=Money(amount=used_credits, currency="USD")
+                )
+
                 buyer.used_for_purchases = buyer.used_for_purchases + used_credits
                 buyer.save()
 
-            if buyer.available_for_withdawal < unit_amount:
+            available_for_withdrawal = helpers.get_available_for_withdrawal(buyer)
 
-                diff = buyer.available_for_withdawal - unit_amount
+            if available_for_withdrawal < unit_amount:
+
+                diff = available_for_withdrawal - unit_amount
 
                 new_cost_of_subscription = abs(diff)
 
@@ -967,8 +1043,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             due_to_seller = order.unit_amount - order.service_fee
 
             seller.net_income = seller.net_income + due_to_seller
-            seller.available_for_withdawal = seller.available_for_withdawal + \
-                due_to_seller
+
             seller.save()
 
             Earning.objects.create(

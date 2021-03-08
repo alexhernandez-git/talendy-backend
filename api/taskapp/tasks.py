@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.utils.module_loading import import_string
 
 # Models
-from api.users.models import User
+from api.users.models import User, Earning
 from rest_framework.authtoken.models import Token
 from api.notifications.models import NotificationUser, notifications
 from api.activities.models import Activity, OfferActivity, DeliveryActivity, CancelOrderActivity
@@ -115,42 +115,37 @@ def send_offer(user, email, user_exists, offer_id, buyer_id=None):
     msg.send()
 
 
-@task(name='check_if_free_trial_have_ended')
-def check_if_free_trial_have_ended():
+# @task(name='check_if_free_trial_have_ended')
+# def check_if_free_trial_have_ended():
+#     """Check if the free trial has ended and turn off"""
+#     now = timezone.now()
+
+#     # Update rides that have already finished
+#     users = User.objects.filter(
+#         free_trial_expiration__gte=now,
+#         is_free_trial=True
+#     )
+#     users.update(is_free_trial=False, passed_free_trial_once=True)
+#     print("Users that has been updated")
+#     print("Total: "+str(users.count()))
+#     for user in users:
+#         print("---------------------------------")
+#         print(user.username)
+
+
+@task(name='send_have_messages_from_email')
+def send_have_messages_from_email(user, email):
     """Check if the free trial has ended and turn off"""
-    now = timezone.now()
 
-    # Update rides that have already finished
-    users = User.objects.filter(
-        free_trial_expiration__gte=now,
-        is_free_trial=True
-    )
-    users.update(is_free_trial=False, passed_free_trial_once=True)
-    print("Users that has been updated")
-    print("Total: "+str(users.count()))
-    for user in users:
-        print("---------------------------------")
-        print(user.username)
+    subject = 'New messages from @{}'.format(
+        user.username)
 
-
-@task(name='check_if_users_have_messages_to_read')
-def check_if_users_have_messages_to_read():
-    """Check if the free trial has ended and turn off"""
-    notifications_user = NotificationUser.objects.filter(
-        is_read=False, user__messages_notificatoin_sent=False)
-    emails = []
-    for notification_user in notifications_user:
-        emails.append(notification_user.user.email)
-        notification_user.user.messages_notificatoin_sent = True
-        notification_user.user.save()
-
-    subject = 'New messages in freelanium'
     from_email = 'Freelanium <no-reply@frelanium.com>'
     content = render_to_string(
         'emails/users/new_messages.html',
-        {}
+        {'user': user}
     )
-    msg = EmailMultiAlternatives(subject, content, from_email, emails)
+    msg = EmailMultiAlternatives(subject, content, from_email, [email])
     msg.attach_alternative(content, "text/html")
     msg.send()
 

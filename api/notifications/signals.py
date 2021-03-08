@@ -10,7 +10,7 @@ from api.orders.models import Offer, Order
 
 # Utils
 from api.utils import helpers
-from api.taskapp.tasks import send_activity_notification
+from api.taskapp.tasks import send_activity_notification, send_have_messages_from_email
 
 
 @receiver(post_save, sender=Message)
@@ -89,7 +89,8 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
             ).first()
 
             if not user_notification:
-
+                # Insert here the send new message email notification
+                send_have_messages_from_email(sent_to, sent_by.email)
                 notification = Notification.objects.create(
                     type=Notification.MESSAGES,
                     chat=chat,

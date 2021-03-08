@@ -8,7 +8,10 @@ from api.plans.models import Plan
 class PlanSubscription(CModel):
     # Login Status
 
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE)
+
     subscription_id = models.CharField(max_length=100, blank=True, null=True)
+    status = models.CharField(max_length=100, blank=True, null=True)
     product_id = models.CharField(max_length=100, blank=True, null=True)
     to_be_cancelled = models.BooleanField(null=False, blank=False, default=False)
     cancelled = models.BooleanField(null=False, blank=False, default=False)

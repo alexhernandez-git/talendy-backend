@@ -21,10 +21,7 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
-    'check_if_free_trial_have_ended': {
-        'task': 'check_if_free_trial_have_ended',
-        'schedule': timedelta(minutes=30),
-    },
+
     'check_if_users_have_messages_to_read': {
         'task': 'check_if_users_have_messages_to_read',
         'schedule': timedelta(seconds=20),

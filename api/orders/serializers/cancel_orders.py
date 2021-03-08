@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404
 # Models
 from api.orders.models import CancelOrder, Order
 from api.activities.models import Activity, CancelOrderActivity
-from api.users.models import User
+from api.users.models import User, Earning
 from api.chats.models import Message, Chat, SeenBy
 from djmoney.models.fields import Money
 
@@ -239,10 +239,11 @@ class AcceptOrderCancelationModelSerializer(serializers.ModelSerializer):
             # Return de money to user as credits
             buyer = order.buyer
             buyer.net_income = buyer.net_income + order.due_to_seller
-            buyer.available_for_withdawal = buyer.available_for_withdawal + order.due_to_seller
-            buyer.save()
-
-            buyer.available_for_withdawal = buyer.available_for_withdawal + order.used_credits
+            Earning.objects.create(
+                user=buyer,
+                amount=order.due_to_seller+order.used_credits,
+                type=Earning.REFUND,
+            )
             buyer.used_for_purchases = buyer.used_for_purchases - order.used_credits
             buyer.save()
         order.save()
