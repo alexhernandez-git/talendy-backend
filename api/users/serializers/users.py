@@ -123,7 +123,6 @@ class UserModelSerializer(serializers.ModelSerializer):
 
     def get_available_for_withdrawal(self, obj):
         amount = helpers.get_available_for_withdrawal(obj)
-
         if amount:
             return Money(amount=amount, currency="USD").amount
         return "0.00"

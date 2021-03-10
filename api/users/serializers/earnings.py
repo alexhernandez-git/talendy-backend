@@ -40,6 +40,7 @@ class EarningModelSerializer(serializers.ModelSerializer):
             "type",
             "amount",
             "created",
+            "available_for_withdrawn_date"
         )
 
         read_only_fields = ("id",)
@@ -57,12 +58,14 @@ class WithdrawFundsModelSerializer(serializers.ModelSerializer):
             "type",
             "amount",
             "created",
+            "available_for_withdrawn_date"
         )
 
         read_only_fields = (
             "id",
             "type",
             "created",
+            "available_for_withdrawn_date"
         )
 
     def validate(self, data):
