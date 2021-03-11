@@ -100,3 +100,6 @@ paypal-payouts-sdk==1.0.0
 
 # Coinbase commerce
 coinbase-commerce==1.0.1
+
+# Environ
+django-environ==0.4.5
