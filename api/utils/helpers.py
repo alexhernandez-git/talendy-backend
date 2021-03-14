@@ -43,6 +43,7 @@ import ccy
 import requests
 import datetime
 from decouple import config
+from django.utils import timezone
 
 def get_client_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -290,17 +291,17 @@ def convert_currency(currency, base, price, rate_date='latest'):
 
 
 def get_available_for_withdrawal(user):
-    today = datetime.datetime.now()
+    today = timezone.now()
 
     # Total earned
     earnings = Earning.objects.filter(
-        user=user, type=Earning.ORDER_REVENUE, available_for_withdrawn_date__gt=today).aggregate(
+        user=user, type=Earning.ORDER_REVENUE, available_for_withdrawn_date__lt=today).aggregate(
         Sum('amount'))
     total_earned = earnings.get('amount__sum', None)
 
     # Total refunded
     refunded = Earning.objects.filter(
-        user=user, type=Earning.REFUND, available_for_withdrawn_date__gt=today).aggregate(
+        user=user, type=Earning.REFUND, available_for_withdrawn_date__lt=today).aggregate(
         Sum('amount'))
     total_refunded = refunded.get('amount__sum', None)
 
