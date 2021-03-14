@@ -81,8 +81,8 @@ INSTALLED_APPS = [
     "channels",
     "channels_redis",
     "corsheaders",
-    "django_celery_beat",
-    "django_celery_results",
+    #"django_celery_beat",
+    #"django_celery_results",
     "djmoney",
     "djmoney.contrib.exchange",
 ]
@@ -275,19 +275,12 @@ if "REDIS_URL" in os.environ:
             },
         }
     }
-#else:
+else:
     CACHES = {
         "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": ""}
     }
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("localhost", 6379)],
-        },
-    },
-}
+
 
 # Templates
 TEMPLATES[0]["OPTIONS"]["loaders"] = [  # noqa F405
@@ -393,6 +386,8 @@ if "REDIS_URL" in os.environ:
     }
 else:
     CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
+
+
 
 # Exchange
 # OPEN_EXCHANGE_RATES_APP_ID =
