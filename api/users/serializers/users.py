@@ -42,7 +42,7 @@ from api.utils import helpers
 import re
 import geoip2.database
 import ccy
-
+from decouple import config
 
 class UserModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
@@ -178,13 +178,12 @@ class GetCurrencySerializer(serializers.Serializer):
     def validate(self, data):
         current_login_ip = helpers.get_client_ip(self.context["request"])
         # Remove this line in production
-        current_login_ip = "161.185.160.93"
+        if config("DEBUG", default=True, cast=bool):
+            current_login_ip = "161.185.160.93"
         try:
             with geoip2.database.Reader('geolite2-db/GeoLite2-Country.mmdb') as reader:
                 response = reader.country(current_login_ip)
                 country_code = response.country.iso_code
-                import pdb
-                pdb.set_trace()
                 country_currency = ccy.countryccy(country_code)
                 if Plan.objects.filter(type=Plan.BASIC, currency=country_currency).exists():
                     data['currency'] = country_currency

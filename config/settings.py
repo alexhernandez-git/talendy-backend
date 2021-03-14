@@ -29,7 +29,7 @@ DEBUG = config("DEBUG", default=True, cast=bool)
 
 ALLOWED_HOSTS = ["*"]
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
+CORS_ALLOWED_ORIGINS = ["https://freelanium.com","http://localhost:3000", "http://127.0.0.1:3000"]
 CORS_ORIGIN_WHITELIST = (
     'localhost:3000',
 )
@@ -123,15 +123,15 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-if "RDS_DB_NAME" in os.environ:
+if not config("DEBUG", default=True, cast=bool):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql_psycopg2",
-            "NAME": os.environ["RDS_DB_NAME"],
-            "USER": os.environ["RDS_USERNAME"],
-            "PASSWORD": os.environ["RDS_PASSWORD"],
-            "HOST": os.environ["RDS_HOSTNAME"],
-            "PORT": os.environ["RDS_PORT"],
+            "NAME": config("RDS_DB_NAME"),
+            "USER": config("RDS_USERNAME"),
+            "PASSWORD": config("RDS_PASSWORD"),
+            "HOST": config("RDS_HOSTNAME"),
+            "PORT": config("RDS_PORT"),
         }
     }
 else:
@@ -203,8 +203,7 @@ else:
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
-    os.path.join(BASE_DIR, "node_modules"),
+    os.path.join(BASE_DIR, "static")
 ]
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
@@ -276,11 +275,19 @@ if "REDIS_URL" in os.environ:
             },
         }
     }
-else:
+#else:
     CACHES = {
         "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": ""}
     }
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("localhost", 6379)],
+        },
+    },
+}
 
 # Templates
 TEMPLATES[0]["OPTIONS"]["loaders"] = [  # noqa F405

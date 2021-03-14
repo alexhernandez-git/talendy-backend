@@ -42,7 +42,7 @@ import geoip2.database
 import ccy
 import requests
 import datetime
-
+from decouple import config
 
 def get_client_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -138,7 +138,8 @@ def get_currency_and_country_anonymous(request):
         if not country:
             current_login_ip = get_client_ip(request)
             # Remove this line in production
-            current_login_ip = "37.133.187.101"
+            if config("DEBUG", default=True, cast=bool):
+                current_login_ip = "37.133.187.101"
             # Get country
             try:
                 with geoip2.database.Reader('geolite2-db/GeoLite2-Country.mmdb') as reader:
@@ -173,7 +174,8 @@ def get_currency_and_country(request):
         if not user.country:
             current_login_ip = get_client_ip(request)
             # Remove this line in production
-            current_login_ip = "37.133.187.101"
+            if config("DEBUG", default=True, cast=bool):
+                current_login_ip = "37.133.187.101"
             # Get country
             try:
                 with geoip2.database.Reader('geolite2-db/GeoLite2-Country.mmdb') as reader:
