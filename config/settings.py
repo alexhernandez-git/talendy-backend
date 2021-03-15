@@ -22,14 +22,18 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY =  config("SECRET_KEY",default="c8jdhs)2-=c46n)i-9h8-8f#ko8x*dt@=e4eh65*5(@n#d&gw%")
+SECRET_KEY = config("DJANGO_SECRET_KEY", default="c8jdhs)2-=c46n)i-9h8-8f#ko8x*dt@=e4eh65*5(@n#d&gw%")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=True, cast=bool)
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["api.freelanium.com"]
+CORS_ALLOWED_ORIGINS = ["https://freelanium.com"]
 
-CORS_ALLOWED_ORIGINS = ["https://freelanium.com","http://localhost:3000", "http://127.0.0.1:3000"]
+if DEBUG:
+    ALLOWED_HOSTS.append("localhost")
+    CORS_ALLOWED_ORIGINS.append("http://localhost:3000")
+
 CORS_ORIGIN_WHITELIST = (
     'localhost:3000',
 )
@@ -81,8 +85,8 @@ INSTALLED_APPS = [
     "channels",
     "channels_redis",
     "corsheaders",
-    #"django_celery_beat",
-    #"django_celery_results",
+    # "django_celery_beat",
+    # "django_celery_results",
     "djmoney",
     "djmoney.contrib.exchange",
 ]
@@ -123,24 +127,16 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-if not config("DEBUG", default=True, cast=bool):
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql_psycopg2",
-            "NAME": config("RDS_DB_NAME"),
-            "USER": config("RDS_USERNAME"),
-            "PASSWORD": config("RDS_PASSWORD"),
-            "HOST": config("RDS_HOSTNAME"),
-            "PORT": config("RDS_PORT"),
-        }
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": config("POSTGRES_DB"),
+        "USER": config("POSTGRES_USER"),
+        "PASSWORD": config("POSTGRES_PASSWORD"),
+        "HOST": config("POSTGRES_HOST"),
+        "PORT": config("POSTGRES_PORT"),
     }
-else:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-        }
-    }
+}
 
 
 # Password validation
@@ -264,22 +260,16 @@ REST_FRAMEWORK = {
 
 
 # Cache
-if "REDIS_URL" in os.environ:
-    CACHES = {
-        "default": {
-            "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": os.environ["REDIS_URL"],
-            "OPTIONS": {
-                "CLIENT_CLASS": "django_redis.client.DefaultClient",
-                "IGNORE_EXCEPTIONS": True,
-            },
-        }
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": config("REDIS_URL"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "IGNORE_EXCEPTIONS": True,
+        },
     }
-else:
-    CACHES = {
-        "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": ""}
-    }
-
+}
 
 
 # Templates
@@ -375,18 +365,14 @@ ASGI_APPLICATION = "config.routing.application"
 
 
 # Channel Layer
-if "REDIS_URL" in os.environ:
-    CHANNEL_LAYERS = {
-        "default": {
-            "BACKEND": "channels_redis.core.RedisChannelLayer",
-            "CONFIG": {
-                "hosts": [os.environ["REDIS_URL"]],
-            },
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [config("REDIS_URL")],
         },
-    }
-else:
-    CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
-
+    },
+}
 
 
 # Exchange
