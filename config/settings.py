@@ -32,6 +32,7 @@ CORS_ALLOWED_ORIGINS = ["https://freelanium.com"]
 
 if DEBUG:
     ALLOWED_HOSTS.append("localhost")
+    ALLOWED_HOSTS.append("127.0.0.1")
     CORS_ALLOWED_ORIGINS.append("http://localhost:3000")
 
 CORS_ORIGIN_WHITELIST = (
@@ -365,15 +366,22 @@ ASGI_APPLICATION = "config.routing.application"
 
 
 # Channel Layer
+# CHANNEL_LAYERS = {
+#     "default": {
+#         "BACKEND": "channels_redis.core.RedisChannelLayer",
+#         "CONFIG": {
+#             "hosts": [config("REDIS_URL")],
+#         },
+#     },
+# }
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [config("REDIS_URL")],
+            "hosts": [("redis", 6379)],
         },
     },
 }
-
 
 # Exchange
 # OPEN_EXCHANGE_RATES_APP_ID =

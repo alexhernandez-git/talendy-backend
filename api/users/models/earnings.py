@@ -38,5 +38,5 @@ class Earning(CModel):
     available_for_withdrawn_date = models.DateTimeField(
         'pending clearance expiration at',
         help_text='Date time on pending clearance ends.',
-        default=timezone.now() + timedelta(days=14),
+        auto_now_add=True
     )
