@@ -1,16 +1,13 @@
 version: "3"
 
 volumes:
-  prod_postgres_data: {}
-  prod_postgres_data_backups: {}
   nginx_static_files: {}
+
 services:
   django: &django
     build:
       context: .
       dockerfile: ./compose/prod/Dockerfile
-    depends_on:
-      - postgres
     volumes:
       - .:/app
     env_file:
@@ -39,13 +36,16 @@ services:
       - ./compose/certbot/conf:/etc/letsencrypt
       - ./compose/certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-  postgres:
-    image: postgres:12-alpine
-    volumes:
-      - prod_postgres_data:/var/lib/postgresql/data
-      - prod_postgres_data_backups:/backups
-    env_file:
-      - ./.envs/.prod/.postgres
+
+  # In prod are using aws RDS
+
+  # postgres:
+  #   image: postgres:12-alpine
+  #   volumes:
+  #     - prod_postgres_data:/var/lib/postgresql/data
+  #     - prod_postgres_data_backups:/backups
+  #   env_file:
+  #     - ./.envs/.prod/.postgres
   redis:
     image: redis:6-alpine
 
@@ -55,7 +55,7 @@ services:
     volumes:
       - .:/app
       - ./compose/certbot/conf:/etc/letsencrypt
-    command: daphne  -e ssl:8001:privateKey=/etc/letsencrypt/live/api.freelanium.com/privkey.pem:certKey=/etc/letsencrypt/live/api.freelanium.com/fullchain.pem config.asgi:application
+    command: daphne -e ssl:8001:privateKey=/etc/letsencrypt/live/api.freelanium.com/privkey.pem:certKey=/etc/letsencrypt/live/api.freelanium.com/fullchain.pem config.asgi:application
     ports:
       - 8001:8001
 
