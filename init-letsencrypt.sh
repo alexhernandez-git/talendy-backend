@@ -66,15 +66,15 @@ esac
 # Enable staging mode if needed
 if [ $staging != "0" ]; then staging_arg="--staging"; fi
 
-docker-compose -f docker-compose.prod.yml run --rm --entrypoint "\
-  certbot certonly --webroot -w /var/www/certbot \
-    $staging_arg \
-    $email_arg \
-    $domain_args \
-    --rsa-key-size $rsa_key_size \
-    --agree-tos \
-    --force-renewal" certbot
-echo
+# docker-compose -f docker-compose.prod.yml run --rm --entrypoint "\
+#   certbot certonly --webroot -w /var/www/certbot \
+#     $staging_arg \
+#     $email_arg \
+#     $domain_args \
+#     --rsa-key-size $rsa_key_size \
+#     --agree-tos \
+#     --force-renewal" certbot
+# echo
 
 echo "### Reloading nginx ..."
 docker-compose -f docker-compose.prod.yml exec nginx nginx -s reload
