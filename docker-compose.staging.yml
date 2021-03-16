@@ -3,21 +3,29 @@ version: "3"
 volumes:
   local_postgres_data: {}
   local_postgres_data_backups: {}
-
+  nginx_static_files: {}
 services:
   django: &django
     build:
       context: .
-      dockerfile: ./compose/dev/Dockerfile
+      dockerfile: ./compose/staging/Dockerfile
     depends_on:
       - postgres
     volumes:
       - .:/app
     env_file:
       - .env
-    ports:
-      - "8000:8000"
     command: /start
+
+  nginx:
+    image: nginx:1.19-alpine
+    volumes:
+      - ./compose/staging/nginx:/etc/nginx/conf.d
+      - nginx_static_files:/app/staticfiles
+    ports:
+      - 1337:80
+    depends_on:
+      - django
 
   postgres:
     image: postgres:12-alpine
@@ -26,6 +34,12 @@ services:
       - local_postgres_data_backups:/backups
     env_file:
       - .env
-
   redis:
     image: redis:6-alpine
+
+  channels:
+    <<: *django
+    image: freelanium_channels
+    command: daphne -b 0.0.0.0 -p 8001 config.asgi:application
+    ports:
+      - 8001:8001
