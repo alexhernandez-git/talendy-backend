@@ -282,3 +282,7 @@ media/
 .pytest_cache/
 
 .ipython/
+
+
+# Certbot 
+/compose/certbot
