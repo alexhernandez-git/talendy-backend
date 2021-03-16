@@ -1,46 +1,53 @@
 version: "3"
 
 volumes:
-  staging_postgres_data: {}
-  staging_postgres_data_backups: {}
+  prod_postgres_data: {}
+  prod_postgres_data_backups: {}
   nginx_static_files: {}
 services:
   django: &django
     build:
       context: .
-      dockerfile: ./compose/staging/Dockerfile
+      dockerfile: ./compose/prod/Dockerfile
     depends_on:
       - postgres
     volumes:
       - .:/app
     env_file:
-      - ./.envs/.staging/.django
-      - ./.envs/.staging/.postgres
+      - ./.envs/.prod/.django
+      - ./.envs/.prod/.postgres
     command: /start
 
   nginx:
     image: nginx:1.19-alpine
     volumes:
-      - ./compose/staging/nginx:/etc/nginx/conf.d
+      - ./compose/prod/nginx:/etc/nginx/conf.d
       - nginx_static_files:/app/staticfiles
     ports:
-      - 1337:80
+      - 80:80
+      - 443:443
     depends_on:
       - django
-
+  certbot:
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - ./compose/certbot/conf:/etc/letsencrypt
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
   postgres:
     image: postgres:12-alpine
     volumes:
-      - staging_postgres_data:/var/lib/postgresql/data
-      - staging_postgres_data_backups:/backups
+      - prod_postgres_data:/var/lib/postgresql/data
+      - prod_postgres_data_backups:/backups
     env_file:
-      - ./.envs/.staging/.postgres
+      - ./.envs/.prod/.postgres
   redis:
     image: redis:6-alpine
 
   channels:
     <<: *django
     image: freelanium_channels
+    # command: daphne  -e ssl:8001:privateKey=/etc/letsencrypt/live/open-chat-demo.xyz/privkey.pem:certKey=/etc/letsencrypt/live/open-chat-demo.xyz/fullchain.pem config.asgi:application
     command: daphne -b 0.0.0.0 -p 8001 config.asgi:application
     ports:
       - 8001:8001
