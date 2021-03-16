@@ -2,12 +2,12 @@ version: "3"
 
 volumes:
   nginx_static_files: {}
-
 services:
   django: &django
     build:
       context: .
       dockerfile: ./compose/prod/Dockerfile
+
     volumes:
       - .:/app
     env_file:
