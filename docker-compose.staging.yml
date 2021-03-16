@@ -43,3 +43,20 @@ services:
     command: daphne -b 0.0.0.0 -p 8001 config.asgi:application
     ports:
       - 8001:8001
+
+  celeryworker:
+    <<: *django
+    image: freelanium_staging_celeryworker
+    command: /start-celeryworker
+
+  celerybeat:
+    <<: *django
+    image: freelanium_staging_celerybeat
+    command: /start-celerybeat
+
+  flower:
+    <<: *django
+    image: freelanium_staging_flower
+    ports:
+      - "5555:5555"
+    command: /start-flower

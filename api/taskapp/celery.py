@@ -22,10 +22,10 @@ app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
 
-    'check_if_users_have_messages_to_read': {
-        'task': 'check_if_users_have_messages_to_read',
-        'schedule': timedelta(seconds=20),
-    },
+    # 'check_if_users_have_messages_to_read': {
+    #     'task': 'check_if_users_have_messages_to_read',
+    #     'schedule': timedelta(seconds=20),
+    # },
 }
 app.conf.timezone = 'UTC'
 

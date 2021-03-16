@@ -29,3 +29,30 @@ services:
 
   redis:
     image: redis:6-alpine
+
+  celeryworker:
+    <<: *django
+    image: freelanium_local_celeryworker
+    depends_on:
+      - redis
+      - postgres
+
+    ports: []
+    command: /start-celeryworker
+
+  celerybeat:
+    <<: *django
+    image: freelanium_local_celerybeat
+    depends_on:
+      - redis
+      - postgres
+
+    ports: []
+    command: /start-celerybeat
+
+  flower:
+    <<: *django
+    image: freelanium_local_flower
+    ports:
+      - "5555:5555"
+    command: /start-flower
