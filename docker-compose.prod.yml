@@ -53,6 +53,7 @@ services:
     <<: *django
     image: freelanium_channels
     volumes:
+      - .:/app
       - ./compose/certbot/conf:/etc/letsencrypt
     command: daphne  -e ssl:8001:privateKey=/etc/letsencrypt/live/api.freelanium.com/privkey.pem:certKey=/etc/letsencrypt/live/api.freelanium.com/fullchain.pem config.asgi:application
     ports:
