@@ -52,7 +52,7 @@ services:
   channels:
     <<: *django
     image: freelanium_channels
-    command: daphne  -e ssl:8001:privateKey=/etc/letsencrypt/live/open-chat-demo.xyz/privkey.pem:certKey=/etc/letsencrypt/live/open-chat-demo.xyz/fullchain.pem config.asgi:application
+    command: daphne  -e ssl:8001:privateKey=/etc/letsencrypt/live/api.freelanium.com/privkey.pem:certKey=/etc/letsencrypt/live/api.freelanium.com/fullchain.pem config.asgi:application
     ports:
       - 8001:8001
 
