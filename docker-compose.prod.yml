@@ -22,6 +22,8 @@ services:
     image: nginx:1.19-alpine
     volumes:
       - ./compose/prod/nginx:/etc/nginx/conf.d
+      - ./compose/certbot/conf:/etc/letsencrypt
+      - ./compose/certbot/www:/var/www/certbot
       - nginx_static_files:/app/staticfiles
     ports:
       - 80:80
@@ -33,6 +35,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./compose/certbot/conf:/etc/letsencrypt
+      - ./compose/certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
   postgres:
     image: postgres:12-alpine
@@ -48,7 +51,6 @@ services:
     <<: *django
     image: freelanium_channels
     command: daphne  -e ssl:8001:privateKey=/etc/letsencrypt/live/open-chat-demo.xyz/privkey.pem:certKey=/etc/letsencrypt/live/open-chat-demo.xyz/fullchain.pem config.asgi:application
-    # command: daphne -b 0.0.0.0 -p 8001 config.asgi:application
     ports:
       - 8001:8001
 
