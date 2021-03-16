@@ -12,8 +12,8 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 
-from decouple import config
-
+import environ
+env = environ.Env()
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -22,12 +22,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config("DJANGO_SECRET_KEY", default="c8jdhs)2-=c46n)i-9h8-8f#ko8x*dt@=e4eh65*5(@n#d&gw%")
+SECRET_KEY = env("DJANGO_SECRET_KEY")
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config("DEBUG", default=True, cast=bool)
+DEBUG = env.bool("DEBUG", True)
 
-ALLOWED_HOSTS = ["api.freelanium.com"]
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['localhost'])
 CORS_ALLOWED_ORIGINS = ["https://freelanium.com"]
 
 if DEBUG:
@@ -86,8 +87,6 @@ INSTALLED_APPS = [
     "channels",
     "channels_redis",
     "corsheaders",
-    # "django_celery_beat",
-    # "django_celery_results",
     "djmoney",
     "djmoney.contrib.exchange",
 ]
@@ -126,19 +125,11 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 
 # Database
-# https://docs.djangoproject.com/en/3.0/ref/settings/#databases
+# https://docs.djangoproject.com/en/3.0/ref/settings/#DATABASES
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": config("POSTGRES_DB"),
-        "USER": config("POSTGRES_USER"),
-        "PASSWORD": config("POSTGRES_PASSWORD"),
-        "HOST": config("POSTGRES_HOST"),
-        "PORT": config("POSTGRES_PORT"),
-    }
+    'default': env.db('DATABASE_URL'),
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
@@ -178,12 +169,12 @@ STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
-if "STORAGE_BUCKET_NAME" in os.environ:
-    AWS_STORAGE_BUCKET_NAME = os.environ["STORAGE_BUCKET_NAME"]
+if 'AWS_SECRET_ACCESS_KEY' in env and 'STORAGE_BUCKET_NAME' in env and 'AWS_ACCESS_KEY_ID' in env:
+    AWS_STORAGE_BUCKET_NAME = env("STORAGE_BUCKET_NAME")
     # STORAGES
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-    AWS_ACCESS_KEY_ID = os.environ["AWS_ACCESS_KEY_ID"]
-    AWS_SECRET_ACCESS_KEY = os.environ["AWS_SECRET_ACCESS_KEY"]
+    AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
     AWS_REGION = "eu-west-3"
     AWS_S3_ADDRESSING_STYLE = "auto"
     AWS_QUERYSTRING_AUTH = False
@@ -264,7 +255,7 @@ REST_FRAMEWORK = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": config("REDIS_URL"),
+        "LOCATION": env("REDIS_URL"),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "IGNORE_EXCEPTIONS": True,
@@ -296,7 +287,7 @@ PASSWORD_HASHERS = [
 ]
 
 
-if "SENDGRID_API_KEY" in os.environ:
+if 'SENDGRID_API_KEY' in env:
     # Email
     DEFAULT_FROM_EMAIL = "Classline Academy <no-reply@classlineacademy.com>"
     SERVER_EMAIL = DEFAULT_FROM_EMAIL
@@ -305,7 +296,7 @@ if "SENDGRID_API_KEY" in os.environ:
     # Anymail (Sendgrid)
 
     EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
-    ANYMAIL = {"SENDGRID_API_KEY": os.environ["SENDGRID_API_KEY"]}
+    ANYMAIL = {"SENDGRID_API_KEY": env("SENDGRID_API_KEY")}
 else:
     # Email
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
@@ -350,7 +341,7 @@ LOGGING = {
 
 if USE_TZ:
     CELERY_TIMEZONE = TIME_ZONE
-CELERY_BROKER_URL = config('CELERY_BROKER_URL')
+CELERY_BROKER_URL = env('CELERY_BROKER_URL')
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
 CELERY_CACHE_BACKEND = 'default'
 CELERY_ACCEPT_CONTENT = ['json']
@@ -365,15 +356,6 @@ FILE_UPLOAD_HANDLERS = ["django.core.files.uploadhandler.TemporaryFileUploadHand
 ASGI_APPLICATION = "config.routing.application"
 
 
-# Channel Layer
-# CHANNEL_LAYERS = {
-#     "default": {
-#         "BACKEND": "channels_redis.core.RedisChannelLayer",
-#         "CONFIG": {
-#             "hosts": [config("REDIS_URL")],
-#         },
-#     },
-# }
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",

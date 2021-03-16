@@ -42,7 +42,10 @@ from api.utils import helpers
 import re
 import geoip2.database
 import ccy
-from decouple import config
+
+import environ
+env = environ.Env()
+
 
 class UserModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
@@ -178,7 +181,7 @@ class GetCurrencySerializer(serializers.Serializer):
     def validate(self, data):
         current_login_ip = helpers.get_client_ip(self.context["request"])
         # Remove this line in production
-        if config("DEBUG", default=True, cast=bool):
+        if env.bool("DEBUG", default=True):
             current_login_ip = "161.185.160.93"
         try:
             with geoip2.database.Reader('geolite2-db/GeoLite2-Country.mmdb') as reader:
