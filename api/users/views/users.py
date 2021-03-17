@@ -159,6 +159,11 @@ class UserViewSet(mixins.RetrieveModelMixin,
             )
             buyer.used_for_purchases = buyer.used_for_purchases - normal_order.used_credits
             buyer.save()
+        if instance.stripe_plan_customer_id:
+            stripe.Customer.delete(instance.stripe_plan_customer_id)
+        if instance.stripe_customer_id:
+            stripe.Customer.delete(instance.stripe_customer_id)
+
         instance.delete()
 
     @action(detail=False, methods=['get'])
