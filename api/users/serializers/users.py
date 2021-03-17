@@ -268,6 +268,9 @@ class UserSignUpSerializer(serializers.Serializer):
 
         currency, country = helpers.get_currency_and_country_anonymous(request)
 
+        if 'currency' in data:
+            currency = data['currency']
+
         expiration_date = datetime.datetime.now() + datetime.timedelta(days=14)
 
         if is_seller:
