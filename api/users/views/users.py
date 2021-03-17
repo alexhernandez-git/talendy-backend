@@ -76,6 +76,7 @@ from api.utils import helpers
 class UserViewSet(mixins.RetrieveModelMixin,
                   mixins.ListModelMixin,
                   mixins.UpdateModelMixin,
+                  mixins.DestroyModelMixin,
                   viewsets.GenericViewSet):
     """User view set.
 
@@ -101,7 +102,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             'stripe_webhooks_invoice_payment_failed',
                 'forget_password']:
             permissions = [AllowAny]
-        elif self.action in ['update', 'delete', 'partial_update', 'change_password', 'change_email', 'stripe_connect', 'paypal_connect']:
+        elif self.action in ['update', 'delete', 'partial_update', 'change_password', 'change_email', 'stripe_connect', 'paypal_connect', 'destroy']:
             permissions = [IsAccountOwner, IsAuthenticated]
 
         else:
@@ -129,6 +130,36 @@ class UserViewSet(mixins.RetrieveModelMixin,
             users_list.append(user.pk)
             return User.objects.all().exclude(pk__in=users_list)
         return User.objects.all()
+
+    # User destroy
+
+    def perform_destroy(self, instance):
+        if 'STRIPE_API_KEY' in os.environ:
+            stripe.api_key = os.environ['STRIPE_API_KEY']
+        else:
+            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+        active_plans_subscription = PlanSubscription.objects.filter(user=instance, cancelled=False)
+        for active_plan in active_plans_subscription:
+            stripe.Subscription.delete(active_plan.subscription_id)
+        active_plans_subscription.update(cancelled=True)
+
+        order_subscriptions = Order.objects.filter(seller=instance, type=Order.RECURRENT_ORDER, cancelled=False)
+        for order_subscription in order_subscriptions:
+            stripe.Subscription.delete(order_subscription.subscription_id)
+        order_subscriptions.update(cancelled=True)
+        normal_orders = Order.objects.filter(seller=instance, type=Order.NORMAL_ORDER)
+        for normal_order in normal_orders:
+            # Return de money to user as credits
+            buyer = normal_order.buyer
+            buyer.net_income = buyer.net_income + normal_order.due_to_seller
+            Earning.objects.create(
+                user=buyer,
+                amount=normal_order.due_to_seller+normal_order.used_credits,
+                type=Earning.REFUND,
+            )
+            buyer.used_for_purchases = buyer.used_for_purchases - normal_order.used_credits
+            buyer.save()
+        instance.delete()
 
     @action(detail=False, methods=['get'])
     def get_currency(self, request):
