@@ -134,7 +134,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             users_list = [x[0] for x in users]
             users_list.append(user.pk)
             return User.objects.all().exclude(pk__in=users_list)
-        return User.objects.all()
+        return User.objects.filter(account_deactivated=False)
 
     # User destroy
 
@@ -162,16 +162,12 @@ class UserViewSet(mixins.RetrieveModelMixin,
                 amount=normal_order.due_to_seller+normal_order.used_credits,
                 type=Earning.REFUND,
                 available_for_withdrawn_date=timezone.now() + timedelta(days=14)
-
             )
             buyer.used_for_purchases = buyer.used_for_purchases - normal_order.used_credits
             buyer.save()
-        if instance.stripe_plan_customer_id:
-            stripe.Customer.delete(instance.stripe_plan_customer_id)
-        if instance.stripe_customer_id:
-            stripe.Customer.delete(instance.stripe_customer_id)
 
-        instance.delete()
+        instance.account_deactivated = True
+        instance.save()
 
     @action(detail=False, methods=['get'])
     def get_currency(self, request):
@@ -1047,7 +1043,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
                 buyer.save()
 
             available_for_withdrawal = helpers.get_available_for_withdrawal(buyer)
-
+            available_for_withdrawal = Money(amount=available_for_withdrawal, currency="USD")
             if available_for_withdrawal < unit_amount:
 
                 diff = available_for_withdrawal - unit_amount

@@ -126,3 +126,4 @@ class Command(BaseCommand):
             currency="ZAR",
             price_label="₺219.00"
         )
+        print("Plans created")

@@ -156,6 +156,8 @@ class AcceptOrderSerializer(serializers.Serializer):
                 if not interval:
                     raise serializers.ValidationError(
                         "Interval not valid")
+                user.default_payment_method = payment_method_id
+                user.save()
                 price = stripe.Price.create(
                     unit_amount=int(unit_amount_with_discount * 100),
                     currency=user.currency,

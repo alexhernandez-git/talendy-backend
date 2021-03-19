@@ -143,6 +143,8 @@ class User(CModel, AbstractUser):
 
     messages_notificatoin_sent = models.BooleanField(default=False)
 
+    account_deactivated = models.BooleanField(default=False)
+
     def __str__(self):
         """Return username."""
         return '{} {}'.format(self.first_name, self.last_name)

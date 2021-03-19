@@ -394,6 +394,12 @@ class UserLoginSerializer(serializers.Serializer):
                 email = user_request.username
             # Check if user set email
 
+        users = User.objects.filter(username=email, account_deactivated=True)
+
+        if users.exists():
+            raise serializers.ValidationError(
+                'This account has already been desactivated')
+
         user = authenticate(username=email, password=password)
         if not user:
             raise serializers.ValidationError(
