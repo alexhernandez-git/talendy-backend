@@ -166,13 +166,14 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
         seller = order.seller
 
         if order.type == Order.NORMAL_ORDER:
+
             # Return de money to user as credits
             seller.net_income = seller.net_income + order.due_to_seller
 
             Earning.objects.create(
                 user=seller,
                 type=Earning.ORDER_REVENUE,
-                amount=order.due_to_seler,
+                amount=order.due_to_seller,
                 available_for_withdrawn_date=timezone.now() + timedelta(days=14)
             )
             seller.save()

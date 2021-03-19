@@ -2,7 +2,6 @@
 # Django
 from operator import sub
 from api.orders.models.orders import Order
-import pdb
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
@@ -1050,13 +1049,20 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
                 new_cost_of_subscription = abs(diff)
 
+                new_cost_of_subscription = new_cost_of_subscription.amount
+
                 new_cost_of_subscription, _ = helpers.convert_currency(
                     buyer.currency, "USD", new_cost_of_subscription, rate_date)
-
+                switcher = {
+                    Order.MONTH: "month",
+                    Order.YEAR: "year"
+                }
+                interval = switcher.get(order.interval_subscription, None)
                 price = stripe.Price.create(
                     unit_amount=int(new_cost_of_subscription * 100),
                     currency=buyer.currency,
-                    product=order.product_id
+                    product=order.product_id,
+                    recurring={"interval": interval}
                 )
 
                 subscription = stripe.Subscription.retrieve(
@@ -1074,11 +1080,10 @@ class UserViewSet(mixins.RetrieveModelMixin,
                     ],
                 )
                 used_credits = unit_amount + diff
-                if used_credits < 0:
-                    used_credits = 0
+                if used_credits < Money(amount=0, currency="USD"):
+                    used_credits = Money(amount=0, currency="USD")
                 order.used_credits = used_credits
                 order.save()
-
             due_to_seller = order.unit_amount - order.service_fee
 
             seller.net_income = seller.net_income + due_to_seller

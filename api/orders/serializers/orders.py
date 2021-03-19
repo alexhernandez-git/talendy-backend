@@ -267,6 +267,7 @@ class AcceptOrderSerializer(serializers.Serializer):
 
             # user.available_for_withdrawal = user.available_for_withdrawal - \
             #     Money(amount=used_credits, currency="USD")
+
             if used_credits > 0:
                 Earning.objects.create(
                     user=user,
