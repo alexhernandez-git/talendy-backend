@@ -13,7 +13,7 @@ from .views import activities as activity_views
 
 router = DefaultRouter()
 # router.register(r'users', user_views.UserViewSet, basename='users')
-router.register(r'orders/(?P<order_id>[-a-zA-Z0-9_]+)/activities',
+router.register(r'activities',
                 activity_views.ActivityViewSet, basename='activities')
 # router.register(
 #     r'activities/(?P<order_id>[-a-zA-Z0-9_]+)/',

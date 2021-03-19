@@ -117,7 +117,7 @@ class UserModelSerializer(serializers.ModelSerializer):
 
     def get_earned_this_month(self, obj):
 
-        today = datetime.datetime.now()
+        today = timezone.now()
 
         earnings = Earning.objects.filter(
             created__month=today.month, user=obj, type=Earning.ORDER_REVENUE).aggregate(
@@ -132,7 +132,7 @@ class UserModelSerializer(serializers.ModelSerializer):
 
     def get_pending_clearance(self, obj):
 
-        today = datetime.datetime.now()
+        today = timezone.now()
 
         earnings = Earning.objects.filter(
             user=obj, type=Earning.ORDER_REVENUE, available_for_withdrawn_date__gte=today).aggregate(
@@ -271,7 +271,7 @@ class UserSignUpSerializer(serializers.Serializer):
         if 'currency' in data:
             currency = data['currency']
 
-        expiration_date = datetime.datetime.now() + datetime.timedelta(days=14)
+        expiration_date = timezone.now() + datetime.timedelta(days=14)
 
         if is_seller:
             stripe = self.context['stripe']
@@ -1116,7 +1116,7 @@ class BecomeASellerSerializer(serializers.Serializer):
         return data
 
     def update(self, instance, validated_data):
-        expiration_date = datetime.datetime.now() + datetime.timedelta(days=14)
+        expiration_date = timezone.now() + datetime.timedelta(days=14)
         plan_subscription = self.context['plan_subscription']
         new_customer_id = self.context['new_customer_id']
         instance.is_seller = True

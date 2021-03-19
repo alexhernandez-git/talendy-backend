@@ -41,7 +41,6 @@ from datetime import timedelta
 import geoip2.database
 import ccy
 import requests
-import datetime
 import environ
 env = environ.Env()
 

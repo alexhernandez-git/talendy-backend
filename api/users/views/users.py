@@ -70,7 +70,12 @@ from django_filters.rest_framework import DjangoFilterBackend
 from api.taskapp.tasks import send_confirmation_email
 
 import os
+
+# Utils
 from api.utils import helpers
+
+from datetime import timedelta
+from django.utils import timezone
 
 
 class UserViewSet(mixins.RetrieveModelMixin,
@@ -156,6 +161,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
                 user=buyer,
                 amount=normal_order.due_to_seller+normal_order.used_credits,
                 type=Earning.REFUND,
+                available_for_withdrawn_date=timezone.now() + timedelta(days=14)
+
             )
             buyer.used_for_purchases = buyer.used_for_purchases - normal_order.used_credits
             buyer.save()
@@ -1084,7 +1091,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
             Earning.objects.create(
                 user=seller,
-                amount=due_to_seller
+                amount=due_to_seller,
+                available_for_withdrawn_date=timezone.now() + timedelta(days=14)
             )
 
             return HttpResponse(status=200)

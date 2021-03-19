@@ -9,8 +9,10 @@ class Order(CModel):
     offer = models.ForeignKey("orders.Offer", on_delete=models.SET_NULL,
                               related_name="order_offer", null=True, blank=True)
 
-    buyer = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="buyer_order")
-    seller = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="seller_order")
+    buyer = models.ForeignKey("users.User", on_delete=models.SET_NULL,
+                              related_name="buyer_order", null=True, blank=True)
+    seller = models.ForeignKey("users.User", on_delete=models.SET_NULL,
+                               related_name="seller_order", null=True, blank=True)
 
     title = models.CharField(max_length=256)
     description = models.TextField(max_length=1000)

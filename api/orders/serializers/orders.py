@@ -21,6 +21,8 @@ from api.users.serializers import UserModelSerializer
 
 # Utils
 from api.utils import helpers
+from datetime import timedelta
+from django.utils import timezone
 
 
 class OrderModelSerializer(serializers.ModelSerializer):
@@ -335,7 +337,8 @@ class AcceptOrderSerializer(serializers.Serializer):
             seller.save()
             Earning.objects.create(
                 user=seller,
-                amount=offer_object.first_payment
+                amount=offer_object.first_payment,
+                available_for_withdrawn_date=timezone.now() + timedelta(days=14)
             )
 
         elif offer['type'] == Order.RECURRENT_ORDER:

@@ -20,6 +20,10 @@ from djmoney.models.fields import Money
 from api.orders.serializers import OrderModelSerializer
 from api.users.serializers import UserModelSerializer
 
+# Utils
+from datetime import timedelta
+from django.utils import timezone
+
 
 class CancelOrderModelSerializer(serializers.ModelSerializer):
     """CancelOrder model serializer."""
@@ -243,6 +247,7 @@ class AcceptOrderCancelationModelSerializer(serializers.ModelSerializer):
                 user=buyer,
                 amount=order.due_to_seller+order.used_credits,
                 type=Earning.REFUND,
+                available_for_withdrawn_date=timezone.now() + timedelta(days=14)
             )
             buyer.used_for_purchases = buyer.used_for_purchases - order.used_credits
             buyer.save()

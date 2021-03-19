@@ -42,6 +42,7 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
             status = ""
             if activityModel:
                 activity_queryset = activityModel.objects.filter(activity=instance.activity)
+
                 if activity_queryset.exists():
                     try:
                         activity = activity_queryset.first()
@@ -52,14 +53,18 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
                         pass
 
             channel_layer = get_channel_layer()
+
             async_to_sync(channel_layer.group_send)(
                 "user-%s" % sent_to.id, {
                     "type": "new.activity",
                     "event": instance.activity.type+status,
-                    "message": instance,
-                    "chat": chat,
-                    "sent_by": sent_by,
-                    "notification": user_notification,
+                    "chat__pk": str(chat.pk),
+                    "message__pk": str(instance.pk),
+                    "message__text": instance.text,
+                    "message__created": str(instance.created),
+                    "sent_by__pk": str(sent_by.pk),
+                    "sent_by__username": sent_by.username,
+                    "notification__pk": str(user_notification.pk),
 
                 }
             )
@@ -67,18 +72,17 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
                 "user-%s" % sent_by.id, {
                     "type": "new.activity",
                     "event": instance.activity.type+status,
-                    "message": instance,
-                    "chat": chat,
-                    "sent_by": sent_by,
-                    "notification": user_notification,
+                    "chat__pk": str(chat.pk),
+                    "message__pk": str(instance.pk),
+                    "message__text": instance.text,
+                    "message__created": str(instance.created),
+                    "sent_by__pk": str(sent_by.pk),
+                    "sent_by__username": sent_by.username,
+                    "notification__pk": str(notification.pk),
 
                 }
             )
         else:
-            # Let celery send have more messages notification
-            sent_to.messages_notificatoin_sent = False
-            sent_to.save()
-            ################################################
 
             user_notification = NotificationUser.objects.filter(
                 user=sent_to,
@@ -110,10 +114,14 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
             async_to_sync(channel_layer.group_send)(
                 "user-%s" % sent_to.id, {
                     "type": "message.sent",
-                    "event": "New Message",
-                    "message": instance,
-                    "chat": chat,
-                    "sent_by": sent_by,
-                    "notification": user_notification
+                    "event": "MESSAGE_RECEIVED",
+                    "type": "new.activity",
+                    "chat__pk": str(chat.pk),
+                    "message__pk": str(instance.pk),
+                    "message__text": instance.text,
+                    "message__created": str(instance.created),
+                    "sent_by__pk": str(sent_by.pk),
+                    "sent_by__username": sent_by.username,
+                    "notification__pk": str(user_notification.pk),
                 }
             )

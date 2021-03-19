@@ -6,7 +6,6 @@ from api.plans.models import Plan
 from djmoney.models.fields import MoneyField
 
 # Utils
-from datetime import timedelta
 from django.utils import timezone
 
 
@@ -38,5 +37,5 @@ class Earning(CModel):
     available_for_withdrawn_date = models.DateTimeField(
         'pending clearance expiration at',
         help_text='Date time on pending clearance ends.',
-        auto_now_add=True
+        default=timezone.now
     )

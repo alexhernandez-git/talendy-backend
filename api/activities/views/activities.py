@@ -21,6 +21,8 @@ from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from django.http import HttpResponse
+from django.db.models import Q
+
 
 # Permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
@@ -50,11 +52,20 @@ class ActivityViewSet(
     queryset = Activity.objects.all()
     lookup_field = "id"
     serializer_class = ActivityModelSerializer
-    pagination_class = None
 
     def get_queryset(self):
-
-        return Activity.objects.filter(order=self.order)
+        have_order = False
+        try:
+            if self.order:
+                have_order = True
+                self.pagination_class = None
+        except:
+            pass
+        if have_order:
+            return Activity.objects.filter(order=self.order)
+        else:
+            user = self.request.user
+            return Activity.objects.filter(Q(order__seller=user) | Q(order__buyer=user))
 
     def get_permissions(self):
         """Assign permissions based on action."""

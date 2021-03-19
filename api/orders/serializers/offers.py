@@ -18,8 +18,9 @@ from api.chats.models import Message, Chat, SeenBy
 from api.users.serializers import UserModelSerializer
 
 # Utils
-from datetime import datetime, timedelta
+from datetime import timedelta
 import re
+from django.utils import timezone
 
 
 class OfferModelSerializer(serializers.ModelSerializer):
@@ -101,7 +102,7 @@ class OfferModelSerializer(serializers.ModelSerializer):
         # Get the amount at delivery
         delivery_time = validated_data['delivery_time']
         if delivery_time:
-            now = datetime.now()
+            now = timezone.now()
             # Get delivery date
             delivery_date = now + timedelta(days=delivery_time)
             validated_data['delivery_date'] = delivery_date
@@ -180,4 +181,5 @@ class OfferModelSerializer(serializers.ModelSerializer):
 
                 seen_by.message = chat_instance.last_message
                 seen_by.save()
+
         return offer

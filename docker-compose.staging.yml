@@ -24,7 +24,7 @@ services:
       - ./compose/staging/nginx:/etc/nginx/conf.d
       - nginx_static_files:/app/staticfiles
     ports:
-      - 1337:80
+      - 80:80
     depends_on:
       - django
 

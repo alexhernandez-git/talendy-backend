@@ -37,9 +37,10 @@ class AddOrderMixin(viewsets.GenericViewSet):
 
     def dispatch(self, request, *args, **kwargs):
         """Return the normal dispatch but adds the circle model."""
+        try:
+            id = self.kwargs["order_id"]
 
-        id = self.kwargs["order_id"]
-
-        self.order = get_object_or_404(Order, id=id)
-
+            self.order = get_object_or_404(Order, id=id)
+        except:
+            pass
         return super(AddOrderMixin, self).dispatch(request, *args, **kwargs)

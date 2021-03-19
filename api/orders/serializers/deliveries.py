@@ -17,6 +17,9 @@ from api.chats.models import Message, Chat, SeenBy
 # Serializers
 from api.orders.serializers import OrderModelSerializer
 
+from datetime import datetime, timedelta
+from django.utils import timezone
+
 
 class DeliveryModelSerializer(serializers.ModelSerializer):
     """Delivery model serializer."""
@@ -161,13 +164,16 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
         )
 
         seller = order.seller
+
         if order.type == Order.NORMAL_ORDER:
             # Return de money to user as credits
             seller.net_income = seller.net_income + order.due_to_seller
+
             Earning.objects.create(
                 user=seller,
-                amount=order.due_to_seller+order.due_to_seller,
-                type=Earning.REFUND
+                type=Earning.ORDER_REVENUE,
+                amount=order.due_to_seler,
+                available_for_withdrawn_date=timezone.now() + timedelta(days=14)
             )
             seller.save()
 
@@ -228,7 +234,9 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
             Earning.objects.create(
                 user=seller,
                 type=Earning.ORDER_REVENUE,
-                amount=order.payment_at_delivery
+                amount=order.payment_at_delivery,
+                available_for_withdrawn_date=timezone.now() + timedelta(days=14)
+
             )
             order.payment_at_delivery_price_id = price['id']
             order.status = Order.DELIVERED

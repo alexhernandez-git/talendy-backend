@@ -25,9 +25,11 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 
 # Models
 from api.orders.models import Order
+from api.activities.models import Activity
 
 # Serializers
 from api.orders.serializers import OrderModelSerializer, AcceptOrderSerializer
+from api.activities.serializers import ActivityModelSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -86,6 +88,10 @@ class OrderViewSet(
             return queryset.filter(status=Order.DELIVERED)[:10]
         if self.action == "cancelled_orders":
             return queryset.filter(status=Order.CANCELLED)[:10]
+        if self.action == "list_activities":
+
+            order = get_object_or_404(Order, id=self.kwargs['id'])
+            return Activity.objects.filter(order=order)
         return queryset
 
     def create(self, request, *args, **kwargs):
@@ -127,4 +133,11 @@ class OrderViewSet(
         queryset = self.filter_queryset(self.get_queryset())
 
         serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def list_activities(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        serializer = ActivityModelSerializer(queryset, many=True)
         return Response(serializer.data)
