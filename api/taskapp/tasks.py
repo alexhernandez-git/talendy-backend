@@ -13,6 +13,7 @@ from rest_framework.authtoken.models import Token
 from api.notifications.models import NotificationUser, notifications
 from api.activities.models import Activity, OfferActivity, DeliveryActivity, CancelOrderActivity
 from api.orders.models import Order
+from djmoney.money import Money
 
 # Celery
 from celery.decorators import task
@@ -133,7 +134,7 @@ def send_offer(user, email, user_exists, offer_id, buyer_id=None):
 #         print(user.username)
 
 
-@task(name='send_have_messages_from_email')
+@task(name='send_have_messages_from_email', max_retries=3)
 def send_have_messages_from_email(user, email):
     """Check if the free trial has ended and turn off"""
 
@@ -260,3 +261,26 @@ def send_activity_notification(activity, type):
         msg = EmailMultiAlternatives(subject, content, from_email, [email])
         msg.attach_alternative(content, "text/html")
         msg.send()
+
+
+@task(name='check_if_pending_clearance_has_ended', max_retries=3)
+def check_if_pending_clearance_has_ended():
+    """Check if pending clearance has ended."""
+    today = timezone.now()
+
+    earnings = Earning.objects.filter(
+        type__in=[Earning.ORDER_REVENUE, Earning.REFUND],
+        available_for_withdrawn_date__lt=today)
+
+    for earning in earnings:
+        user = earning.user
+        if user:
+            pending_clearance_substracted = user.pending_clearance - earning.amount
+
+            if pending_clearance_substracted < Money(amount=0, currency="USD"):
+                pending_clearance_substracted = 0
+
+            user.pending_clearance = pending_clearance_substracted
+
+            user.available_for_withdrawal += pending_clearance_substracted
+            user.save()

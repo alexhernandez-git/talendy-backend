@@ -21,11 +21,10 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
-
-    # 'check_if_users_have_messages_to_read': {
-    #     'task': 'check_if_users_have_messages_to_read',
-    #     'schedule': timedelta(seconds=20),
-    # },
+    'check_if_pending_clearance_has_ended': {
+        'task': 'check_if_pending_clearance_has_ended',
+        'schedule': timedelta(days=1),
+    },
 }
 app.conf.timezone = 'UTC'
 
