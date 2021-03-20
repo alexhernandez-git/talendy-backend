@@ -176,6 +176,8 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
                 amount=order.due_to_seller,
                 available_for_withdrawn_date=timezone.now() + timedelta(days=14)
             )
+            seller.pending_clearance = seller.pending_clearance + order.due_to_seller
+
             seller.save()
 
         elif order.type == Order.TWO_PAYMENTS_ORDER:
@@ -239,6 +241,8 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
                 available_for_withdrawn_date=timezone.now() + timedelta(days=14)
 
             )
+            seller.pending_clearance = seller.pending_clearance + order.payment_at_delivery
+
             order.payment_at_delivery_price_id = price['id']
             order.status = Order.DELIVERED
 

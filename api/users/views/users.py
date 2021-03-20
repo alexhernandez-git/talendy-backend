@@ -155,14 +155,15 @@ class UserViewSet(mixins.RetrieveModelMixin,
         for normal_order in normal_orders:
             # Return de money to user as credits
             buyer = normal_order.buyer
-            buyer.net_income = buyer.net_income + normal_order.due_to_seller
+            buyer.net_income += normal_order.due_to_seller
             Earning.objects.create(
                 user=buyer,
-                amount=normal_order.due_to_seller+normal_order.used_credits,
+                amount=normal_order.due_to_seller,
                 type=Earning.REFUND,
                 available_for_withdrawn_date=timezone.now() + timedelta(days=14)
             )
-            buyer.used_for_purchases = buyer.used_for_purchases - normal_order.used_credits
+            buyer.pending_clearance += normal_order.due_to_seller
+            buyer.used_for_purchases -= normal_order.used_credits
             buyer.save()
 
         instance.account_deactivated = True
@@ -1037,15 +1038,23 @@ class UserViewSet(mixins.RetrieveModelMixin,
                     type=Earning.SPENT,
                     amount=Money(amount=used_credits, currency="USD")
                 )
+                # Substract in pending_clearance and available_for_withdrawal the used credits amount
+
+                pending_clearance = buyer.pending_clearance - Money(amount=used_credits, currency="USD")
+
+                if pending_clearance < Money(amount=0, currency="USD"):
+                    buyer.pending_clearance = Money(amount=0, currency="USD")
+                    available_money_payed = abs(pending_clearance)
+                    buyer.available_for_withdrawal = buyer.available_for_withdrawal - available_money_payed
 
                 buyer.used_for_purchases = buyer.used_for_purchases + used_credits
                 buyer.save()
 
-            available_for_withdrawal = helpers.get_available_for_withdrawal(buyer)
-            available_for_withdrawal = Money(amount=available_for_withdrawal, currency="USD")
-            if available_for_withdrawal < unit_amount:
+            credits_available = buyer.available_for_withdrawal - buyer.pending_clearance
 
-                diff = available_for_withdrawal - unit_amount
+            if credits_available < unit_amount:
+
+                diff = credits_available - unit_amount
 
                 new_cost_of_subscription = abs(diff)
 
@@ -1079,22 +1088,28 @@ class UserViewSet(mixins.RetrieveModelMixin,
                         },
                     ],
                 )
+
                 used_credits = unit_amount + diff
                 if used_credits < Money(amount=0, currency="USD"):
                     used_credits = Money(amount=0, currency="USD")
                 order.used_credits = used_credits
+                buyer.reserved_for_subscriptions += used_credits
+                buyer.save()
+
                 order.save()
             due_to_seller = order.unit_amount - order.service_fee
 
             seller.net_income = seller.net_income + due_to_seller
-
-            seller.save()
 
             Earning.objects.create(
                 user=seller,
                 amount=due_to_seller,
                 available_for_withdrawn_date=timezone.now() + timedelta(days=14)
             )
+
+            seller.pending_clearance += due_to_seller
+
+            seller.save()
 
             return HttpResponse(status=200)
 

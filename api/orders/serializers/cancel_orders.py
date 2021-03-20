@@ -245,10 +245,12 @@ class AcceptOrderCancelationModelSerializer(serializers.ModelSerializer):
             buyer.net_income = buyer.net_income + order.due_to_seller
             Earning.objects.create(
                 user=buyer,
-                amount=order.due_to_seller+order.used_credits,
+                amount=order.due_to_seller,
                 type=Earning.REFUND,
                 available_for_withdrawn_date=timezone.now() + timedelta(days=14)
             )
+
+            buyer.pending_clearance = buyer.pending_clearance + order.due_to_seller
             buyer.used_for_purchases = buyer.used_for_purchases - order.used_credits
             buyer.save()
         order.save()
@@ -350,6 +352,18 @@ class UnsubscribeOrderModelSerializer(serializers.ModelSerializer):
 
         stripe.Subscription.delete(order.subscription_id)
         order.status = Order.CANCELLED
+        buyer = order.buyer
+
+        if order.used_credits > Money(amount=0, currency="USD"):
+            buyer.reserved_for_subscriptions -= order.used_credits
+            buyer.pending_clearance -= order.pending_clearance
+            Earning.objects.create(
+                user=buyer,
+                amount=order.used_credits,
+                type=Earning.REFUND,
+                available_for_withdrawn_date=timezone.now() + timedelta(days=14)
+            )
+            buyer.save()
         order.cancelled = True
         order.save()
 
@@ -365,7 +379,6 @@ class UnsubscribeOrderModelSerializer(serializers.ModelSerializer):
         )
 
         seller = order.seller
-        buyer = order.buyer
 
         issued_by = user
         issued_to = None

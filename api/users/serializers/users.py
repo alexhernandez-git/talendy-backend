@@ -53,8 +53,6 @@ class UserModelSerializer(serializers.ModelSerializer):
     pending_messages = serializers.SerializerMethodField(read_only=True)
     current_plan_subscription = serializers.SerializerMethodField(read_only=True)
     earned_this_month = serializers.SerializerMethodField(read_only=True)
-    available_for_withdrawal = serializers.SerializerMethodField(read_only=True)
-    pending_clearance = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -123,25 +121,6 @@ class UserModelSerializer(serializers.ModelSerializer):
             created__month=today.month, user=obj, type=Earning.ORDER_REVENUE).aggregate(
             Sum('amount'))
         return earnings.get('amount__sum', None)
-
-    def get_available_for_withdrawal(self, obj):
-        amount = helpers.get_available_for_withdrawal(obj)
-        if amount:
-            return Money(amount=amount, currency="USD").amount
-        return "0.00"
-
-    def get_pending_clearance(self, obj):
-
-        today = timezone.now()
-
-        earnings = Earning.objects.filter(
-            user=obj, type=Earning.ORDER_REVENUE, available_for_withdrawn_date__gte=today).aggregate(
-            Sum('amount'))
-        amount = earnings.get('amount__sum', None)
-        if not amount:
-            amount = 0
-
-        return Money(amount=amount, currency="USD").amount
 
 
 class GetUserByJwtSerializer(serializers.Serializer):
