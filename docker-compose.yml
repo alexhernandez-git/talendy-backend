@@ -19,7 +19,8 @@ services:
     ports:
       - "8000:8000"
     command: /start
-
+    depends_on:
+      - redis
   postgres:
     image: postgres:12-alpine
     volumes:

@@ -17,7 +17,9 @@ services:
       - ./.envs/.staging/.django
       - ./.envs/.staging/.postgres
     command: /start
-
+    depends_on:
+      - redis
+      
   nginx:
     image: nginx:1.19-alpine
     volumes:
