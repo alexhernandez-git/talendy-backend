@@ -26,7 +26,7 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool("DEBUG", True)
+DEBUG = env.bool("DEBUG", default=True)
 
 ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['localhost'])
 CORS_ALLOWED_ORIGINS = ["https://freelanium.com"]
@@ -37,6 +37,7 @@ if DEBUG:
     CORS_ALLOWED_ORIGINS.append("http://localhost:3000")
 
 CORS_ORIGIN_WHITELIST = env.tuple('CORS_ORIGIN_WHITELIST', default=('localhost:3000',))
+
 
 CORS_ALLOW_HEADERS = [
     'accept',
