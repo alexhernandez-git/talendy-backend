@@ -87,7 +87,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
     Handle sign up, login and account verification.
     """
 
-    queryset = User.objects.all()
+    queryset = User.objects.filter(account_deactivated=False)
     serializer_class = UserModelSerializer
     lookup_field = 'id'
     filter_backends = (SearchFilter,  DjangoFilterBackend)
