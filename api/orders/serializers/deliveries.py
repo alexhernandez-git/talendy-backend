@@ -4,8 +4,6 @@
 from rest_framework import serializers
 
 # Django
-from django.conf import settings
-from django.shortcuts import get_object_or_404
 
 
 # Models
@@ -233,7 +231,6 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
             )
             seller.net_income = seller.net_income + order.payment_at_delivery
 
-            seller.save()
             Earning.objects.create(
                 user=seller,
                 type=Earning.ORDER_REVENUE,
@@ -245,6 +242,7 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
 
             order.payment_at_delivery_price_id = price['id']
             order.status = Order.DELIVERED
+            seller.save()
 
         order.save()
         issued_to = order.seller
