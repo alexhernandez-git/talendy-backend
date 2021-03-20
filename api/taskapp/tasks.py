@@ -270,17 +270,24 @@ def check_if_pending_clearance_has_ended():
 
     earnings = Earning.objects.filter(
         type__in=[Earning.ORDER_REVENUE, Earning.REFUND],
-        available_for_withdrawn_date__lt=today)
+        available_for_withdrawn_date__lt=today, setted_to_available_for_withdrawn=False)
 
     for earning in earnings:
+        print(earning.amount)
         user = earning.user
         if user:
             pending_clearance_substracted = user.pending_clearance - earning.amount
-
+            available_for_withdrawn_add = earning.amount
             if pending_clearance_substracted < Money(amount=0, currency="USD"):
+                available_for_withdrawn_add = earning.amount + pending_clearance_substracted
                 pending_clearance_substracted = 0
 
             user.pending_clearance = pending_clearance_substracted
 
-            user.available_for_withdrawal += pending_clearance_substracted
+            user.available_for_withdrawal += available_for_withdrawn_add
+
             user.save()
+
+            earning.setted_to_available_for_withdrawn = True
+            earning.save()
+            return available_for_withdrawn_add.amount

@@ -22,8 +22,9 @@ class CustomUserAdmin(UserAdmin):
                                         {
                                             "fields":
                                             ("is_verified", "stripe_customer_id", "net_income", "withdrawn",
-                                             "used_for_purchases", "active_month",
-                                             "have_active_plan", "is_free_trial", "passed_free_trial_once", "currency",
+                                             "used_for_purchases", "available_for_withdrawal", "pending_clearance",
+                                             "reserved_for_subscriptions", "active_month", "have_active_plan",
+                                             "is_free_trial", "passed_free_trial_once", "currency",
                                              "plan_default_payment_method")}),)
 
     list_display = ("email", "first_name", "last_name", "is_staff",

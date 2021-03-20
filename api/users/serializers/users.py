@@ -85,6 +85,7 @@ class UserModelSerializer(serializers.ModelSerializer):
             'used_for_purchases',
             'available_for_withdrawal',
             'pending_clearance',
+            'reserved_for_subscriptions',
             'pending_messages',
             'pending_notifications',
             'default_payment_method',

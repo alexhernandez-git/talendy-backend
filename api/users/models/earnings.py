@@ -39,3 +39,5 @@ class Earning(CModel):
         help_text='Date time on pending clearance ends.',
         default=timezone.now
     )
+
+    setted_to_available_for_withdrawn = models.BooleanField(default=False)

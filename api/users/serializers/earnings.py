@@ -69,13 +69,12 @@ class WithdrawFundsModelSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
-        from api.utils.helpers import get_available_for_withdrawal
 
         amount = Money(amount=data['amount'], currency="USD")
         request = self.context['request']
         user = request.user
 
-        available_for_withdrawal = get_available_for_withdrawal(user)
+        available_for_withdrawal = user.available_for_withdrawal
         if amount > Money(amount=available_for_withdrawal, currency="USD"):
             raise serializers.ValidationError('The amount is greater than your budget')
         if amount > Money(amount=5000, currency="USD"):
