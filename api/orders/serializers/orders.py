@@ -60,126 +60,115 @@ class AcceptOrderSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 "This offer already has been accepted")
         # Check if offer is not accepted
-        try:
 
-            if not user.stripe_customer_id:
+        if not user.stripe_customer_id:
 
-                new_customer = stripe.Customer.create(
-                    description="claCustomer_"+user.first_name+'_'+user.last_name,
-                    name=user.first_name+' '+user.last_name,
-                    email=user.email,
-                )
-                user.stripe_customer_id = new_customer['id']
-                user.save()
-            stripe.Customer.modify(
-                user.stripe_customer_id,
-                invoice_settings={
-                    "default_payment_method": payment_method_id
-                }
+            new_customer = stripe.Customer.create(
+                description="claCustomer_"+user.first_name+'_'+user.last_name,
+                name=user.first_name+' '+user.last_name,
+                email=user.email,
             )
-            product = stripe.Product.create(name=offer['title'] + '_' + user.username)
+            user.stripe_customer_id = new_customer['id']
+            user.save()
+        stripe.Customer.modify(
+            user.stripe_customer_id,
+            invoice_settings={
+                "default_payment_method": payment_method_id
+            }
+        )
+        product = stripe.Product.create(name=offer['title'] + '_' + user.username)
 
-            if not 'type' in offer:
-                raise serializers.ValidationError(
-                    "Not a valid order type")
-            if not 'seller' in offer:
-                raise serializers.ValidationError(
-                    "Not seller in offer")
-            if not 'unit_amount' in offer:
-                raise serializers.ValidationError(
-                    "Not unit amount in offer")
-
-            unit_amount = float(offer['unit_amount'])
-            unit_amount_with_discount = unit_amount - float(offer['used_credits'])
-
-            if not 'service_fee' in offer:
-                raise serializers.ValidationError(
-                    "There is not service fee in this offer")
-            service_fee = float(offer['service_fee'])
-
-            price = None
-            if offer['type'] == Order.NORMAL_ORDER:
-
-                price = stripe.Price.create(
-                    unit_amount=int(unit_amount_with_discount * 100),
-                    currency=user.currency,
-                    product=product['id']
-                )
-                invoice_item = stripe.InvoiceItem.create(
-                    customer=user.stripe_customer_id,
-                    price=price['id'],
-                )
-                invoice = stripe.Invoice.create(
-                    customer=user.stripe_customer_id,
-                    default_payment_method=payment_method_id
-                )
-                user.default_payment_method = payment_method_id
-                user.save()
-                invoice_paid = stripe.Invoice.pay(invoice['id'])
-
-                # Invoice paid succesfully, do actions
-
-                self.context['price'] = price
-                self.context['product'] = product
-                self.context['invoice_paid'] = invoice_paid
-
-            elif offer['type'] == Order.TWO_PAYMENTS_ORDER:
-
-                price = stripe.Price.create(
-                    unit_amount=int(unit_amount_with_discount * 100),
-                    currency=user.currency,
-                    product=product['id']
-                )
-                invoice_item = stripe.InvoiceItem.create(
-                    customer=user.stripe_customer_id,
-                    price=price['id'],
-                )
-                invoice = stripe.Invoice.create(
-                    customer=user.stripe_customer_id,
-                )
-                user.default_payment_method = payment_method_id
-                user.save()
-                invoice_paid = stripe.Invoice.pay(invoice['id'])
-                self.context['price'] = price
-                self.context['product'] = product
-
-                self.context['invoice_paid'] = invoice_paid
-            elif offer['type'] == Order.RECURRENT_ORDER:
-                if not 'interval_subscription' in offer:
-                    raise serializers.ValidationError(
-                        "Not interval subscription in offer")
-                switcher = {
-                    Order.MONTH: "month",
-                    Order.YEAR: "year"
-                }
-                interval = switcher.get(offer['interval_subscription'], None)
-                if not interval:
-                    raise serializers.ValidationError(
-                        "Interval not valid")
-                user.default_payment_method = payment_method_id
-                user.save()
-                price = stripe.Price.create(
-                    unit_amount=int(unit_amount_with_discount * 100),
-                    currency=user.currency,
-                    recurring={"interval": interval},
-                    product=product['id']
-                )
-                self.context['product'] = product
-
-                self.context['price'] = price
-
-            else:
-                raise serializers.ValidationError(
-                    "Not a valid order type")
-
-        except stripe.error.StripeError as e:
-            print(e)
+        if not 'type' in offer:
             raise serializers.ValidationError(
-                'Something went wrong with stripe')
-        except Exception as e:
-            print(e)
+                "Not a valid order type")
+        if not 'seller' in offer:
             raise serializers.ValidationError(
-                'Something went wrong')
+                "Not seller in offer")
+        if not 'unit_amount' in offer:
+            raise serializers.ValidationError(
+                "Not unit amount in offer")
+
+        unit_amount = float(offer['unit_amount'])
+        unit_amount_with_discount = unit_amount - float(offer['used_credits'])
+
+        if not 'service_fee' in offer:
+            raise serializers.ValidationError(
+                "There is not service fee in this offer")
+
+        price = None
+        if offer['type'] == Order.NORMAL_ORDER:
+
+            price = stripe.Price.create(
+                unit_amount=int(unit_amount_with_discount * 100),
+                currency=user.currency,
+                product=product['id']
+            )
+            invoice_item = stripe.InvoiceItem.create(
+                customer=user.stripe_customer_id,
+                price=price['id'],
+            )
+            invoice = stripe.Invoice.create(
+                customer=user.stripe_customer_id,
+                default_payment_method=payment_method_id
+            )
+            user.default_payment_method = payment_method_id
+            user.save()
+            invoice_paid = stripe.Invoice.pay(invoice['id'])
+
+            # Invoice paid succesfully, do actions
+
+            self.context['price'] = price
+            self.context['product'] = product
+            self.context['invoice_paid'] = invoice_paid
+
+        elif offer['type'] == Order.TWO_PAYMENTS_ORDER:
+
+            price = stripe.Price.create(
+                unit_amount=int(unit_amount_with_discount * 100),
+                currency=user.currency,
+                product=product['id']
+            )
+            stripe.InvoiceItem.create(
+                customer=user.stripe_customer_id,
+                price=price['id'],
+            )
+            invoice = stripe.Invoice.create(
+                customer=user.stripe_customer_id,
+            )
+            user.default_payment_method = payment_method_id
+            user.save()
+            invoice_paid = stripe.Invoice.pay(invoice['id'])
+            self.context['price'] = price
+            self.context['product'] = product
+
+            self.context['invoice_paid'] = invoice_paid
+        elif offer['type'] == Order.RECURRENT_ORDER:
+            if not 'interval_subscription' in offer:
+                raise serializers.ValidationError(
+                    "Not interval subscription in offer")
+            switcher = {
+                Order.MONTH: "month",
+                Order.YEAR: "year"
+            }
+            interval = switcher.get(offer['interval_subscription'], None)
+            if not interval:
+                raise serializers.ValidationError(
+                    "Interval not valid")
+            user.default_payment_method = payment_method_id
+            user.save()
+            price = stripe.Price.create(
+                unit_amount=int(unit_amount_with_discount * 100),
+                currency=user.currency,
+                recurring={"interval": interval},
+                product=product['id']
+            )
+            self.context['product'] = product
+
+            self.context['price'] = price
+
+        else:
+            raise serializers.ValidationError(
+                "Not a valid order type")
 
         return data
 
