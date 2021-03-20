@@ -1,0 +1,52 @@
+Normal order $100
+Normal order accept offer
+Normal order delivery order
+Normal order accept order
+Normal order request revision
+Normal order request cancelation
+Normal order accept cancelation
+Normal order cancel cancelation
+
+<<*
+    with 0 credits
+    with 50 credits
+    with 100 credits
+    with 150 credits
+
+<<* 
+    Buy
+    Sell
+
+Two payments order $100 first payment $75
+Two payments accept offer
+Two payments delivery order
+Two payments accept order
+Two payments request revision
+Two payments request cancelation
+Two payments accept cancelation
+Two payments cancel cancelation
+
+<<*
+    with 0 credits
+    with 50 credits
+    with 100 credits
+    with 150 credits
+
+<<* 
+    Buy
+    Sell
+
+Recurrent payment month $100
+Recurrent payment year $100
+Recurrent payment unsubscribe
+<<*
+    with 50 credits
+    with 100 credits
+    with 150 credits
+<<* 
+    Buy
+    Sell
+
+Tree months cycle with 150 credits
+
+
