@@ -132,7 +132,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             users = Contact.objects.filter(from_user=user).values_list('contact_user__pk')
             users_list = [x[0] for x in users]
             users_list.append(user.pk)
-            return User.objects.all().exclude(pk__in=users_list)
+            return User.objects.filter(account_deactivated=False).exclude(pk__in=users_list)
         return User.objects.filter(account_deactivated=False)
 
     # User destroy
