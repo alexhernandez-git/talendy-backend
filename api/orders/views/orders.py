@@ -112,7 +112,7 @@ class OrderViewSet(
 
         data = OrderModelSerializer(user, many=False).data
 
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'])
     def active_orders(self, request, *args, **kwargs):

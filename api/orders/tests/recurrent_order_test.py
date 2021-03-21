@@ -20,7 +20,7 @@ from api.utils import helpers
 from api.users.tests.register_test import SetupUsersInitialData
 
 
-class NormalOrderAPITestCase(SetupUsersInitialData):
+class RecurrentOrderAPITestCase(SetupUsersInitialData):
 
     def setUp(self):
         super().setUp()
@@ -45,7 +45,7 @@ class NormalOrderAPITestCase(SetupUsersInitialData):
             "send_offer_by_email": False,
             "title": "Normal order",
             "description": "Normal order offer",
-            "type": "NO",
+            "type": "RO",
             "unit_amount": "100"
         }
 

@@ -20,7 +20,7 @@ from api.utils import helpers
 from api.users.tests.register_test import SetupUsersInitialData
 
 
-class NormalOrderAPITestCase(SetupUsersInitialData):
+class TwoPaymentsOrderAPITestCase(SetupUsersInitialData):
 
     def setUp(self):
         super().setUp()
@@ -43,9 +43,10 @@ class NormalOrderAPITestCase(SetupUsersInitialData):
             "buyer_email": "",
             "delivery_time": "7",
             "send_offer_by_email": False,
-            "title": "Normal order",
-            "description": "Normal order offer",
-            "type": "NO",
+            "title": "Two payments order",
+            "description": "Two payments order offer",
+            "first_payment": "50",
+            "type": "TP",
             "unit_amount": "100"
         }
 
@@ -61,7 +62,9 @@ class NormalOrderAPITestCase(SetupUsersInitialData):
         buyer = self.buyer
 
         currencyRate, _ = helpers.get_currency_rate(buyer.currency, offer['rate_date'])
-        subtotal = float(offer['unit_amount']) * currencyRate
+        subtotal = float(offer['first_payment']) * currencyRate
+        first_payment = subtotal
+        payment_at_delivery = float(offer['payment_at_delivery']) * currencyRate
         fixed_price = 0.3 * currencyRate
         service_fee = (subtotal * 5) / 100 + fixed_price
         unit_amount = subtotal * service_fee
@@ -79,6 +82,8 @@ class NormalOrderAPITestCase(SetupUsersInitialData):
         offer['service_fee'] = round(service_fee, 2)
         offer['unit_amount'] = round(unit_amount, 2)
         offer['used_credits'] = round(used_credits, 2)
+        offer['first_payment'] = round(first_payment, 2)
+        offer['payment_at_delivery'] = round(payment_at_delivery, 2)
 
         # Petition data
 
