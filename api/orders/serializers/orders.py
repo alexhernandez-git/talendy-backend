@@ -56,10 +56,58 @@ class AcceptOrderSerializer(serializers.Serializer):
 
         offer_object = get_object_or_404(Offer, id=offer['id'])
         self.context['offer_object'] = offer_object
+        # Check if offer is not accepted
         if offer_object.accepted:
             raise serializers.ValidationError(
                 "This offer already has been accepted")
-        # Check if offer is not accepted
+
+        # Check if the payload match with the offer
+        if offer['type'] == Order.NORMAL_ORDER or offer['type'] == Order.RECURRENT_ORDER:
+
+            currencyRate, _ = helpers.get_currency_rate(user.currency, offer_object.rate_date)
+            subtotal = float(offer_object.unit_amount.amount) * currencyRate
+            fixed_price = 0.3 * currencyRate
+            service_fee = (subtotal * 5) / 100 + fixed_price
+            unit_amount = subtotal + service_fee
+            available_for_withdrawal = (float(user.available_for_withdrawal.amount) +
+                                        float(user.pending_clearance.amount))
+            used_credits = 0
+            if available_for_withdrawal > 0:
+                if available_for_withdrawal > subtotal:
+                    used_credits = subtotal
+                else:
+                    diff = available_for_withdrawal - subtotal
+                    used_credits = subtotal + diff
+
+            if round(unit_amount, 2) != offer['unit_amount'] or round(used_credits, 2) != offer['used_credits']:
+                raise serializers.ValidationError(
+                    "The data recieved not match with the offer")
+
+        if offer['type'] == Order.TWO_PAYMENTS_ORDER:
+
+            currencyRate, _ = helpers.get_currency_rate(user.currency, offer_object.rate_date)
+            subtotal = float(offer_object.first_payment.amount) * currencyRate
+            first_payment = subtotal
+            payment_at_delivery = float(offer_object.payment_at_delivery.amount) * currencyRate
+            fixed_price = 0.3 * currencyRate
+            service_fee = (subtotal * 5) / 100 + fixed_price
+            unit_amount = subtotal + service_fee
+            available_for_withdrawal = (float(user.available_for_withdrawal.amount) +
+                                        float(user.pending_clearance.amount))
+            used_credits = 0
+            if available_for_withdrawal > 0:
+                if available_for_withdrawal > subtotal:
+                    used_credits = subtotal
+                else:
+                    diff = available_for_withdrawal - subtotal
+                    used_credits = subtotal + diff
+
+            if round(unit_amount, 2) != offer['unit_amount'] \
+                    or round(used_credits, 2) != offer['used_credits'] \
+                    or round(first_payment, 2) != offer['first_payment'] \
+                    or round(payment_at_delivery, 2) != offer['payment_at_delivery']:
+                raise serializers.ValidationError(
+                    "The data recieved not match with the offer")
 
         if not user.stripe_customer_id:
 

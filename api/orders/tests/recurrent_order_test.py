@@ -64,7 +64,7 @@ class RecurrentOrderAPITestCase(SetupUsersInitialData):
         subtotal = float(offer['unit_amount']) * currencyRate
         fixed_price = 0.3 * currencyRate
         service_fee = (subtotal * 5) / 100 + fixed_price
-        unit_amount = subtotal * service_fee
+        unit_amount = subtotal + service_fee
         available_for_withdrawal = (float(buyer.available_for_withdrawal.amount) +
                                     float(buyer.pending_clearance.amount))
         used_credits = 0
