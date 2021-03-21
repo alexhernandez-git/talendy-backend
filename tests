@@ -7,13 +7,13 @@ Normal order request cancelation
 Normal order accept cancelation
 Normal order cancel cancelation
 
-<<*
+<<
     with 0 credits
     with 50 credits
     with 100 credits
     with 150 credits
 
-<<* 
+<< 
     Buy
     Sell
 
@@ -26,24 +26,24 @@ Two payments request cancelation
 Two payments accept cancelation
 Two payments cancel cancelation
 
-<<*
+<<
     with 0 credits
     with 50 credits
     with 100 credits
     with 150 credits
 
-<<* 
+<< 
     Buy
     Sell
 
 Recurrent payment month $100
 Recurrent payment year $100
 Recurrent payment unsubscribe
-<<*
+<<
     with 50 credits
     with 100 credits
     with 150 credits
-<<* 
+<< 
     Buy
     Sell
 

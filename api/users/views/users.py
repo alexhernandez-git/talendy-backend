@@ -7,8 +7,6 @@ from django.template.loader import render_to_string
 
 
 # Django REST Framework
-import stripe
-import json
 import uuid
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -69,6 +67,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from api.taskapp.tasks import send_confirmation_email
 
 import os
+import stripe
+import json
 
 # Utils
 from api.utils import helpers
