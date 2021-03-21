@@ -25,7 +25,7 @@ class SetupUsersInitialData(APITestCase):
             "password_confirmation": "admin321",
             "first_name": "Alex",
             "last_name": "Hernandez",
-            "currency": "EUR"
+            "currency": "USD"
         }
         buyer_data = {
             "email": "ivan@gmail.com",
