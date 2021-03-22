@@ -44,11 +44,11 @@ class SetupUsersInitialData(APITestCase):
         buyer_response = self.client.post("/api/users/signup_buyer/", buyer_data)
         self.buyer_response = buyer_response
 
-        self.seller = User.objects.get(id=self.seller_response.data['user']['id'])
+        self.seller = self.seller_response.data['user']
 
         self.seller_token = self.seller_response.data['access_token']
 
-        self.buyer = User.objects.get(id=self.buyer_response.data['user']['id'])
+        self.buyer = self.buyer_response.data['user']
 
         self.buyer_token = self.buyer_response.data['access_token']
 

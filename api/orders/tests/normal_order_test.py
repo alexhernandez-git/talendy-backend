@@ -28,18 +28,20 @@ class NormalOrderAPITestCase(SetupUsersInitialData):
         self.stripe = stripe
 
         # In dollars
-        self.buyer_credits = 10
-        self.buyer.net_income = self.buyer_credits
-        self.buyer.available_for_withdrawal = self.buyer_credits
-        self.buyer.save()
+        buyer = User.objects.get(id=self.buyer['id'])
 
+        self.buyer_credits = 75
+
+        buyer.net_income = self.buyer_credits
+        buyer.available_for_withdrawal = self.buyer_credits
+        buyer.save()
         self.create_offer()
 
         self.accept_offer()
 
     def create_offer(self):
         offer_data = {
-            "buyer": self.buyer.id,
+            "buyer": self.buyer['id'],
             "buyer_email": "",
             "delivery_time": "7",
             "send_offer_by_email": False,
@@ -58,7 +60,7 @@ class NormalOrderAPITestCase(SetupUsersInitialData):
     def accept_offer(self):
         # Convert the offer in buyer currency
         offer = self.offer
-        buyer = self.buyer
+        buyer = User.objects.get(id=self.buyer['id'])
 
         currencyRate, _ = helpers.get_currency_rate(buyer.currency, offer['rate_date'])
         subtotal = float(offer['unit_amount']) * currencyRate

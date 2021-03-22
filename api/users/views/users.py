@@ -1,7 +1,6 @@
 """Users views."""
 # Django
 from operator import sub
-from api.orders.models.orders import Order
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
@@ -27,9 +26,8 @@ from api.users.permissions import IsAccountOwner
 
 # Models
 from api.users.models import User, UserLoginActivity, PlanSubscription, Earning, Contact, PlanPayment
-from api.orders.models import OrderPayment
+from api.orders.models import OrderPayment, Order
 from djmoney.money import Money
-
 
 # Serializers
 from api.users.serializers import (
@@ -1036,11 +1034,11 @@ class UserViewSet(mixins.RetrieveModelMixin,
                 Earning.objects.create(
                     user=buyer,
                     type=Earning.SPENT,
-                    amount=Money(amount=used_credits, currency="USD")
+                    amount=used_credits
                 )
                 # Substract in pending_clearance and available_for_withdrawal the used credits amount
 
-                pending_clearance = buyer.pending_clearance - Money(amount=used_credits, currency="USD")
+                pending_clearance = buyer.pending_clearance - used_credits
 
                 if pending_clearance < Money(amount=0, currency="USD"):
                     buyer.pending_clearance = Money(amount=0, currency="USD")
@@ -1097,7 +1095,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
                 buyer.save()
 
                 order.save()
-            due_to_seller = order.unit_amount - order.service_fee
+            due_to_seller = order.offer.unit_amount
 
             seller.net_income = seller.net_income + due_to_seller
 
