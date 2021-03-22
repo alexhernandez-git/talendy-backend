@@ -71,7 +71,7 @@ class TwoPaymentsOrderAPITestCase(SetupUsersInitialData):
         service_fee = (subtotal * 5) / 100 + fixed_price
         unit_amount = subtotal + service_fee
         available_for_withdrawal = (float(buyer.available_for_withdrawal.amount) +
-                                    float(buyer.pending_clearance.amount))
+                                    float(buyer.pending_clearance.amount)) * currencyRate
         used_credits = 0
         if available_for_withdrawal > 0:
             if available_for_withdrawal > subtotal:

@@ -70,7 +70,7 @@ class AcceptOrderSerializer(serializers.Serializer):
             service_fee = (subtotal * 5) / 100 + fixed_price
             unit_amount = subtotal + service_fee
             available_for_withdrawal = (float(user.available_for_withdrawal.amount) +
-                                        float(user.pending_clearance.amount))
+                                        float(user.pending_clearance.amount)) * currencyRate
             used_credits = 0
             if available_for_withdrawal > 0:
                 if available_for_withdrawal > subtotal:
@@ -93,7 +93,7 @@ class AcceptOrderSerializer(serializers.Serializer):
             service_fee = (subtotal * 5) / 100 + fixed_price
             unit_amount = subtotal + service_fee
             available_for_withdrawal = (float(user.available_for_withdrawal.amount) +
-                                        float(user.pending_clearance.amount))
+                                        float(user.pending_clearance.amount)) * currencyRate
             used_credits = 0
             if available_for_withdrawal > 0:
                 if available_for_withdrawal > subtotal:
@@ -319,9 +319,12 @@ class AcceptOrderSerializer(serializers.Serializer):
                 if pending_clearance < Money(amount=0, currency="USD"):
                     user.pending_clearance = Money(amount=0, currency="USD")
                     available_money_payed = abs(pending_clearance)
-                    user.available_for_withdrawal = user.available_for_withdrawal - available_money_payed
-
-                user.used_for_purchases = user.used_for_purchases + Money(amount=used_credits, currency="USD")
+                    available_for_withdrawal = user.available_for_withdrawal - available_money_payed
+                    if available_for_withdrawal < Money(amount=0, currency="USD"):
+                        user.available_for_withdrawal = Money(amount=0, currency="USD")
+                else:
+                    user.pending_clearance = pending_clearance
+                user.used_for_purchases += Money(amount=used_credits, currency="USD")
                 user.save()
 
             price = self.context['price']
@@ -366,10 +369,15 @@ class AcceptOrderSerializer(serializers.Serializer):
             if pending_clearance < Money(amount=0, currency="USD"):
                 user.pending_clearance = Money(amount=0, currency="USD")
                 available_money_payed = abs(pending_clearance)
-                user.available_for_withdrawal = user.available_for_withdrawal - available_money_payed
+                available_for_withdrawal = user.available_for_withdrawal - available_money_payed
+                if available_for_withdrawal < Money(amount=0, currency="USD"):
+                    user.available_for_withdrawal = Money(amount=0, currency="USD")
+            else:
+                user.pending_clearance = pending_clearance
 
             user.used_for_purchases = user.used_for_purchases + Money(amount=used_credits, currency="USD")
             user.save()
+
             invoice_paid = self.context['invoice_paid']
             invoice_id = invoice_paid['id']
             currency = invoice_paid['currency']

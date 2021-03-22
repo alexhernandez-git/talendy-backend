@@ -1043,8 +1043,14 @@ class UserViewSet(mixins.RetrieveModelMixin,
                 if pending_clearance < Money(amount=0, currency="USD"):
                     buyer.pending_clearance = Money(amount=0, currency="USD")
                     available_money_payed = abs(pending_clearance)
-                    buyer.available_for_withdrawal = buyer.available_for_withdrawal - available_money_payed
 
+                    available_for_withdrawal = buyer.available_for_withdrawal - available_money_payed
+                    if available_for_withdrawal < Money(amount=0, currency="USD"):
+                        available_for_withdrawal = Money(amount=0, currency="USD")
+                    buyer.available_for_withdrawal = available_for_withdrawal
+                else:
+
+                    buyer.pending_clearance = pending_clearance
                 buyer.used_for_purchases = buyer.used_for_purchases + used_credits
                 buyer.save()
 

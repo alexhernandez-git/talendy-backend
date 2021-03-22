@@ -39,6 +39,7 @@ class RecurrentOrderAPITestCase(SetupUsersInitialData):
         buyer.net_income = self.buyer_credits
         buyer.available_for_withdrawal = self.buyer_credits / 2
         buyer.pending_clearance = self.buyer_credits / 2
+
         buyer.save()
         self.create_offer()
 
@@ -47,6 +48,7 @@ class RecurrentOrderAPITestCase(SetupUsersInitialData):
         self.seller_recieve_subscription_payment()
 
     def create_offer(self):
+        order_usd_price = "12"
         offer_data = {
             "buyer": self.buyer['id'],
             "buyer_email": "",
@@ -55,8 +57,9 @@ class RecurrentOrderAPITestCase(SetupUsersInitialData):
             "title": "Normal order",
             "description": "Normal order offer",
             "type": "RO",
-            "unit_amount": "200"
+            "unit_amount": order_usd_price
         }
+        self.order_usd_price = order_usd_price
 
         self.client.credentials(HTTP_AUTHORIZATION="Token {}".format(self.seller_token))
 
@@ -75,8 +78,9 @@ class RecurrentOrderAPITestCase(SetupUsersInitialData):
         service_fee = (subtotal * 5) / 100 + fixed_price
         unit_amount = subtotal + service_fee
         available_for_withdrawal = (float(buyer.available_for_withdrawal.amount) +
-                                    float(buyer.pending_clearance.amount))
+                                    float(buyer.pending_clearance.amount)) * currencyRate
         used_credits = 0
+
         if available_for_withdrawal > 0:
             if available_for_withdrawal > subtotal:
                 used_credits = subtotal
@@ -146,12 +150,20 @@ class RecurrentOrderAPITestCase(SetupUsersInitialData):
             if pending_clearance < Money(amount=0, currency="USD"):
                 buyer.pending_clearance = Money(amount=0, currency="USD")
                 available_money_payed = abs(pending_clearance)
-                buyer.available_for_withdrawal = buyer.available_for_withdrawal - available_money_payed
 
-            buyer.used_for_purchases = buyer.used_for_purchases + used_credits
+                available_for_withdrawal = buyer.available_for_withdrawal - available_money_payed
+                if available_for_withdrawal < Money(amount=0, currency="USD"):
+                    available_for_withdrawal = Money(amount=0, currency="USD")
+                buyer.available_for_withdrawal = available_for_withdrawal
+            else:
+
+                buyer.pending_clearance = pending_clearance
+
+            buyer.used_for_purchases += used_credits
+
             buyer.save()
 
-        credits_available = buyer.available_for_withdrawal - buyer.pending_clearance
+        credits_available = buyer.available_for_withdrawal + buyer.pending_clearance
 
         if credits_available < unit_amount:
 
@@ -230,5 +242,16 @@ class RecurrentOrderAPITestCase(SetupUsersInitialData):
 
     def test_buyer_spent_what_expected(self):
         buyer = User.objects.get(id=self.buyer['id'])
-        import pdb
-        pdb.set_trace()
+        order_price = float(self.order_usd_price)
+        available_for_withdrawal = self.buyer_credits / 2
+        pending_clearance = self.buyer_credits / 2
+        pending_clearance -= order_price
+        if pending_clearance < 0:
+            substract_available_for_withdrawal = abs(pending_clearance)
+            pending_clearance = 0
+            available_for_withdrawal -= substract_available_for_withdrawal
+            if available_for_withdrawal < 0:
+                available_for_withdrawal = 0
+
+        self.assertEqual(available_for_withdrawal, buyer.available_for_withdrawal.amount)
+        self.assertEqual(pending_clearance, buyer.pending_clearance.amount)
