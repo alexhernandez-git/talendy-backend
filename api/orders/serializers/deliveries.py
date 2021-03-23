@@ -144,7 +144,7 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
         if order.status == Order.CANCELLED:
             raise serializers.ValidationError('This order is cancelled')
 
-        if order_checkout['type'] == Order.TWO_PAYMENTS_ORDER:
+        if order.type == Order.TWO_PAYMENTS_ORDER:
             offer_object = order.offer
             currencyRate, _ = helpers.get_currency_rate(user.currency, offer_object.rate_date)
             subtotal = float(offer_object.payment_at_delivery.amount) * currencyRate
