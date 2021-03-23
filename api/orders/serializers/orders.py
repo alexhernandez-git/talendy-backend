@@ -313,7 +313,6 @@ class AcceptOrderSerializer(serializers.Serializer):
                 )
 
                 # Substract in pending_clearance and available_for_withdrawal the used credits amount
-
                 pending_clearance = user.pending_clearance - Money(amount=used_credits, currency="USD")
 
                 if pending_clearance < Money(amount=0, currency="USD"):
@@ -321,8 +320,10 @@ class AcceptOrderSerializer(serializers.Serializer):
                     available_money_payed = abs(pending_clearance)
                     available_for_withdrawal = user.available_for_withdrawal - available_money_payed
                     if available_for_withdrawal < Money(amount=0, currency="USD"):
-                        user.available_for_withdrawal = Money(amount=0, currency="USD")
+                        available_for_withdrawal = Money(amount=0, currency="USD")
+                    user.available_for_withdrawal = available_for_withdrawal
                 else:
+
                     user.pending_clearance = pending_clearance
                 user.used_for_purchases += Money(amount=used_credits, currency="USD")
                 user.save()
@@ -356,27 +357,30 @@ class AcceptOrderSerializer(serializers.Serializer):
 
             # user.available_for_withdrawal = user.available_for_withdrawal - \
             #     Money(amount=used_credits, currency="USD")
-            Earning.objects.create(
-                user=user,
-                type=Earning.SPENT,
-                amount=Money(amount=used_credits, currency="USD")
-            )
+            if used_credits:
 
-            # Substract in pending_clearance and available_for_withdrawal the used credits amount
+                Earning.objects.create(
+                    user=user,
+                    type=Earning.SPENT,
+                    amount=Money(amount=used_credits, currency="USD")
+                )
 
-            pending_clearance = user.pending_clearance - Money(amount=used_credits, currency="USD")
+                # Substract in pending_clearance and available_for_withdrawal the used credits amount
 
-            if pending_clearance < Money(amount=0, currency="USD"):
-                user.pending_clearance = Money(amount=0, currency="USD")
-                available_money_payed = abs(pending_clearance)
-                available_for_withdrawal = user.available_for_withdrawal - available_money_payed
-                if available_for_withdrawal < Money(amount=0, currency="USD"):
-                    user.available_for_withdrawal = Money(amount=0, currency="USD")
-            else:
-                user.pending_clearance = pending_clearance
+                pending_clearance = user.pending_clearance - Money(amount=used_credits, currency="USD")
 
-            user.used_for_purchases = user.used_for_purchases + Money(amount=used_credits, currency="USD")
-            user.save()
+                if pending_clearance < Money(amount=0, currency="USD"):
+                    user.pending_clearance = Money(amount=0, currency="USD")
+                    available_money_payed = abs(pending_clearance)
+                    available_for_withdrawal = user.available_for_withdrawal - available_money_payed
+                    if available_for_withdrawal < Money(amount=0, currency="USD"):
+                        available_for_withdrawal = Money(amount=0, currency="USD")
+                    user.available_for_withdrawal = available_for_withdrawal
+                else:
+                    user.pending_clearance = pending_clearance
+
+                user.used_for_purchases = user.used_for_purchases + Money(amount=used_credits, currency="USD")
+                user.save()
 
             invoice_paid = self.context['invoice_paid']
             invoice_id = invoice_paid['id']
@@ -408,7 +412,7 @@ class AcceptOrderSerializer(serializers.Serializer):
                 amount=offer_object.first_payment,
                 available_for_withdrawn_date=timezone.now() + timedelta(days=14)
             )
-            seller.pending_clearance = seller.pending_clearance + offer_object.first_payment
+            seller.pending_clearance += offer_object.first_payment
 
         elif offer['type'] == Order.RECURRENT_ORDER:
             price = self.context['price']

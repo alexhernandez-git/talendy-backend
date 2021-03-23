@@ -1027,17 +1027,15 @@ class UserViewSet(mixins.RetrieveModelMixin,
             seller = order.seller
             buyer = order.buyer
             used_credits = order.used_credits
-            unit_amount = order.unit_amount
 
             if used_credits:
-
                 Earning.objects.create(
                     user=buyer,
                     type=Earning.SPENT,
                     amount=used_credits
                 )
-                # Substract in pending_clearance and available_for_withdrawal the used credits amount
 
+                # Substract in pending_clearance and available_for_withdrawal the used credits amount
                 pending_clearance = buyer.pending_clearance - used_credits
 
                 if pending_clearance < Money(amount=0, currency="USD"):
@@ -1049,58 +1047,51 @@ class UserViewSet(mixins.RetrieveModelMixin,
                         available_for_withdrawal = Money(amount=0, currency="USD")
                     buyer.available_for_withdrawal = available_for_withdrawal
                 else:
-
                     buyer.pending_clearance = pending_clearance
-                buyer.used_for_purchases = buyer.used_for_purchases + used_credits
+
+                buyer.used_for_purchases += used_credits
+
                 buyer.save()
 
-            credits_available = buyer.available_for_withdrawal - buyer.pending_clearance
+            order_fee = order.service_fee
+            unit_amount_without_fees = order.offer.unit_amount
 
-            if credits_available < unit_amount:
+            new_cost_of_subscription = unit_amount_without_fees + order_fee
 
-                diff = credits_available - unit_amount
+            order.unit_amount = new_cost_of_subscription
+            order.used_credits = 0
+            order.save()
 
-                new_cost_of_subscription = abs(diff)
+            new_cost_of_subscription, _ = helpers.convert_currency(
+                buyer.currency, "USD", new_cost_of_subscription.amount, rate_date)
 
-                new_cost_of_subscription = new_cost_of_subscription.amount
+            switcher = {
+                Order.MONTH: "month",
+                Order.YEAR: "year"
+            }
+            interval = switcher.get(order.interval_subscription, None)
+            price = stripe.Price.create(
+                unit_amount=int(new_cost_of_subscription * 100),
+                currency=buyer.currency,
+                product=order.product_id,
+                recurring={"interval": interval}
+            )
 
-                new_cost_of_subscription, _ = helpers.convert_currency(
-                    buyer.currency, "USD", new_cost_of_subscription, rate_date)
-                switcher = {
-                    Order.MONTH: "month",
-                    Order.YEAR: "year"
-                }
-                interval = switcher.get(order.interval_subscription, None)
-                price = stripe.Price.create(
-                    unit_amount=int(new_cost_of_subscription * 100),
-                    currency=buyer.currency,
-                    product=order.product_id,
-                    recurring={"interval": interval}
-                )
+            subscription = stripe.Subscription.retrieve(
+                subscription_id)
 
-                subscription = stripe.Subscription.retrieve(
-                    subscription_id)
+            stripe.Subscription.modify(
+                subscription_id,
+                cancel_at_period_end=False,
+                proration_behavior=None,
+                items=[
+                    {
+                        'id': subscription['items']['data'][0]['id'],
+                        "price": price['id']
+                    },
+                ],
+            )
 
-                stripe.Subscription.modify(
-                    subscription_id,
-                    cancel_at_period_end=False,
-                    proration_behavior=None,
-                    items=[
-                        {
-                            'id': subscription['items']['data'][0]['id'],
-                            "price": price['id']
-                        },
-                    ],
-                )
-
-                used_credits = unit_amount + diff
-                if used_credits < Money(amount=0, currency="USD"):
-                    used_credits = Money(amount=0, currency="USD")
-                order.used_credits = used_credits
-                buyer.reserved_for_subscriptions += used_credits
-                buyer.save()
-
-                order.save()
             due_to_seller = order.offer.unit_amount
 
             seller.net_income = seller.net_income + due_to_seller

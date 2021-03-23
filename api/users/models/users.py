@@ -140,7 +140,6 @@ class User(CModel, AbstractUser):
     used_for_purchases = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
     available_for_withdrawal = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
     pending_clearance = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
-    reserved_for_subscriptions = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
 
     # Email notifications
 

@@ -20,6 +20,7 @@ class Order(CModel):
     used_credits = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
 
     first_payment = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', null=True, blank=True)
+
     payment_at_delivery = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', null=True, blank=True)
 
     delivery_date = models.DateTimeField(null=True, blank=True)

@@ -2,6 +2,7 @@
 """Invitations tests."""
 
 # Django
+import pdb
 from django.test import TestCase
 
 # Django REST Framework
@@ -9,7 +10,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 # Model
-from api.users.models import User
+from api.users.models import User, Earning
+from api.orders.models import Order
 from rest_framework.authtoken.models import Token
 
 # Utils
@@ -30,16 +32,20 @@ class NormalOrderAPITestCase(SetupUsersInitialData):
         # In dollars
         buyer = User.objects.get(id=self.buyer['id'])
 
-        self.buyer_credits = 75
-
-        buyer.net_income = self.buyer_credits
-        buyer.available_for_withdrawal = self.buyer_credits
+        self.net_income = 75
+        self.available_for_withdrawal = 12
+        self.pending_clearance = 10
+        buyer.net_income = self.net_income
+        buyer.available_for_withdrawal = self.available_for_withdrawal
+        buyer.pending_clearance = self.pending_clearance
         buyer.save()
         self.create_offer()
 
         self.accept_offer()
 
     def create_offer(self):
+        order_usd_price = 20
+
         offer_data = {
             "buyer": self.buyer['id'],
             "buyer_email": "",
@@ -48,9 +54,9 @@ class NormalOrderAPITestCase(SetupUsersInitialData):
             "title": "Normal order",
             "description": "Normal order offer",
             "type": "NO",
-            "unit_amount": "100"
+            "unit_amount":  str(order_usd_price)
         }
-
+        self.order_usd_price = order_usd_price
         self.client.credentials(HTTP_AUTHORIZATION="Token {}".format(self.seller_token))
 
         create_offer_response = self.client.post("/api/offers/", offer_data)
@@ -124,3 +130,20 @@ class NormalOrderAPITestCase(SetupUsersInitialData):
 
     def test_is_offer_accepted(self):
         self.assertEqual(self.accept_order_response.status_code, status.HTTP_201_CREATED)
+
+    def test_buyer_spent_what_expected(self):
+        buyer = User.objects.get(id=self.buyer['id'])
+        order_price = float(self.order_usd_price)
+        available_for_withdrawal = self.available_for_withdrawal
+        pending_clearance = self.pending_clearance
+
+        pending_clearance -= order_price
+        if pending_clearance < 0:
+            substract_available_for_withdrawal = abs(pending_clearance)
+            pending_clearance = 0
+            available_for_withdrawal -= substract_available_for_withdrawal
+            if available_for_withdrawal < 0:
+                available_for_withdrawal = 0
+
+        self.assertEqual(available_for_withdrawal, buyer.available_for_withdrawal.amount)
+        self.assertEqual(pending_clearance, buyer.pending_clearance.amount)

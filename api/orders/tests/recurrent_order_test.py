@@ -35,11 +35,12 @@ class RecurrentOrderAPITestCase(SetupUsersInitialData):
         # In dollars
         buyer = User.objects.get(id=self.buyer['id'])
 
-        self.buyer_credits = 75
-
-        buyer.net_income = self.buyer_credits
-        buyer.available_for_withdrawal = self.buyer_credits / 2
-        buyer.pending_clearance = self.buyer_credits / 2
+        self.net_income = 75
+        self.available_for_withdrawal = 20
+        self.pending_clearance = 0
+        buyer.net_income = self.net_income
+        buyer.available_for_withdrawal = self.available_for_withdrawal
+        buyer.pending_clearance = self.pending_clearance
 
         buyer.save()
         self.create_offer()
@@ -49,7 +50,7 @@ class RecurrentOrderAPITestCase(SetupUsersInitialData):
         self.seller_recieve_subscription_payment()
 
     def create_offer(self):
-        order_usd_price = 12
+        order_usd_price = 25
         offer_data = {
             "buyer": self.buyer['id'],
             "buyer_email": "",
@@ -130,13 +131,14 @@ class RecurrentOrderAPITestCase(SetupUsersInitialData):
 
     def seller_recieve_subscription_payment(self):
         order = Order.objects.get(id=self.order['id'])
+
+        # Set a amount of credits reserved for this order for testing propouses
         subscription_id = order.subscription_id
 
         rate_date = order.rate_date
         seller = order.seller
         buyer = order.buyer
         used_credits = order.used_credits
-        unit_amount = order.unit_amount
 
         if used_credits:
             Earning.objects.create(
@@ -144,8 +146,8 @@ class RecurrentOrderAPITestCase(SetupUsersInitialData):
                 type=Earning.SPENT,
                 amount=used_credits
             )
-            # Substract in pending_clearance and available_for_withdrawal the used credits amount
 
+            # Substract in pending_clearance and available_for_withdrawal the used credits amount
             pending_clearance = buyer.pending_clearance - used_credits
 
             if pending_clearance < Money(amount=0, currency="USD"):
@@ -155,81 +157,53 @@ class RecurrentOrderAPITestCase(SetupUsersInitialData):
                 available_for_withdrawal = buyer.available_for_withdrawal - available_money_payed
                 if available_for_withdrawal < Money(amount=0, currency="USD"):
                     available_for_withdrawal = Money(amount=0, currency="USD")
-                buyer.available_for_withdrawal = available_for_withdrawal
+                else:
+                    buyer.available_for_withdrawal = available_for_withdrawal
             else:
-
                 buyer.pending_clearance = pending_clearance
 
             buyer.used_for_purchases += used_credits
 
             buyer.save()
 
-        credits_available = buyer.available_for_withdrawal + buyer.pending_clearance
+        order_fee = order.service_fee
+        unit_amount_without_fees = order.offer.unit_amount
 
-        # Reserve credits for the new subscription
-        if credits_available > Money(amount=0, currency="USD"):
-            unit_amount_without_fees = order.offer.unit_amount
-            order_fee = order.service_fee
+        new_cost_of_subscription = unit_amount_without_fees + order_fee
 
-            credits_available_before_subsctraction = credits_available - unit_amount_without_fees
+        order.unit_amount = new_cost_of_subscription
+        order.used_credits = 0
+        order.save()
 
-            amount_new_cycle = order_fee
-            if credits_available_before_subsctraction < Money(amount=0, currency="USD"):
-                # Have less credits than the cost of order
-                amount_new_cycle += abs(credits_available_before_subsctraction)
-                buyer.available_for_withdrawal = 0
-                buyer.pending_clearance = 0
-                buyer.reserved_for_subscriptions += credits_available
+        new_cost_of_subscription, _ = helpers.convert_currency(
+            buyer.currency, "USD", new_cost_of_subscription.amount, rate_date)
 
-            else:
-                # Get the new amount cycle
+        switcher = {
+            Order.MONTH: "month",
+            Order.YEAR: "year"
+        }
+        interval = switcher.get(order.interval_subscription, None)
+        price = stripe.Price.create(
+            unit_amount=int(new_cost_of_subscription * 100),
+            currency=buyer.currency,
+            product=order.product_id,
+            recurring={"interval": interval}
+        )
 
-                if buyer.available_for_withdrawal >= credits_available_before_subsctraction:
-                    # Quit the reserved for subscription to available_for_withdrawal
-                    buyer.available_for_withdrawal = credits_available_before_subsctraction
-                else:
-                    # Quit the reserved for subscription to pending clearance
-                    diff = buyer.available_for_withdrawal - credits_available_before_subsctraction
-                    buyer.pending_clearance = abs(diff)
+        subscription = stripe.Subscription.retrieve(
+            subscription_id)
 
-                buyer.reserved_for_subscriptions += unit_amount_without_fees
-
-            order.used_credits = unit_amount_without_fees
-
-            buyer.save()
-            order.save()
-
-            new_cost_of_subscription = amount_new_cycle
-
-            new_cost_of_subscription, _ = helpers.convert_currency(
-                buyer.currency, "USD", new_cost_of_subscription.amount, rate_date)
-
-            switcher = {
-                Order.MONTH: "month",
-                Order.YEAR: "year"
-            }
-            interval = switcher.get(order.interval_subscription, None)
-            price = stripe.Price.create(
-                unit_amount=int(new_cost_of_subscription * 100),
-                currency=buyer.currency,
-                product=order.product_id,
-                recurring={"interval": interval}
-            )
-
-            subscription = stripe.Subscription.retrieve(
-                subscription_id)
-
-            stripe.Subscription.modify(
-                subscription_id,
-                cancel_at_period_end=False,
-                proration_behavior=None,
-                items=[
-                    {
-                        'id': subscription['items']['data'][0]['id'],
-                        "price": price['id']
-                    },
-                ],
-            )
+        stripe.Subscription.modify(
+            subscription_id,
+            cancel_at_period_end=False,
+            proration_behavior=None,
+            items=[
+                {
+                    'id': subscription['items']['data'][0]['id'],
+                    "price": price['id']
+                },
+            ],
+        )
 
         due_to_seller = order.offer.unit_amount
 
@@ -264,8 +238,10 @@ class RecurrentOrderAPITestCase(SetupUsersInitialData):
     def test_buyer_spent_what_expected(self):
         buyer = User.objects.get(id=self.buyer['id'])
         order_price = float(self.order_usd_price)
-        available_for_withdrawal = self.buyer_credits / 2
-        pending_clearance = self.buyer_credits / 2
+        order = Order.objects.get(id=self.order['id'])
+        available_for_withdrawal = self.available_for_withdrawal
+        pending_clearance = self.pending_clearance
+
         pending_clearance -= order_price
         if pending_clearance < 0:
             substract_available_for_withdrawal = abs(pending_clearance)
@@ -273,14 +249,6 @@ class RecurrentOrderAPITestCase(SetupUsersInitialData):
             available_for_withdrawal -= substract_available_for_withdrawal
             if available_for_withdrawal < 0:
                 available_for_withdrawal = 0
-
-        if buyer.reserved_for_subscriptions > Money(amount=0, currency="USD"):
-            diff = pending_clearance - float(buyer.reserved_for_subscriptions.amount)
-            if diff < 0:
-                pending_clearance = 0
-                available_for_withdrawal -= abs(diff)
-            else:
-                pending_clearance -= float(buyer.reserved_for_subscriptions.amount)
 
         self.assertEqual(available_for_withdrawal, buyer.available_for_withdrawal.amount)
         self.assertEqual(pending_clearance, buyer.pending_clearance.amount)
