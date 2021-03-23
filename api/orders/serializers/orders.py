@@ -79,7 +79,11 @@ class AcceptOrderSerializer(serializers.Serializer):
                     diff = available_for_withdrawal - subtotal
                     used_credits = subtotal + diff
 
-            if round(unit_amount, 2) != offer['unit_amount'] or round(used_credits, 2) != offer['used_credits']:
+            if round(
+                    unit_amount, 2) != float(
+                    offer['unit_amount']) or round(
+                    used_credits, 2) != float(
+                    offer['used_credits']):
                 raise serializers.ValidationError(
                     "The data recieved not match with the offer")
 
@@ -102,10 +106,10 @@ class AcceptOrderSerializer(serializers.Serializer):
                     diff = available_for_withdrawal - subtotal
                     used_credits = subtotal + diff
 
-            if round(unit_amount, 2) != offer['unit_amount'] \
-                    or round(used_credits, 2) != offer['used_credits'] \
-                    or round(first_payment, 2) != offer['first_payment'] \
-                    or round(payment_at_delivery, 2) != offer['payment_at_delivery']:
+            if round(unit_amount, 2) != float(offer['unit_amount']) \
+                    or round(used_credits, 2) != float(offer['used_credits']) \
+                    or round(first_payment, 2) != float(offer['first_payment']) \
+                    or round(payment_at_delivery, 2) != float(offer['payment_at_delivery']):
                 raise serializers.ValidationError(
                     "The data recieved not match with the offer")
 

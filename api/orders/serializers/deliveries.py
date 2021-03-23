@@ -11,12 +11,15 @@ from api.orders.models import Delivery, Order, OrderPayment
 from api.activities.models import Activity, DeliveryActivity
 from api.users.models import User, Earning
 from api.chats.models import Message, Chat, SeenBy
+from djmoney.models.fields import Money
 
 # Serializers
 from api.orders.serializers import OrderModelSerializer
 
+# Utils
 from datetime import datetime, timedelta
 from django.utils import timezone
+from api.utils import helpers
 
 
 class DeliveryModelSerializer(serializers.ModelSerializer):
@@ -141,6 +144,30 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
         if order.status == Order.CANCELLED:
             raise serializers.ValidationError('This order is cancelled')
 
+        if order_checkout['type'] == Order.TWO_PAYMENTS_ORDER:
+            offer_object = order.offer
+            currencyRate, _ = helpers.get_currency_rate(user.currency, offer_object.rate_date)
+            subtotal = float(offer_object.payment_at_delivery.amount) * currencyRate
+            fixed_price = 0.3 * currencyRate
+            service_fee = (subtotal * 5) / 100 + fixed_price
+            unit_amount = subtotal + service_fee
+            available_for_withdrawal = (float(user.available_for_withdrawal.amount) +
+                                        float(user.pending_clearance.amount)) * currencyRate
+            used_credits = 0
+            if available_for_withdrawal > 0:
+                if available_for_withdrawal > subtotal:
+                    used_credits = subtotal
+                else:
+                    diff = available_for_withdrawal - subtotal
+                    used_credits = subtotal + diff
+
+            if round(
+                    unit_amount, 2) != float(
+                    order_checkout['unit_amount']) or round(
+                    used_credits, 2) != float(
+                    order_checkout['used_credits']):
+                raise serializers.ValidationError(
+                    "The data recieved not match with the offer")
         return data
 
     def update(self, instance,  validated_data):
@@ -150,16 +177,6 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
         user = request.user
         payment_method_id = self.context['payment_method_id']
         order_checkout = self.context['order_checkout']
-
-        activity = Activity.objects.create(
-            type=Activity.DELIVERY,
-            order=order
-        )
-        DeliveryActivity.objects.create(
-            activity=activity,
-            delivery=instance,
-            status=DeliveryActivity.ACCEPTED
-        )
 
         seller = order.seller
 
@@ -229,6 +246,34 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
                 currency=currency,
                 status=status,
             )
+
+            # If used credits pay with credits
+            used_credits, _ = helpers.convert_currency(
+                "USD", user.currency, order_checkout['used_credits'], order.rate_date)
+
+            if used_credits > 0:
+                Earning.objects.create(
+                    user=user,
+                    type=Earning.SPENT,
+                    amount=Money(amount=used_credits, currency="USD")
+                )
+
+                # Substract in pending_clearance and available_for_withdrawal the used credits amount
+                pending_clearance = user.pending_clearance - Money(amount=used_credits, currency="USD")
+
+                if pending_clearance < Money(amount=0, currency="USD"):
+                    user.pending_clearance = Money(amount=0, currency="USD")
+                    available_money_payed = abs(pending_clearance)
+                    available_for_withdrawal = user.available_for_withdrawal - available_money_payed
+                    if available_for_withdrawal < Money(amount=0, currency="USD"):
+                        available_for_withdrawal = Money(amount=0, currency="USD")
+                    user.available_for_withdrawal = available_for_withdrawal
+                else:
+
+                    user.pending_clearance = pending_clearance
+                user.used_for_purchases += Money(amount=used_credits, currency="USD")
+                user.save()
+
             seller.net_income = seller.net_income + order.payment_at_delivery
 
             Earning.objects.create(
@@ -250,6 +295,15 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
 
         chats = Chat.objects.filter(participants=issued_by)
         chats = chats.filter(participants=issued_to)
+        activity = Activity.objects.create(
+            type=Activity.DELIVERY,
+            order=order
+        )
+        DeliveryActivity.objects.create(
+            activity=activity,
+            delivery=instance,
+            status=DeliveryActivity.ACCEPTED
+        )
 
         chat_instance = None
         if chats.exists():
