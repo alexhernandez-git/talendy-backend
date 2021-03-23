@@ -140,7 +140,7 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
         if user != order.buyer:
             raise serializers.ValidationError('You are not allowed to do this action')
         if order.status == Order.DELIVERED:
-            raise serializers.ValidationError('This order is already delivered')
+            raise serializers.ValidationError('This delivery is already accepted')
         if order.status == Order.CANCELLED:
             raise serializers.ValidationError('This order is cancelled')
 

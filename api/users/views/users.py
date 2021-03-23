@@ -97,8 +97,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
             'signup',
             'login',
             'verify',
-            'list',
-            'retrieve',
             'stripe_webhooks',
             'stripe_webhooks_invoice_payment_failed',
             'stripe_webhooks_invoice_payment_failed',
@@ -106,7 +104,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
             permissions = [AllowAny]
         elif self.action in ['update', 'delete', 'partial_update', 'change_password', 'change_email', 'stripe_connect', 'paypal_connect', 'destroy']:
             permissions = [IsAccountOwner, IsAuthenticated]
-
+        elif self.action in ['list', 'retrieve']:
+            permissions = [IsAuthenticated]
         else:
             permissions = []
         return [p() for p in permissions]
@@ -130,7 +129,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             users = Contact.objects.filter(from_user=user).values_list('contact_user__pk')
             users_list = [x[0] for x in users]
             users_list.append(user.pk)
-            return User.objects.filter(account_deactivated=False,is_staff=False).exclude(pk__in=users_list)
+            return User.objects.filter(account_deactivated=False, is_staff=False).exclude(pk__in=users_list)
         return User.objects.filter(account_deactivated=False, is_staff=False)
 
     # User destroy

@@ -74,8 +74,7 @@ class WithdrawFundsModelSerializer(serializers.ModelSerializer):
         request = self.context['request']
         user = request.user
 
-        available_for_withdrawal = user.available_for_withdrawal
-        if amount > Money(amount=available_for_withdrawal, currency="USD"):
+        if amount > user.available_for_withdrawal:
             raise serializers.ValidationError('The amount is greater than your budget')
         if amount > Money(amount=5000, currency="USD"):
             raise serializers.ValidationError('The amount is too large')
