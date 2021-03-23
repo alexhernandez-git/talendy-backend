@@ -286,9 +286,9 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
             seller.pending_clearance = seller.pending_clearance + order.payment_at_delivery
 
             order.payment_at_delivery_price_id = price['id']
-            order.status = Order.DELIVERED
             seller.save()
 
+        order.status = Order.DELIVERED
         order.save()
         issued_to = order.seller
         issued_by = order.buyer
