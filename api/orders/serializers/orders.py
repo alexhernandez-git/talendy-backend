@@ -66,7 +66,8 @@ class AcceptOrderSerializer(serializers.Serializer):
 
             currencyRate, _ = helpers.get_currency_rate(user.currency, offer_object.rate_date)
             subtotal = float(offer_object.unit_amount.amount) * currencyRate
-            service_fee = (subtotal * 5) / 100
+            fixed_price = 0.3 * currencyRate
+            service_fee = (subtotal * 5) / 100 + fixed_price
             unit_amount = subtotal + service_fee
             available_for_withdrawal = (float(user.available_for_withdrawal.amount) +
                                         float(user.pending_clearance.amount)) * currencyRate
@@ -92,7 +93,8 @@ class AcceptOrderSerializer(serializers.Serializer):
             subtotal = float(offer_object.first_payment.amount) * currencyRate
             first_payment = subtotal
             payment_at_delivery = float(offer_object.payment_at_delivery.amount) * currencyRate
-            service_fee = (subtotal * 5) / 100
+            fixed_price = 0.3 * currencyRate
+            service_fee = (subtotal * 5) / 100 + fixed_price
             unit_amount = subtotal + service_fee
             available_for_withdrawal = (float(user.available_for_withdrawal.amount) +
                                         float(user.pending_clearance.amount)) * currencyRate
