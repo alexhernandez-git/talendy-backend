@@ -10,4 +10,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Use the freelanium context
-        run: ./deploy
+        run: ./deploy.sh
