@@ -12,5 +12,4 @@ jobs:
       - name: Build the site api.freelanium.com
         with:
           context: ./
-      - name: Run the docker compose script
         run: ./deploy.sh
