@@ -10,4 +10,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build the site api.freelanium.com
-        run: docker-compose -f docker-compose.prod.yml build && docker-compose -f docker-compose.prod.yml down && supervisorctl restart freelanium
+        run: docker-compose -f ${{ github.workspace }}docker-compose.prod.yml build && docker-compose -f ${{ github.workspace }}docker-compose.prod.yml down && supervisorctl restart freelanium
