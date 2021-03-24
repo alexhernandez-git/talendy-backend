@@ -131,30 +131,52 @@ def get_payment_methods(stripe, stripe_customer_id):
         return None
 
 
+def get_currency_api(current_login_ip):
+
+    r = requests.get('http://ip-api.com/json/{}'.format(current_login_ip))
+    status = r.status_code
+    if status == 200:
+        data = r.json()
+        country_code = data['countryCode']
+        if not country_code:
+            country_code = "US"
+
+        try:
+            currency = ccy.countryccy(country_code)
+            if Plan.objects.filter(type=Plan.BASIC, currency=currency).exists():
+                return currency
+        except Exception as e:
+            print(e)
+            pass
+        return "USD"
+    else:
+        raise serializers.ValidationError("Get currency issue, try it later")
+
+
 def get_currency_and_country_anonymous(request):
-    country = None
+    country_code = None
     currency = None
     if not currency:
         # Get country
-        if not country:
+        if not country_code:
             current_login_ip = get_client_ip(request)
             # Remove this line in production
             if env.bool("DEBUG", default=True):
                 current_login_ip = "37.133.187.101"
             # Get country
-            try:
-                with geoip2.database.Reader('geolite2-db/GeoLite2-Country.mmdb') as reader:
-                    response = reader.country(current_login_ip)
-                    country = response.country.iso_code
-            except Exception as e:
-                print(e)
-                pass
+            r = requests.get('http://ip-api.com/json/{}'.format(current_login_ip))
+            status = r.status_code
+            if status == 200:
+                data = r.json()
+                country_code = data['countryCode']
+                if not country_code:
+                    country_code = "US"
 
             # Get the currency by country
-            if country:
+            if country_code:
 
                 try:
-                    country_currency = ccy.countryccy(country)
+                    country_currency = ccy.countryccy(country_code)
                     if Plan.objects.filter(type=Plan.BASIC, currency=country_currency).exists():
                         currency = country_currency
                 except Exception as e:
@@ -163,12 +185,12 @@ def get_currency_and_country_anonymous(request):
             else:
                 currency = "USD"
 
-    return currency, country
+    return currency, country_code
 
 
 def get_currency_and_country(request):
     user = request.user
-    country = user.country
+    country_code = user.country
     currency = user.currency
     if not currency:
         # Get country
@@ -178,19 +200,19 @@ def get_currency_and_country(request):
             if env.bool("DEBUG", default=True):
                 current_login_ip = "37.133.187.101"
             # Get country
-            try:
-                with geoip2.database.Reader('geolite2-db/GeoLite2-Country.mmdb') as reader:
-                    response = reader.country(current_login_ip)
-                    country = response.country.iso_code
-            except Exception as e:
-                print(e)
-                pass
+            r = requests.get('http://ip-api.com/json/{}'.format(current_login_ip))
+            status = r.status_code
+            if status == 200:
+                data = r.json()
+                country_code = data['countryCode']
+                if not country_code:
+                    country_code = "US"
 
             # Get the currency by country
-            if country:
+            if country_code:
 
                 try:
-                    country_currency = ccy.countryccy(country)
+                    country_currency = ccy.countryccy(country_code)
                     if Plan.objects.filter(type=Plan.BASIC, currency=country_currency).exists():
                         currency = country_currency
                 except Exception as e:
@@ -201,9 +223,9 @@ def get_currency_and_country(request):
     if not user.currency:
         user.currency = currency
     if not user.country:
-        user.country = country
+        user.country = country_code
     user.save()
-    return currency, country
+    return currency, country_code
 
 
 def get_plan(currency):

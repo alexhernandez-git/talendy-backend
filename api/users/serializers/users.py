@@ -158,21 +158,12 @@ class GetCurrencySerializer(serializers.Serializer):
     currency = serializers.CharField(required=False, allow_blank=True)
 
     def validate(self, data):
-        current_login_ip = helpers.get_client_ip(self.context["request"])
+        request = self.context['request']
+        current_login_ip = helpers.get_client_ip(request)
         # Remove this line in production
         if env.bool("DEBUG", default=True):
-            current_login_ip = "161.185.160.93"
-        try:
-            with geoip2.database.Reader('geolite2-db/GeoLite2-Country.mmdb') as reader:
-                response = reader.country(current_login_ip)
-                country_code = response.country.iso_code
-                country_currency = ccy.countryccy(country_code)
-                if Plan.objects.filter(type=Plan.BASIC, currency=country_currency).exists():
-                    data['currency'] = country_currency
-        except Exception as e:
-            print(e)
-            pass
-
+            current_login_ip = "37.133.187.101"
+        data['currency'] = helpers.get_currency_api(current_login_ip)
         return data
 
 
