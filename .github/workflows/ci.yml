@@ -9,5 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - env: ./envs/.prod/.*
       - name: Build the site api.freelanium.com
         run: ./deploy.sh
