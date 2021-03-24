@@ -68,8 +68,7 @@ class TwoPaymentsOrderAPITestCase(SetupUsersInitialData):
         subtotal = float(offer['first_payment']) * currencyRate
         first_payment = subtotal
         payment_at_delivery = float(offer['payment_at_delivery']) * currencyRate
-        fixed_price = 0.3 * currencyRate
-        service_fee = (subtotal * 5) / 100 + fixed_price
+        service_fee = (subtotal * 5) / 100
         unit_amount = subtotal + service_fee
         available_for_withdrawal = (float(buyer.available_for_withdrawal.amount) +
                                     float(buyer.pending_clearance.amount)) * currencyRate
