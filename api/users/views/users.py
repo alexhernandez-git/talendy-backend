@@ -1010,7 +1010,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             orders = Order.objects.filter(subscription_id=subscription_id).exclude(subscription_id=None)
 
             if not orders.exists():
-                return HttpResponse(status=400)
+                return HttpResponse(status=200)
 
             order = orders.first()
             OrderPayment.objects.create(
