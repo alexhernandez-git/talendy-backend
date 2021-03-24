@@ -10,6 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build the site api.freelanium.com
-        with:
-          context: ./
+          with:
+            context: ./
         run: ./deploy.sh
