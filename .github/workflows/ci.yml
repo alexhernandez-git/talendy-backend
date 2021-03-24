@@ -10,6 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build the site api.freelanium.com
-          with:
-            context: ./
+        with:
+          context: ./
+      - name: Run the docker compose script
         run: ./deploy.sh
