@@ -9,7 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Build the site api.freelanium.com
+
+      - name: Use the freelanium context
         with:
           context: ./
-        run: ./deploy.sh
+      - name: Build the site api.freelanium.com
+        run: ./deploy
