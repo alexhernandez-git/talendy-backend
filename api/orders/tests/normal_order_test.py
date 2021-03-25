@@ -70,9 +70,7 @@ class NormalOrderAPITestCase(SetupUsersInitialData):
 
         currencyRate, _ = helpers.get_currency_rate(buyer.currency, offer['rate_date'])
         subtotal = float(offer['unit_amount']) * currencyRate
-        fixed_price = 0.3 * currencyRate
-        service_fee = (subtotal * 5) / 100 + fixed_price
-        unit_amount = subtotal + service_fee
+
         available_for_withdrawal = (float(buyer.available_for_withdrawal.amount) +
                                     float(buyer.pending_clearance.amount)) * currencyRate
         used_credits = 0
@@ -82,7 +80,9 @@ class NormalOrderAPITestCase(SetupUsersInitialData):
             else:
                 diff = available_for_withdrawal - subtotal
                 used_credits = subtotal + diff
-
+        fixed_price = 0.3 * currencyRate
+        service_fee = ((subtotal - used_credits) * 5) / 100 + fixed_price
+        unit_amount = subtotal + service_fee
         offer['subtotal'] = round(subtotal, 2)
         offer['service_fee'] = round(service_fee, 2)
         offer['unit_amount'] = round(unit_amount, 2)

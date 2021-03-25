@@ -162,7 +162,7 @@ def get_currency_and_country_anonymous(request):
             current_login_ip = get_client_ip(request)
             # Remove this line in production
             if env.bool("DEBUG", default=True):
-                current_login_ip = "37.133.187.101"
+                current_login_ip = "147.161.106.227"
             # Get country
             r = requests.get('http://ip-api.com/json/{}'.format(current_login_ip))
             status = r.status_code
@@ -198,7 +198,7 @@ def get_currency_and_country(request):
             current_login_ip = get_client_ip(request)
             # Remove this line in production
             if env.bool("DEBUG", default=True):
-                current_login_ip = "37.133.187.101"
+                current_login_ip = "147.161.106.227"
             # Get country
             r = requests.get('http://ip-api.com/json/{}'.format(current_login_ip))
             status = r.status_code

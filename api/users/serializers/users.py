@@ -162,7 +162,7 @@ class GetCurrencySerializer(serializers.Serializer):
         current_login_ip = helpers.get_client_ip(request)
         # Remove this line in production
         if env.bool("DEBUG", default=True):
-            current_login_ip = "37.133.187.101"
+            current_login_ip = "147.161.106.227"
         data['currency'] = helpers.get_currency_api(current_login_ip)
         return data
 
