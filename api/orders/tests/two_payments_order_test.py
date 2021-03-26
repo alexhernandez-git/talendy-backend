@@ -131,21 +131,3 @@ class TwoPaymentsOrderAPITestCase(SetupUsersInitialData):
 
     def test_is_offer_accepted(self):
         self.assertEqual(self.accept_order_response.status_code, status.HTTP_201_CREATED)
-
-    def test_seller_earned_what_expected(self):
-        order = Order.objects.get(id=self.order['id'])
-        seller = order.seller
-        expected_earned = order.offer.first_payment
-        earnings = Earning.objects.filter(user=seller, type=Earning.ORDER_REVENUE)
-        earning = None
-        if earnings.exists():
-            earning = earnings.first()
-
-        # Check if the pending clearance is equal of the amount of order
-        self.assertEqual(expected_earned, seller.pending_clearance)
-
-        # Check if earning object is already created
-        self.assertIsNotNone(earning)
-
-        # Check if the amount of earning is the same as first payment order
-        self.assertEqual(earning.amount.amount, expected_earned.amount)

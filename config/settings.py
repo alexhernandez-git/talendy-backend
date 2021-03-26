@@ -290,7 +290,7 @@ PASSWORD_HASHERS = [
 
 if 'SENDGRID_API_KEY' in env:
     # Email
-    DEFAULT_FROM_EMAIL = "Classline Academy <no-reply@classlineacademy.com>"
+    DEFAULT_FROM_EMAIL = "Freelanium <no-reply@freelanium.com>"
     SERVER_EMAIL = DEFAULT_FROM_EMAIL
     EMAIL_SUBJECT_PREFIX = "DJANGO_EMAIL_SUBJECT_PREFIX"
 

@@ -131,19 +131,19 @@ class NormalOrderAPITestCase(SetupUsersInitialData):
     def test_is_offer_accepted(self):
         self.assertEqual(self.accept_order_response.status_code, status.HTTP_201_CREATED)
 
-    def test_buyer_spent_what_expected(self):
-        buyer = User.objects.get(id=self.buyer['id'])
-        order_price = float(self.order_usd_price)
-        available_for_withdrawal = self.available_for_withdrawal
-        pending_clearance = self.pending_clearance
+    # def test_buyer_spent_what_expected(self):
+    #     buyer = User.objects.get(id=self.buyer['id'])
+    #     order_price = float(self.order_usd_price)
+    #     available_for_withdrawal = self.available_for_withdrawal
+    #     pending_clearance = self.pending_clearance
 
-        pending_clearance -= order_price
-        if pending_clearance < 0:
-            substract_available_for_withdrawal = abs(pending_clearance)
-            pending_clearance = 0
-            available_for_withdrawal -= substract_available_for_withdrawal
-            if available_for_withdrawal < 0:
-                available_for_withdrawal = 0
+    #     pending_clearance -= order_price
+    #     if pending_clearance < 0:
+    #         substract_available_for_withdrawal = abs(pending_clearance)
+    #         pending_clearance = 0
+    #         available_for_withdrawal -= substract_available_for_withdrawal
+    #         if available_for_withdrawal < 0:
+    #             available_for_withdrawal = 0
 
-        self.assertEqual(available_for_withdrawal, buyer.available_for_withdrawal.amount)
-        self.assertEqual(pending_clearance, buyer.pending_clearance.amount)
+    #     self.assertEqual(available_for_withdrawal, buyer.available_for_withdrawal.amount)
+    #     self.assertEqual(pending_clearance, buyer.pending_clearance.amount)

@@ -53,4 +53,8 @@ class DeliveryNormalOrderAPITestCase(NormalOrderAPITestCase):
 
     def test_delivery_request_sent(self):
 
+        self.assertEqual(self.delivery_response.status_code, status.HTTP_201_CREATED)
+
+    def test_delivery_request_accepted(self):
+
         self.assertEqual(self.accept_delivery_response.status_code, status.HTTP_200_OK)

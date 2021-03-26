@@ -161,6 +161,7 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
             fixed_price = 0.3 * currencyRate
             service_fee = ((subtotal - used_credits) * 5) / 100 + fixed_price
             unit_amount = subtotal + service_fee
+
             if round(
                     unit_amount, 2) != float(
                     order_checkout['unit_amount']) or round(
@@ -170,7 +171,7 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
                     "The data recieved not match with the offer")
         return data
 
-    def update(self, instance,  validated_data):
+    def update(self, instance, validated_data):
         order = instance.order
         stripe = self.context['stripe']
         request = self.context['request']

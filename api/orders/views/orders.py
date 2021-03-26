@@ -108,9 +108,9 @@ class OrderViewSet(
             context={"request": request, "stripe": stripe, "offer": request.data['offer']},
         )
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        order = serializer.save()
 
-        data = OrderModelSerializer(user, many=False).data
+        data = OrderModelSerializer(order, many=False).data
 
         return Response(data, status=status.HTTP_201_CREATED)
 
