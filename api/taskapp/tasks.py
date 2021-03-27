@@ -31,9 +31,9 @@ def send_confirmation_email(user):
     """Send account verification link to given user."""
 
     verification_token = helpers.gen_verification_token(user)
-    subject = 'Welcome @{}! Verify your account to start using Full Order Tracker'.format(
+    subject = 'Welcome @{}! Verify your account to start using Freelanium'.format(
         user.username)
-    from_email = 'Full Order Tracker <no-reply@fullordertracker.com>'
+    from_email = 'Freelanium <no-reply@freelanium.com>'
     content = render_to_string(
         'emails/users/account_verification.html',
         {'token': verification_token, 'user': user}
@@ -50,7 +50,7 @@ def send_change_email_email(user, new_email):
     verification_token = helpers.gen_new_email_token(user, new_email)
     subject = 'Welcome @{}! Change your email'.format(
         user.username)
-    from_email = 'Full Order Tracker <no-reply@fullordertracker.com>'
+    from_email = 'Freelanium <no-reply@freelanium.com>'
     content = render_to_string(
         'emails/users/change_email.html',
         {'token': verification_token, 'user': user}
@@ -67,7 +67,7 @@ def send_reset_password_email(user_email):
     verification_token = helpers.gen_verification_token(user)
 
     subject = 'Reset your password'
-    from_email = 'Full Order Tracker <no-reply@fullordertracker.com>'
+    from_email = 'Freelanium <no-reply@freelanium.com>'
     content = render_to_string(
         'emails/users/reset_password.html',
         {'token': verification_token, 'user': user}
@@ -84,7 +84,7 @@ def send_invitation_email(user, email, message, type):
     verification_token = helpers.get_invitation_token(user, email)
     subject = 'Welcome! @{} has invited you '.format(
         user.username)
-    from_email = 'Full Order Tracker <no-reply@fullordertracker.com>'
+    from_email = 'Freelanium <no-reply@freelanium.com>'
     content = render_to_string(
         'emails/users/user_invitation.html',
         {'token': verification_token, 'user': user, 'message': message, 'type': type}
@@ -105,7 +105,7 @@ def send_offer(user, email, user_exists, offer_id, buyer_id=None):
 
     subject = 'Welcome! @{} has invited you '.format(
         user.username)
-    from_email = 'Full Order Tracker <no-reply@fullordertracker.com>'
+    from_email = 'Freelanium <no-reply@freelanium.com>'
 
     content = render_to_string(
         'emails/users/order_offer.html',
@@ -240,7 +240,7 @@ def send_activity_notification(activity, type):
         ), sent_by.email, '@{} has not accepted the cancelation '.format(
             issued_by.username)
 
-    from_email = 'Freelanium <no-reply@fullordertracker.com>'
+    from_email = 'Freelanium <no-reply@freelanium.com>'
 
     switcher = {
         Activity.OFFER+OfferActivity.ACCEPTED: offer_accepted_email,
