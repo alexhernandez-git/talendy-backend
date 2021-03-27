@@ -48,7 +48,8 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
                         activity = activity_queryset.first()
 
                         status = activity.status
-                        send_activity_notification(activity, instance.activity.type+status)
+                        if not sent_to.is_online:
+                            send_activity_notification(activity, instance.activity.type+status)
                     except Exception as e:
                         pass
 
