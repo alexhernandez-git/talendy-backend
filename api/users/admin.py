@@ -25,7 +25,7 @@ class CustomUserAdmin(UserAdmin):
                                              "used_for_purchases", "available_for_withdrawal", "pending_clearance",
                                              "active_month", "have_active_plan",
                                              "is_free_trial", "passed_free_trial_once", "currency",
-                                             "plan_default_payment_method")}),)
+                                             "plan_default_payment_method", "is_online")}),)
 
     list_display = ("email", "first_name", "last_name", "is_staff",
                     "is_client")

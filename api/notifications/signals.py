@@ -94,7 +94,8 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
 
             if not user_notification:
                 # Insert here the send new message email notification
-                send_have_messages_from_email(sent_to, sent_by.email)
+                if not sent_to.is_online:
+                    send_have_messages_from_email(sent_to, sent_by.email)
                 notification = Notification.objects.create(
                     type=Notification.MESSAGES,
                     chat=chat,
