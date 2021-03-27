@@ -41,7 +41,6 @@ ipdb==0.11
 
 
 # Testing
-# mypy==0.650
 pytest==6.0.0
 pytest-sugar==0.9.4
 pytest-django==4.1.0

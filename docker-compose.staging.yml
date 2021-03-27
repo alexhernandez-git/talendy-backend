@@ -39,6 +39,11 @@ services:
       - ./.envs/.staging/.postgres
   redis:
     image: redis:6-alpine
+    
+  stripecli:
+    image: stripe/stripe-cli:latest
+    network_mode: host
+    command: listen --api-key sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw --events invoice.payment_succeeded  --forward-to http://localhost:80/api/users/stripe_webhooks_invoice_payment_succeeded/
 
   channels:
     <<: *django
