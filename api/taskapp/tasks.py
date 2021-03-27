@@ -141,7 +141,7 @@ def send_have_messages_from_email(user, email):
     subject = 'New messages from @{}'.format(
         user.username)
 
-    from_email = 'Freelanium <no-reply@frelanium.com>'
+    from_email = 'Freelanium <no-reply@freelanium.com>'
     content = render_to_string(
         'emails/users/new_messages.html',
         {'user': user}
