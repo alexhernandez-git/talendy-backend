@@ -34,6 +34,7 @@ class CustomUserAdmin(UserAdmin):
         "is_staff",
         "created",
         "modified",
+        "is_online"
     )
 
 
