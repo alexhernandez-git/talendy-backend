@@ -28,7 +28,7 @@ class CustomUserAdmin(UserAdmin):
                                              "plan_default_payment_method", "is_online")}),)
 
     list_display = ("email", "first_name", "last_name", "is_staff",
-                    "is_client")
+                    "is_client", "is_online")
     list_filter = (
         "is_client",
         "is_staff",
