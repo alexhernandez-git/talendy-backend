@@ -178,7 +178,7 @@ if 'AWS_SECRET_ACCESS_KEY' in env and 'DJANGO_AWS_STORAGE_BUCKET_NAME' in env an
     AWS_REGION = "eu-west-1"
     AWS_S3_ADDRESSING_STYLE = "auto"
     AWS_QUERYSTRING_AUTH = False
-
+    AWS_DEFAULT_ACL = None
     _AWS_EXPIRY = 60 * 60 * 24 * 7
     AWS_S3_OBJECT_PARAMETERS = {
         "CacheControl": f"max-age={_AWS_EXPIRY}, s-maxage={_AWS_EXPIRY}, must-revalidate",
