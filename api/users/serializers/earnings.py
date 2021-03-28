@@ -17,7 +17,7 @@ from djmoney.models.fields import Money
 
 # Utils
 
-from paypalpayoutssdk.core import PayPalHttpClient, SandboxEnvironment
+from paypalpayoutssdk.core import PayPalHttpClient, SandboxEnvironment, LiveEnvironment
 from paypalpayoutssdk.payouts import PayoutsPostRequest
 from paypalhttp import HttpError
 from paypalhttp.encoder import Encoder
@@ -26,6 +26,9 @@ from paypalpayoutssdk.payouts import PayoutsGetRequest
 
 import random
 import string
+
+import environ
+env = environ.Env()
 
 
 class EarningModelSerializer(serializers.ModelSerializer):
@@ -97,10 +100,23 @@ class WithdrawFundsModelSerializer(serializers.ModelSerializer):
         #     destination=user.stripe_account_id,
         # )
         # Creating Access Token for Sandbox
-        client_id = "AbhmcP2IEj-X9YIyhPCeMApdZa8LiRaDFN8dCzG4OdMzrOuGPJC4hQ2KMvuNY7zWF-sxavTP-qmX9XWU"
-        client_secret = "EHkQZP9Qiw0G4EmmiPK2NS2qAOeG-rgp9_yq_h9kIWgdE9G__qq72OAwZNfFn3x8na2GX8F4lydn9XG2"
+
+        if 'PAYPAL_CLIENT_ID' in env:
+            client_id = env('PAYPAL_CLIENT_ID')
+        else:
+            client_id = "AbhmcP2IEj-X9YIyhPCeMApdZa8LiRaDFN8dCzG4OdMzrOuGPJC4hQ2KMvuNY7zWF-sxavTP-qmX9XWU"
+
+        if 'PAYPAL_SECRET_KEY' in env:
+            client_secret = env('PAYPAL_SECRET_KEY')
+        else:
+            client_secret = "EHkQZP9Qiw0G4EmmiPK2NS2qAOeG-rgp9_yq_h9kIWgdE9G__qq72OAwZNfFn3x8na2GX8F4lydn9XG2"
+
         # Creating an environment
-        environment = SandboxEnvironment(client_id=client_id, client_secret=client_secret)
+        if 'PAYPAL_CLIENT_ID' in env and 'PAYPAL_SECRET_KEY' in env:
+
+            environment = LiveEnvironment(client_id=client_id, client_secret=client_secret)
+        else:
+            environment = SandboxEnvironment(client_id=client_id, client_secret=client_secret)
         client = PayPalHttpClient(environment)
         senderBatchId = str(''.join(random.sample(
             string.ascii_uppercase + string.digits, k=7)))
