@@ -103,7 +103,7 @@ def send_offer(user, email, user_exists, offer_id, buyer_id=None):
     if user_exists:
         verification_token = helpers.get_user_token(buyer_id)
 
-    subject = 'Welcome! @{} has invited you '.format(
+    subject = '@{} sent you an offer '.format(
         user.username)
     from_email = 'Freelanium <no-reply@freelanium.com>'
 
