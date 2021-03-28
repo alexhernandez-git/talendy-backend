@@ -169,9 +169,9 @@ def send_activity_notification(activity, type):
         order = activity.delivery.order
         return render_to_string(
             'emails/users/order_delivery.html',
-            {'user': order.buyer, 'order': order.id}
-        ), order.seller.email, '@{} has delivered the offer '.format(
-            order.buyer.username)
+            {'user': order.seller, 'order': order.id}
+        ), order.buyer.email, '@{} has delivered the offer '.format(
+            order.seller.username)
 
     def order_delivery_accepted_email():
         order = activity.delivery.order
