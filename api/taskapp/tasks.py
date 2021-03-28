@@ -135,18 +135,18 @@ def send_offer(user, email, user_exists, offer_id, buyer_id=None):
 
 
 @task(name='send_have_messages_from_email', max_retries=3)
-def send_have_messages_from_email(user, email):
+def send_have_messages_from_email(sent_to, sent_by):
     """Check if the free trial has ended and turn off"""
 
     subject = 'New messages from @{}'.format(
-        user.username)
+        sent_by.username)
 
     from_email = 'Freelanium <no-reply@freelanium.com>'
     content = render_to_string(
         'emails/users/new_messages.html',
-        {'user': user}
+        {'user': sent_by}
     )
-    msg = EmailMultiAlternatives(subject, content, from_email, [email])
+    msg = EmailMultiAlternatives(subject, content, from_email, [sent_to.email])
     msg.attach_alternative(content, "text/html")
     msg.send()
 
