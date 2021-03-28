@@ -22,6 +22,7 @@ from rest_framework.permissions import (
     IsAuthenticated,
     IsAdminUser
 )
+from stripe.api_resources import plan
 from api.users.permissions import IsAccountOwner
 
 # Models
@@ -1134,6 +1135,25 @@ class UserViewSet(mixins.RetrieveModelMixin,
             invoice_failed = event.data.object
             subscription_id = invoice_failed['subscription']
 
+            plan_subscriptions = PlanSubscription.objects.filter(subscription_id=subscription_id)
+
+            if plan_subscriptions.exists():
+                plan_subscription = plan_subscriptions.first()
+                plan_user = plan_subscription.user
+
+                plan_subscription.cancelled = True
+                plan_subscription.payment_issue = True
+                plan_subscription.save()
+                plan_user.seller_view = False
+                plan_user.is_seller = False
+                plan_user.have_active_plan = False
+                plan_user.save()
+
+                try:
+                    stripe.Subscription.delete(subscription_id)
+                except Exception as e:
+                    pass
+
             orders = Order.objects.filter(subscription_id=subscription_id)
 
             for order in orders:
@@ -1146,11 +1166,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
                 order.payment_issue = True
                 order.save()
 
-            return HttpResponse(status=200)
+        return HttpResponse(status=200)
 
-        else:
-            # Unexpected event type
-            return HttpResponse(status=400)
 
 # {
 #   "id": "sub_IlnjqhWRBzlgmq",
