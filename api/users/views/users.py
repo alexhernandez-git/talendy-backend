@@ -139,7 +139,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         active_plans_subscription = PlanSubscription.objects.filter(user=instance, cancelled=False)
         for active_plan in active_plans_subscription:
             stripe.Subscription.delete(active_plan.subscription_id)
@@ -203,7 +203,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         """User sign up."""
         invitation_token = None
         if 'invitation_token' in request.data:
@@ -277,7 +277,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
         stripe_plan_customer_id = data['user']['stripe_plan_customer_id']
         stripe_customer_id = data['user']['stripe_customer_id']
@@ -355,7 +355,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
         remove = stripe.PaymentMethod.detach(
             request.data.get('payment_method').get('id'),
@@ -369,7 +369,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
         serializer = StripeConnectSerializer(
             user,
@@ -405,7 +405,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
         serializer = StripeSellerSubscriptionSerializer(
             user,
@@ -438,7 +438,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
         stripe_plan_customer_id = data['user']['stripe_plan_customer_id']
         stripe_customer_id = data['user']['stripe_customer_id']
@@ -461,7 +461,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
         stripe_plan_customer_id = data['user']['stripe_plan_customer_id']
         stripe_customer_id = data['user']['stripe_customer_id']
@@ -503,7 +503,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
         serializer = SellerChangePaymentMethodSerializer(
             user,
@@ -532,7 +532,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
         serializer = SellerChangePaymentMethodSerializer(
             user,
@@ -560,7 +560,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         subscriptions_queryset = PlanSubscription.objects.filter(user=user, cancelled=False)
         if not subscriptions_queryset.exists():
             Response("User have not a plan subscription", status=status.HTTP_404_NOT_FOUND)
@@ -580,7 +580,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
         serializer = SellerCancelSubscriptionSerializer(
             user,
@@ -610,7 +610,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
         serializer = SellerReactivateSubscriptionSerializer(
             user,
@@ -636,7 +636,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
         serializer = BecomeASellerSerializer(
             user,
@@ -662,7 +662,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
         serializer = AttachPlanPaymentMethodSerializer(
             user,
@@ -693,7 +693,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
         serializer = AttachPaymentMethodSerializer(
             user,
@@ -724,7 +724,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
         serializer = DetachPaymentMethodSerializer(
             user,
@@ -757,7 +757,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
         try:
             event = stripe.Event.construct_from(
@@ -809,42 +809,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
-
-        try:
-            event = stripe.Event.construct_from(
-                json.loads(payload), stripe.api_key
-            )
-        except ValueError as e:
-            # Invalid payload
-            return HttpResponse(status=400)
-
-        # Handle the event
-        if event.type == 'customer.subscription.deleted':
-            subscription = event.data.object  # contains a stripe.Subscription
-            subscriptions_queryset = PlanSubscription.objects.filter(subscription_id=subscription.id, cancelled=False)
-            if not subscriptions_queryset.exists():
-                Response("Plan subscription does not exist", status=status.HTTP_404_NOT_FOUND)
-            plan_subscription = subscriptions_queryset.first()
-            user = plan_subscription.user_plan_subscription
-            plan_subscription.update(cancelled=True)
-            user.update(have_active_plan=False)
-
-            return HttpResponse(status=200)
-
-        else:
-            # Unexpected event type
-            return HttpResponse(status=400)
-
-    @action(detail=False, methods=['post'])
-    def stripe_webhook_subscription_cancelled(self, request, *args, **kwargs):
-        """Process stripe webhook notification for subscription cancellation"""
-        payload = request.body
-        event = None
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
-        else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
         try:
             event = stripe.Event.construct_from(
@@ -879,7 +844,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
         try:
             event = stripe.Event.construct_from(
@@ -914,7 +879,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
         try:
             event = stripe.Event.construct_from(
@@ -1120,7 +1085,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
         try:
             event = stripe.Event.construct_from(

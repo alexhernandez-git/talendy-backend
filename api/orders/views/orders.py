@@ -101,7 +101,7 @@ class OrderViewSet(
         if 'STRIPE_API_KEY' in os.environ:
             stripe.api_key = os.environ['STRIPE_API_KEY']
         else:
-            stripe.api_key = 'sk_test_51I4AQuCob7soW4zYOgn6qWIigjeue6IGon27JcI3sN00dAq7tPJAYWx9vN8iLxSbfFh4mLxTW3PhM33cds8GBuWr00P3tPyMGw'
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
         serializer = AcceptOrderSerializer(
             data=request.data,
