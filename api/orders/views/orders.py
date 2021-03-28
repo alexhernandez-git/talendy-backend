@@ -37,6 +37,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 import os
 from api.utils import helpers
+import environ
+env = environ.Env()
 
 
 class OrderViewSet(
@@ -98,8 +100,8 @@ class OrderViewSet(
         """Process stripe connect auth flow."""
 
         user = request.user
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 

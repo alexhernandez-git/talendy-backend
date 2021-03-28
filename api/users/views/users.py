@@ -74,6 +74,8 @@ from api.utils import helpers
 
 from datetime import timedelta
 from django.utils import timezone
+import environ
+env = environ.Env()
 
 
 class UserViewSet(mixins.RetrieveModelMixin,
@@ -136,8 +138,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
     # User destroy
 
     def perform_destroy(self, instance):
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         active_plans_subscription = PlanSubscription.objects.filter(user=instance, cancelled=False)
@@ -200,8 +202,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @action(detail=False, methods=['post'])
     def signup_seller(self, request):
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         """User sign up."""
@@ -274,8 +276,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
             'user': UserModelSerializer(user).data,
             'access_token': token,
         }
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
@@ -352,8 +354,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
     def remove_card(self, request, *args, **kwargs):
         """Remove payment method"""
         user = request.user
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
@@ -366,8 +368,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
     def stripe_connect(self, request, *args, **kwargs):
         """Process stripe connect auth flow."""
         user = request.user
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
@@ -402,8 +404,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """Process stripe connect auth flow."""
 
         user = request.user
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
@@ -435,8 +437,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
             'user': UserModelSerializer(request.user, many=False).data,
 
         }
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
@@ -458,8 +460,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         serializer.is_valid(raise_exception=True)
         data = serializer.data
 
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
@@ -500,8 +502,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """Process stripe connect auth flow."""
 
         user = request.user
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
@@ -529,8 +531,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """Process stripe connect auth flow."""
 
         user = request.user
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
@@ -557,8 +559,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
     def list_invoices(self, request, *args, **kwargs):
         """Process stripe connect auth flow."""
         user = request.user
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         subscriptions_queryset = PlanSubscription.objects.filter(user=user, cancelled=False)
@@ -577,8 +579,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """Process stripe connect auth flow."""
 
         user = request.user
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
@@ -607,8 +609,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """Process stripe connect auth flow."""
 
         user = request.user
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
@@ -633,8 +635,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """Process stripe connect auth flow."""
 
         user = request.user
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
@@ -659,8 +661,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """Process stripe connect auth flow."""
 
         user = request.user
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
@@ -690,8 +692,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """Process stripe connect auth flow."""
 
         user = request.user
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
@@ -721,8 +723,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """Process stripe connect auth flow."""
 
         user = request.user
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
         partial = request.method == 'PATCH'
@@ -754,8 +756,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         payload = request.body
         event = None
 
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
@@ -806,8 +808,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """Process stripe webhook notification for subscription cancellation"""
         payload = request.body
         event = None
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
@@ -841,8 +843,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """Process stripe webhook notification for subscription cancellation"""
         payload = request.body
         event = None
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
@@ -876,8 +878,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """Process stripe webhook notification for subscription cancellation"""
         payload = request.body
         event = None
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
@@ -1088,8 +1090,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         """Process stripe webhook notification for subscription cancellation"""
         payload = request.body
         event = None
-        if 'STRIPE_API_KEY' in os.environ:
-            stripe.api_key = os.environ['STRIPE_API_KEY']
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
 
