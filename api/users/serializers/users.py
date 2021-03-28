@@ -259,6 +259,7 @@ class UserSignUpSerializer(serializers.Serializer):
                 email=user.email,
             )
             product = stripe.Product.create(name="Basic Plan for" + '_' + user.username)
+
             price = stripe.Price.create(
                 unit_amount=int(plan.unit_amount * 100),
                 currency=currency,

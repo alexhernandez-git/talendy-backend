@@ -917,59 +917,65 @@ class UserViewSet(mixins.RetrieveModelMixin,
                     status=status,
                 )
 
-                if plan_user.active_month:
+                if plan_user.free_trial_invoiced:
 
-                    product_id = plan_subscription.product_id
+                    if plan_user.active_month:
 
-                    price = stripe.Price.create(
-                        unit_amount=int(plan_subscription.plan_unit_amount * 100),
-                        currency=plan_subscription.plan_currency,
-                        product=product_id,
-                        recurring={"interval": "month"},
-                    )
+                        product_id = plan_subscription.product_id
 
-                    subscription = stripe.Subscription.retrieve(
-                        subscription_id)
+                        price = stripe.Price.create(
+                            unit_amount=int(plan_subscription.plan_unit_amount * 100),
+                            currency=plan_subscription.plan_currency,
+                            product=product_id,
+                            recurring={"interval": "month"},
+                        )
 
-                    stripe.Subscription.modify(
-                        subscription_id,
-                        cancel_at_period_end=False,
-                        proration_behavior=None,
-                        items=[
-                            {
-                                'id': subscription['items']['data'][0]['id'],
-                                "price": price['id']
-                            },
-                        ],
-                    )
+                        subscription = stripe.Subscription.retrieve(
+                            subscription_id)
 
-                    plan_user.active_month = False
-                    plan_user.save()
+                        stripe.Subscription.modify(
+                            subscription_id,
+                            cancel_at_period_end=False,
+                            proration_behavior=None,
+                            items=[
+                                {
+                                    'id': subscription['items']['data'][0]['id'],
+                                    "price": price['id']
+                                },
+                            ],
+                        )
+
+                        plan_user.active_month = False
+                        plan_user.save()
+                    else:
+                        product_id = plan_subscription.product_id
+
+                        price = stripe.Price.create(
+                            unit_amount=0,
+                            currency=plan_user.currency,
+                            recurring={"interval": "month"},
+
+                            product=product_id
+                        )
+
+                        subscription = stripe.Subscription.retrieve(
+                            subscription_id)
+
+                        stripe.Subscription.modify(
+                            subscription_id,
+                            cancel_at_period_end=False,
+                            proration_behavior=None,
+                            items=[
+                                {
+                                    'id': subscription['items']['data'][0]['id'],
+                                    "price": price['id']
+                                },
+                            ],
+                        )
                 else:
-                    product_id = plan_subscription.product_id
-
-                    price = stripe.Price.create(
-                        unit_amount=0,
-                        currency=plan_user.currency,
-                        recurring={"interval": "month"},
-
-                        product=product_id
-                    )
-
-                    subscription = stripe.Subscription.retrieve(
-                        subscription_id)
-
-                    stripe.Subscription.modify(
-                        subscription_id,
-                        cancel_at_period_end=False,
-                        proration_behavior=None,
-                        items=[
-                            {
-                                'id': subscription['items']['data'][0]['id'],
-                                "price": price['id']
-                            },
-                        ],
-                    )
+                    # enter the free trial invocie
+                    plan_user.free_trial_invoiced = True
+                    plan_user.save()
 
                 return HttpResponse(status=200)
 

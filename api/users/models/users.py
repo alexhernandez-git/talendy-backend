@@ -114,6 +114,7 @@ class User(CModel, AbstractUser):
         max_length=100, blank=True, null=True)
     plan_default_payment_method = models.CharField(max_length=100, blank=True, null=True)
     active_month = models.BooleanField(default=False)
+    free_trial_invoiced = models.BooleanField(default=False)
 
     # Payments
 
