@@ -776,7 +776,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             subscription = event.data.object  # contains a stripe.Subscription
 
             subscriptions_queryset = PlanSubscription.objects.filter(
-                subscription_id=subscription.id, cancelled=False)
+                subscription_id=subscription['id'], cancelled=False)
 
             if subscriptions_queryset.exists():
                 plan_subscription = subscriptions_queryset.first()
@@ -785,11 +785,11 @@ class UserViewSet(mixins.RetrieveModelMixin,
                 user.update(have_active_plan=False)
 
             # Handle also the recurrent order subscription cancelation
-            orders = Order.objects.filter(subscription_id=subscription.id)
+            orders = Order.objects.filter(subscription_id=subscription['id'])
 
             for order in orders:
                 try:
-                    stripe.Subscription.delete(subscription.id)
+                    stripe.Subscription.delete(subscription['id'])
                 except Exception as e:
                     pass
                 order.status = Order.CANCELLED
