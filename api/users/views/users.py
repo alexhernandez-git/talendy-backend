@@ -750,61 +750,11 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
         return Response(data, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['post'])
-    def stripe_subscription_payment_failed(self, request, *args, **kwargs):
-        """Process stripe webhook notification for subscription cancellation"""
-        payload = request.body
-        event = None
-
-        if 'STRIPE_API_KEY' in env:
-            stripe.api_key = env('STRIPE_API_KEY')
-        else:
-            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
-
-        try:
-            event = stripe.Event.construct_from(
-                json.loads(payload), stripe.api_key
-            )
-        except ValueError as e:
-            # Invalid payload
-            return HttpResponse(status=400)
-
-        if event.type == 'customer.subscription.deleted':
-            invoice = event.data.object  # contains Stripe.invoice
-            subscription_id = invoice.subscription
-
-            try:
-                stripe.Subscription.delete(subscription_id)
-            except stripe.error.StripeError as e:
-                return HttpResponse(status=400)
-
-            except Exception as e:
-                return HttpResponse(status=400)
-
-            subscriptions_queryset = PlanSubscription.objects.filter(subscription_id=subscription_id, cancelled=False)
-            if not subscriptions_queryset.exists():
-                Response("User have not a plan subscription", status=status.HTTP_404_NOT_FOUND)
-            subscription = subscriptions_queryset.first()
-
-            user = subscription.user_plan_subscription
-            subscription.update(
-                cancelled=True
-            )
-            user.update(
-                have_active_plan=False,
-            )
-
-            return HttpResponse(status=200)
-
-        else:
-            # Unexpected event type
-            return HttpResponse(status=400)
-
     # Events that may have to handle:
     # - customer.subscription.trial_will_end - This event notify the subscription trial will end in one day
 
     @action(detail=False, methods=['post'])
-    def stripe_webhook_subscription_cancelled(self, request, *args, **kwargs):
+    def stripe_webhook_subscription_deleted(self, request, *args, **kwargs):
         """Process stripe webhook notification for subscription cancellation"""
         payload = request.body
         event = None
@@ -824,19 +774,28 @@ class UserViewSet(mixins.RetrieveModelMixin,
         # Handle the event
         if event.type == 'customer.subscription.deleted':
             subscription = event.data.object  # contains a stripe.Subscription
-            subscriptions_queryset = PlanSubscription.objects.filter(subscription_id=subscription.id, cancelled=False)
+            subscriptions_queryset = PlanSubscription.objects.filter(
+                subscription_id=subscription['id'], cancelled=False)
             if not subscriptions_queryset.exists():
                 Response("Plan subscription does not exist", status=status.HTTP_404_NOT_FOUND)
             plan_subscription = subscriptions_queryset.first()
-            user = plan_subscription.user_plan_subscription
+            user = plan_subscription.user
             plan_subscription.update(cancelled=True)
             user.update(have_active_plan=False)
 
-            return HttpResponse(status=200)
+            # Handle also the recurrent order subscription cancelation
+            orders = Order.objects.filter(subscription_id=subscription['id'])
 
-        else:
-            # Unexpected event type
-            return HttpResponse(status=400)
+            for order in orders:
+                try:
+                    stripe.Subscription.delete(subscription['id'])
+                except Exception as e:
+                    pass
+                order.status = Order.CANCELLED
+                order.cancelled = True
+                order.save()
+
+        return HttpResponse(status=200)
 
     @action(detail=False, methods=['post'])
     def stripe_webhook_subscription_updated(self, request, *args, **kwargs):
@@ -854,24 +813,28 @@ class UserViewSet(mixins.RetrieveModelMixin,
             )
         except ValueError as e:
             # Invalid payload
-            return HttpResponse(status=400)
-
-        # Handle the event
-        if event.type == 'customer.subscription.deleted':
-            subscription = event.data.object  # contains a stripe.Subscription
-            subscriptions_queryset = PlanSubscription.objects.filter(subscription_id=subscription.id, status="trialing")
-            if not subscriptions_queryset.exists():
-                Response("Plan subscription does not exist", status=status.HTTP_404_NOT_FOUND)
-            plan_subscription = subscriptions_queryset.first()
-            user = plan_subscription.user
-            plan_subscription.update(status="active")
-            user.update(have_active_plan=True, passed_free_trial_once=True, is_free_trial=False)
-
             return HttpResponse(status=200)
 
-        else:
-            # Unexpected event type
-            return HttpResponse(status=400)
+        # Handle the event
+        if event.type == 'customer.subscription.updated':
+            subscription = event.data.object  # contains a stripe.Subscription
+            if subscription['status'] == "active":
+                subscriptions_queryset = PlanSubscription.objects.filter(
+                    subscription_id=subscription['id'])
+                if not subscriptions_queryset.exists():
+                    Response("Plan subscription does not exist", status=status.HTTP_404_NOT_FOUND)
+                plan_subscription = subscriptions_queryset.first()
+                user = plan_subscription.user
+                plan_subscription.update(status="active")
+                user.update(have_active_plan=True, passed_free_trial_once=True, is_free_trial=False)
+            if subscription['status'] == "past_due":
+                subscriptions_queryset = PlanSubscription.objects.filter(
+                    subscription_id=subscription['id'])
+                if not subscriptions_queryset.exists():
+                    Response("Plan subscription does not exist", status=status.HTTP_404_NOT_FOUND)
+                plan_subscription = subscriptions_queryset.first()
+                plan_subscription.update(status="past_due")
+        return HttpResponse(status=200)
 
     @action(detail=False, methods=['post'])
     def stripe_webhooks_invoice_payment_succeeded(self, request, *args, **kwargs):
@@ -1107,25 +1070,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if event.type == 'invoice.payment_failed':
             invoice_failed = event.data.object
             subscription_id = invoice_failed['subscription']
-
-            plan_subscriptions = PlanSubscription.objects.filter(subscription_id=subscription_id)
-
-            if plan_subscriptions.exists():
-                plan_subscription = plan_subscriptions.first()
-                plan_user = plan_subscription.user
-
-                plan_subscription.cancelled = True
-                plan_subscription.payment_issue = True
-                plan_subscription.save()
-                plan_user.seller_view = False
-                plan_user.is_seller = False
-                plan_user.have_active_plan = False
-                plan_user.save()
-
-                try:
-                    stripe.Subscription.delete(subscription_id)
-                except Exception as e:
-                    pass
 
             orders = Order.objects.filter(subscription_id=subscription_id)
 
