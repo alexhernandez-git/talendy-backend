@@ -822,7 +822,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             if subscription['status'] == "active":
                 subscriptions_queryset = PlanSubscription.objects.filter(
                     subscription_id=subscription['id'])
-                if not subscriptions_queryset.exists():
+                if subscriptions_queryset.exists():
                     plan_subscription = subscriptions_queryset.first()
                     user = plan_subscription.user
                     plan_subscription.update(status="active")
@@ -830,7 +830,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             if subscription['status'] == "past_due":
                 subscriptions_queryset = PlanSubscription.objects.filter(
                     subscription_id=subscription['id'])
-                if not subscriptions_queryset.exists():
+                if subscriptions_queryset.exists():
                     plan_subscription = subscriptions_queryset.first()
                     plan_subscription.update(status="past_due")
         return HttpResponse(status=200)
