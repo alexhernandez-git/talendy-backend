@@ -1085,6 +1085,7 @@ class BecomeASellerSerializer(serializers.Serializer):
             plan_currency=plan.currency,
             plan_price_label=plan.price_label,
             plan_type=plan.type,
+            status=subscription['status'],
             product_id=product["id"]
         )
         self.context['plan_subscription'] = plan_subscription
