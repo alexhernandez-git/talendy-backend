@@ -823,18 +823,16 @@ class UserViewSet(mixins.RetrieveModelMixin,
                 subscriptions_queryset = PlanSubscription.objects.filter(
                     subscription_id=subscription['id'])
                 if not subscriptions_queryset.exists():
-                    Response("Plan subscription does not exist", status=status.HTTP_404_NOT_FOUND)
-                plan_subscription = subscriptions_queryset.first()
-                user = plan_subscription.user
-                plan_subscription.update(status="active")
-                user.update(have_active_plan=True, passed_free_trial_once=True, is_free_trial=False)
+                    plan_subscription = subscriptions_queryset.first()
+                    user = plan_subscription.user
+                    plan_subscription.update(status="active")
+                    user.update(have_active_plan=True, passed_free_trial_once=True, is_free_trial=False)
             if subscription['status'] == "past_due":
                 subscriptions_queryset = PlanSubscription.objects.filter(
                     subscription_id=subscription['id'])
                 if not subscriptions_queryset.exists():
-                    Response("Plan subscription does not exist", status=status.HTTP_404_NOT_FOUND)
-                plan_subscription = subscriptions_queryset.first()
-                plan_subscription.update(status="past_due")
+                    plan_subscription = subscriptions_queryset.first()
+                    plan_subscription.update(status="past_due")
         return HttpResponse(status=200)
 
     @action(detail=False, methods=['post'])
