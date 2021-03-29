@@ -1045,7 +1045,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
         else:
             # Unexpected event type
-            return HttpResponse(status=400)
+            return HttpResponse(status=200)
 
     @ action(detail=False, methods=['post'])
     def stripe_webhooks_invoice_payment_failed(self, request, *args, **kwargs):

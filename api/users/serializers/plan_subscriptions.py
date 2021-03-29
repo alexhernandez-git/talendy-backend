@@ -28,6 +28,7 @@ class PlanSubscriptionModelSerializer(serializers.ModelSerializer):
             "product_id",
             "to_be_cancelled",
             "cancelled",
+            "status",
             "payment_issue",
             "current_period_end",
             "plan_type",
