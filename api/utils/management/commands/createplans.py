@@ -126,4 +126,10 @@ class Command(BaseCommand):
             currency="ZAR",
             price_label="₺219.00"
         )
+        Plan.objects.create(
+            type=Plan.BASIC,
+            unit_amount=2300.00,
+            currency="PKR",
+            price_label="₨2300.00"
+        )
         print("Plans created")

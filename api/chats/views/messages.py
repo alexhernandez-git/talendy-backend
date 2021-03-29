@@ -26,7 +26,7 @@ from api.users.permissions import IsAccountOwner
 
 # Models
 from api.users.models import User
-from api.chats.models import Chat, Message
+from api.chats.models import Chat, Message, MessageFile
 
 # Serializers
 from api.users.serializers import UserModelSerializer
@@ -43,18 +43,31 @@ from api.utils.mixins import AddChatMixin
 import os
 from api.utils import helpers
 from asgiref.sync import sync_to_async
+from django.core.files.base import ContentFile
+import base64
+
 
 # Consumer methods
-
-
 @sync_to_async
-def create_message(self, text, sent_by):
+def create_message(self, text, sent_by, files):
     chat = Chat.objects.get(pk=self.room_name)
     user = User.objects.get(pk=sent_by["id"])
     new_message = Message.objects.create(chat=chat, text=text, sent_by=user)
+
+    for i, file in enumerate(files):
+
+        try:
+            format, imgstr = file['file'].split(';base64,')
+
+            ext = format.split('/')[-1]
+            data = ContentFile(base64.b64decode(imgstr), name=file['name']+'.' + ext)
+            MessageFile.objects.create(message=new_message, chat=chat, file=data, name=file['name'])
+        except:
+            files.pop(i)
+
     chat.last_message = new_message
     chat.save()
-    return new_message, chat.pk
+    return new_message, chat.pk, files
 
 
 # Message ViewSet

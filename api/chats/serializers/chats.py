@@ -7,7 +7,7 @@ from rest_framework import serializers
 
 # Models
 from api.users.models import User
-from api.chats.models import Chat, SeenBy
+from api.chats.models import Chat, SeenBy, MessageFile
 from api.notifications.models import NotificationUser
 
 # Serializers
@@ -162,6 +162,7 @@ class RetrieveChatModelSerializer(serializers.ModelSerializer):
                     return activity.type+activity_item.status
                 else:
                     return activity.type
+
             return obj.last_message.text
 
         return None

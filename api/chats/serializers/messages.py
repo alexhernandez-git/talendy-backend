@@ -2,7 +2,7 @@
 from rest_framework import serializers
 
 # Models
-from api.chats.models import Message, Chat
+from api.chats.models import Message, Chat, MessageFile
 
 # Serializers
 from api.activities.serializers import ActivityModelSerializer
@@ -13,12 +13,20 @@ class MessageModelSerializer(serializers.ModelSerializer):
 
     sent_by = serializers.SerializerMethodField(read_only=True)
     activity = ActivityModelSerializer(read_only=True)
+    files = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
 
         model = Message
-        fields = ("id", "text", "sent_by", "created", "activity")
+        fields = (
+            "id",
+            "text",
+            "sent_by",
+            "files",
+            "created",
+            "activity"
+        )
 
         read_only_fields = ("id",)
 
@@ -26,6 +34,12 @@ class MessageModelSerializer(serializers.ModelSerializer):
         from api.users.serializers import UserModelSerializer
 
         return UserModelSerializer(obj.sent_by, many=False).data
+
+    def get_files(self, obj):
+
+        from api.chats.serializers import MessageFileModelSerializer
+        files = MessageFile.objects.filter(message=obj.id)
+        return MessageFileModelSerializer(files, many=True).data
 
 
 class CreateMessageSerializer(serializers.Serializer):
