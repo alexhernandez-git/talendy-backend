@@ -774,21 +774,22 @@ class UserViewSet(mixins.RetrieveModelMixin,
         # Handle the event
         if event.type == 'customer.subscription.deleted':
             subscription = event.data.object  # contains a stripe.Subscription
+
             subscriptions_queryset = PlanSubscription.objects.filter(
-                subscription_id=subscription['id'], cancelled=False)
-            if not subscriptions_queryset.exists():
-                Response("Plan subscription does not exist", status=status.HTTP_404_NOT_FOUND)
-            plan_subscription = subscriptions_queryset.first()
-            user = plan_subscription.user
-            plan_subscription.update(cancelled=True)
-            user.update(have_active_plan=False)
+                subscription_id=subscription.id, cancelled=False)
+
+            if subscriptions_queryset.exists():
+                plan_subscription = subscriptions_queryset.first()
+                user = plan_subscription.user
+                plan_subscription.update(cancelled=True)
+                user.update(have_active_plan=False)
 
             # Handle also the recurrent order subscription cancelation
-            orders = Order.objects.filter(subscription_id=subscription['id'])
+            orders = Order.objects.filter(subscription_id=subscription.id)
 
             for order in orders:
                 try:
-                    stripe.Subscription.delete(subscription['id'])
+                    stripe.Subscription.delete(subscription.id)
                 except Exception as e:
                     pass
                 order.status = Order.CANCELLED
