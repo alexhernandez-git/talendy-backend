@@ -4,13 +4,14 @@
 from django.db import models
 
 
-import uuid 
+import uuid
+
 
 class CModel(models.Model):
     """Comparte Ride base model.
     MRideModel acts as an abstract base class from which every
     other model in the project will inherit. This class provides
-    every table with the following attributes:
+    every table with the follow attributes:
         + created (DateTime): Store the datetime the object was created.
         + modified (DateTime): Store the last datetime the object was modified.
     """
@@ -34,5 +35,3 @@ class CModel(models.Model):
 
         get_latest_by = 'created'
         ordering = ['-created', '-modified']
-
-

@@ -246,12 +246,6 @@ def get_plan(currency):
 
 def get_activity_classes(type):
     switcher = {
-        Activity.OFFER: {
-            "model": OfferActivity,
-            "serializer": OfferActivityModelSerializer
-        },
-        Activity.CHANGE_DELIVERY_TIME: ChangeDeliveryTimeActivity,
-        Activity.INCREASE_AMOUNT: IncreaseAmountActivity,
         Activity.DELIVERY: {"model": DeliveryActivity, "serializer": DeliveryActivityModelSerializer},
         Activity.REVISION: {"model": RevisionActivity, "serializer": RevisionActivityModelSerializer},
         Activity.CANCEL: {

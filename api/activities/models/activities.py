@@ -9,7 +9,6 @@ class Activity(CModel):
     )
 
     # Orders
-    OFFER = 'OF'
     CHANGE_DELIVERY_TIME = 'CT'
     INCREASE_AMOUNT = 'IA'
     DELIVERY = 'DE'
@@ -17,7 +16,6 @@ class Activity(CModel):
     CANCEL = 'CA'
 
     TYPE_CHOICES = [
-        (OFFER, 'Offer order'),
         (CHANGE_DELIVERY_TIME, 'Change delivery time order'),
         (INCREASE_AMOUNT, 'Increase order amount'),
         (DELIVERY, 'Delivery order'),

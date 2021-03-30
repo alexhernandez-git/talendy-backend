@@ -12,7 +12,7 @@ from api.users.models import User, Earning, Contact, PlanPayment, PlanSubscripti
 class ContactAdmin(admin.ModelAdmin):
     """Contact model admin."""
 
-    list_display = ("id", "from_user", "contact_user")
+    list_display = ("id", "from_user", "follow_user")
 
 
 class CustomUserAdmin(UserAdmin):

@@ -172,8 +172,8 @@ class Migration(migrations.Migration):
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('created', models.DateTimeField(auto_now_add=True, help_text='Date time on which the object was created.', verbose_name='created at')),
                 ('modified', models.DateTimeField(auto_now=True, help_text='Date time on which the object was last modified.', verbose_name='modified at')),
-                ('contact_user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='to_contact_user', to=settings.AUTH_USER_MODEL)),
-                ('from_user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='from_contact_user', to=settings.AUTH_USER_MODEL)),
+                ('follow_user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='to_follow_user', to=settings.AUTH_USER_MODEL)),
+                ('from_user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='from_follow_user', to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'ordering': ['-created', '-modified'],
@@ -183,8 +183,8 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='user',
-            name='contacts',
-            field=models.ManyToManyField(through='users.Contact', to=settings.AUTH_USER_MODEL, verbose_name='user_contacts'),
+            name='follows',
+            field=models.ManyToManyField(through='users.Contact', to=settings.AUTH_USER_MODEL, verbose_name='user_follows'),
         ),
         migrations.AddField(
             model_name='user',

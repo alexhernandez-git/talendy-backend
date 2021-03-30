@@ -69,52 +69,7 @@ class User(CModel, AbstractUser):
 
     country = models.CharField(max_length=2, blank=True, null=True)
 
-    contacts = models.ManyToManyField("users.User", through="users.Contact", verbose_name="user_contacts")
-
-    # Is seller
-    is_seller = models.BooleanField(
-        'seller',
-        default=False,
-        help_text='Set to true when the user have a seller account.'
-    )
-
-    seller_view = models.BooleanField(
-        'seller view',
-        default=False,
-        help_text='Set to true when the user view is on seller dashboard set false if is in buyer view.'
-    )
-
-    is_free_trial = models.BooleanField(
-        'free trial',
-        default=False,
-        help_text='Set to true when the seller is in free trial.'
-    )
-
-    passed_free_trial_once = models.BooleanField(
-        'passed free trial',
-        default=False,
-        help_text='Set to true when the seller alreay passed free trial once.'
-    )
-
-    free_trial_expiration = models.DateTimeField(
-        'free trial expiration at',
-        help_text='Date time on the free tiral expiration.',
-        null=True, blank=True,
-    )
-
-    have_active_plan = models.BooleanField(
-        'have active plan subscription',
-        default=False,
-        help_text='Set to true when the user have a active plan subscription.'
-    )
-
-    # Plan
-
-    stripe_plan_customer_id = models.CharField(
-        max_length=100, blank=True, null=True)
-    plan_default_payment_method = models.CharField(max_length=100, blank=True, null=True)
-    active_month = models.BooleanField(default=False)
-    free_trial_invoiced = models.BooleanField(default=False)
+    followed = models.ManyToManyField("users.User", through="users.Follow", verbose_name="user_follow")
 
     # Payments
 
@@ -138,13 +93,10 @@ class User(CModel, AbstractUser):
 
     net_income = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
     withdrawn = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
-    used_for_purchases = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
     available_for_withdrawal = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
     pending_clearance = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
 
     # Email notifications
-
-    messages_notificatoin_sent = models.BooleanField(default=False)
 
     account_deactivated = models.BooleanField(default=False)
 

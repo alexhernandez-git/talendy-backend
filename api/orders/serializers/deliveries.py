@@ -7,7 +7,7 @@ from rest_framework import serializers
 
 
 # Models
-from api.orders.models import Delivery, Order, OrderPayment
+from api.orders.models import Delivery, Order, OrderTip
 from api.activities.models import Activity, DeliveryActivity
 from api.users.models import User, Earning
 from api.chats.models import Message, Chat, SeenBy
@@ -129,13 +129,6 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
         order = delivery.order
         request = self.context['request']
         user = request.user
-        payment_method_id = self.context['payment_method_id']
-        order_checkout = self.context['order_checkout']
-        if order.type == Order.TWO_PAYMENTS_ORDER:
-            if not payment_method_id:
-                raise serializers.ValidationError('There is no payment method')
-            elif not order_checkout:
-                raise serializers.ValidationError('There is no order')
 
         if user != order.buyer:
             raise serializers.ValidationError('You are not allowed to do this action')
@@ -144,31 +137,13 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
         if order.status == Order.CANCELLED:
             raise serializers.ValidationError('This order is cancelled')
 
-        if order.type == Order.TWO_PAYMENTS_ORDER:
-            offer_object = order.offer
-            currencyRate, _ = helpers.get_currency_rate(user.currency, offer_object.rate_date)
-            subtotal = float(offer_object.payment_at_delivery.amount) * currencyRate
+        payment_method_id = self.context['payment_method_id']
+        order_checkout = self.context['order_checkout']
 
-            available_for_withdrawal = (float(user.available_for_withdrawal.amount) +
-                                        float(user.pending_clearance.amount)) * currencyRate
-            used_credits = 0
-            if available_for_withdrawal > 0:
-                if available_for_withdrawal > subtotal:
-                    used_credits = subtotal
-                else:
-                    diff = available_for_withdrawal - subtotal
-                    used_credits = subtotal + diff
-            fixed_price = 0.3 * currencyRate
-            service_fee = ((subtotal - used_credits) * 5) / 100 + fixed_price
-            unit_amount = subtotal + service_fee
+        if 'tip' in order_checkout:
+            if not payment_method_id:
+                raise serializers.ValidationError('There is no payment method')
 
-            if round(
-                    unit_amount, 2) != float(
-                    order_checkout['unit_amount']) or round(
-                    used_credits, 2) != float(
-                    order_checkout['used_credits']):
-                raise serializers.ValidationError(
-                    "The data recieved not match with the offer")
         return data
 
     def update(self, instance, validated_data):
@@ -180,27 +155,12 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
         order_checkout = self.context['order_checkout']
 
         seller = order.seller
+        if 'tip' in order_checkout:
 
-        if order.type == Order.NORMAL_ORDER:
-
-            # Return de money to user as credits
-            seller.net_income = seller.net_income + order.due_to_seller
-
-            Earning.objects.create(
-                user=seller,
-                type=Earning.ORDER_REVENUE,
-                amount=order.due_to_seller,
-                available_for_withdrawn_date=timezone.now() + timedelta(days=14)
-            )
-            seller.pending_clearance = seller.pending_clearance + order.due_to_seller
-
-            seller.save()
-
-        elif order.type == Order.TWO_PAYMENTS_ORDER:
             if not user.stripe_customer_id:
 
                 new_customer = stripe.Customer.create(
-                    description="claCustomer_"+user.first_name+'_'+user.last_name,
+                    description="talCustomer_"+user.first_name+'_'+user.last_name,
                     name=user.first_name+' '+user.last_name,
                     email=user.email,
                 )
@@ -213,12 +173,11 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
                     "default_payment_method": payment_method_id
                 }
             )
-            product = stripe.Product.create(name='Seccond payment of ' + order_checkout['title'] + '_' + user.username)
-            unit_amount = float(order_checkout['unit_amount'])
-            unit_amount_with_discount = unit_amount - float(order_checkout['used_credits'])
+            product = stripe.Product.create(name='Tip of ' + order.offer.title + '_' + user.username)
+            unit_amount = float(order_checkout['tip'])
 
             price = stripe.Price.create(
-                unit_amount=int(unit_amount_with_discount * 100),
+                unit_amount=int(unit_amount * 100),
                 currency=user.currency,
                 product=product['id']
             )
@@ -238,7 +197,12 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
             amount_paid = invoice_paid['amount_paid']
             status = invoice_paid['status']
             invoice_pdf = invoice_paid['invoice_pdf']
-            OrderPayment.objects.create(
+            # If used credits pay with credits
+
+            tip_usd_amount, _ = helpers.convert_currency(
+                "USD", user.currency, order_checkout['tip'], order.rate_date)
+
+            order_tip = OrderTip.objects.create(
                 order=order,
                 invoice_id=invoice_id,
                 invoice_pdf=invoice_pdf,
@@ -246,48 +210,20 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
                 amount_paid=float(amount_paid) / 100,
                 currency=currency,
                 status=status,
+                amount_usd=tip_usd_amount
             )
-
-            # If used credits pay with credits
-            used_credits, _ = helpers.convert_currency(
-                "USD", user.currency, order_checkout['used_credits'], order.rate_date)
-
-            if used_credits > 0:
-                Earning.objects.create(
-                    user=user,
-                    type=Earning.SPENT,
-                    amount=Money(amount=used_credits, currency="USD")
-                )
-
-                # Substract in pending_clearance and available_for_withdrawal the used credits amount
-                pending_clearance = user.pending_clearance - Money(amount=used_credits, currency="USD")
-
-                if pending_clearance < Money(amount=0, currency="USD"):
-                    user.pending_clearance = Money(amount=0, currency="USD")
-                    available_money_payed = abs(pending_clearance)
-                    available_for_withdrawal = user.available_for_withdrawal - available_money_payed
-                    if available_for_withdrawal < Money(amount=0, currency="USD"):
-                        available_for_withdrawal = Money(amount=0, currency="USD")
-                    user.available_for_withdrawal = available_for_withdrawal
-                else:
-
-                    user.pending_clearance = pending_clearance
-                user.used_for_purchases += Money(amount=used_credits, currency="USD")
-                user.save()
-
-            seller.net_income = seller.net_income + order.payment_at_delivery
-
             Earning.objects.create(
                 user=seller,
-                type=Earning.ORDER_REVENUE,
-                amount=order.payment_at_delivery,
+                type=Earning.TIP_REVENUE,
+                order_tip=order_tip,
+                amount=tip_usd_amount,
                 available_for_withdrawn_date=timezone.now() + timedelta(days=14)
-
             )
-            seller.pending_clearance = seller.pending_clearance + order.payment_at_delivery
 
-            order.payment_at_delivery_price_id = price['id']
-            seller.save()
+        seller.karmas_amount += order.karmas_amount
+
+        order.payment_at_delivery_price_id = price['id']
+        seller.save()
 
         order.status = Order.DELIVERED
         order.save()

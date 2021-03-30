@@ -42,11 +42,11 @@ class Command(BaseCommand):
                 )
             print("Fake data users created...")
 
-        def add_contacts():
+        def add_follows():
             users = User.objects.all().exclude(username="alex")
             alex_user = User.objects.get(username="alex")
             for user in users:
-                alex_user.contacts.add(user)
+                alex_user.follows.add(user)
                 alex_user.save()
             print("Contacts added to alex...")
 
@@ -60,5 +60,5 @@ class Command(BaseCommand):
             print("Chats created...")
 
         add_users(5)
-        add_contacts()
+        add_follows()
         create_chats()

@@ -13,12 +13,12 @@ class Earning(CModel):
 
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
 
-    ORDER_REVENUE = 'OR'
+    TIP_REVENUE = 'TR'
     WITHDRAWN = 'WI'
     REFUND = 'RE'
     SPENT = 'SP'
     EARNING_TYPES = [
-        (ORDER_REVENUE, 'Order revenue'),
+        (TIP_REVENUE, 'Tip Revenue'),
         (WITHDRAWN, 'Withdrawn'),
         (REFUND, 'Refund'),
         (SPENT, 'Spent'),
@@ -27,10 +27,12 @@ class Earning(CModel):
     type = models.CharField(
         max_length=2,
         choices=EARNING_TYPES,
-        default=ORDER_REVENUE
+        default=TIP_REVENUE
     )
 
     amount = MoneyField(max_digits=14, decimal_places=2, default_currency='USD')
+
+    order_tip = models.ForeignKey("orders.Order", on_delete=models.SET_NULL, blank=True, null=True)
 
     batch_id = models.CharField(max_length=100, blank=True, null=True)
 
