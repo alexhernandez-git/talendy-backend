@@ -39,37 +39,37 @@ class NormalOrderAPITestCase(SetupUsersInitialData):
         buyer.available_for_withdrawal = self.available_for_withdrawal
         buyer.pending_clearance = self.pending_clearance
         buyer.save()
-        self.create_offer()
+        self.create_oportunity()
 
-        self.accept_offer()
+        self.accept_oportunity()
 
-    def create_offer(self):
+    def create_oportunity(self):
         order_usd_price = 20
 
-        offer_data = {
+        oportunity_data = {
             "buyer": self.buyer['id'],
             "buyer_email": "",
             "delivery_time": "7",
-            "send_offer_by_email": False,
+            "send_oportunity_by_email": False,
             "title": "Normal order",
-            "description": "Normal order offer",
+            "description": "Normal order oportunity",
             "type": "NO",
             "unit_amount":  str(order_usd_price)
         }
         self.order_usd_price = order_usd_price
         self.client.credentials(HTTP_AUTHORIZATION="Token {}".format(self.seller_token))
 
-        create_offer_response = self.client.post("/api/offers/", offer_data)
-        self.create_offer_response = create_offer_response
-        self.offer = create_offer_response.data
+        create_oportunity_response = self.client.post("/api/oportunities/", oportunity_data)
+        self.create_oportunity_response = create_oportunity_response
+        self.oportunity = create_oportunity_response.data
 
-    def accept_offer(self):
-        # Convert the offer in buyer currency
-        offer = self.offer
+    def accept_oportunity(self):
+        # Convert the oportunity in buyer currency
+        oportunity = self.oportunity
         buyer = User.objects.get(id=self.buyer['id'])
 
-        currencyRate, _ = helpers.get_currency_rate(buyer.currency, offer['rate_date'])
-        subtotal = float(offer['unit_amount']) * currencyRate
+        currencyRate, _ = helpers.get_currency_rate(buyer.currency, oportunity['rate_date'])
+        subtotal = float(oportunity['unit_amount']) * currencyRate
 
         available_for_withdrawal = (float(buyer.available_for_withdrawal.amount) +
                                     float(buyer.pending_clearance.amount)) * currencyRate
@@ -83,10 +83,10 @@ class NormalOrderAPITestCase(SetupUsersInitialData):
         fixed_price = 0.3 * currencyRate
         service_fee = ((subtotal - used_credits) * 5) / 100 + fixed_price
         unit_amount = subtotal + service_fee
-        offer['subtotal'] = round(subtotal, 2)
-        offer['service_fee'] = round(service_fee, 2)
-        offer['unit_amount'] = round(unit_amount, 2)
-        offer['used_credits'] = round(used_credits, 2)
+        oportunity['subtotal'] = round(subtotal, 2)
+        oportunity['service_fee'] = round(service_fee, 2)
+        oportunity['unit_amount'] = round(unit_amount, 2)
+        oportunity['used_credits'] = round(used_credits, 2)
 
         # Petition data
 
@@ -112,9 +112,9 @@ class NormalOrderAPITestCase(SetupUsersInitialData):
             "/api/users/attach_payment_method/", attach_payment_method_data, format='json')
         self.attach_payment_method_response = attach_payment_method_response
 
-        # Send accepting offer
+        # Send accepting oportunity
         order_data = {
-            "offer": offer,
+            "oportunity": oportunity,
             "payment_method_id": payment_method['id']
         }
 
@@ -122,13 +122,13 @@ class NormalOrderAPITestCase(SetupUsersInitialData):
         self.accept_order_response = accept_order_response
         self.order = accept_order_response.data
 
-    def test_is_offer_created(self):
-        self.assertEqual(self.create_offer_response.status_code, status.HTTP_201_CREATED)
+    def test_is_oportunity_created(self):
+        self.assertEqual(self.create_oportunity_response.status_code, status.HTTP_201_CREATED)
 
     def test_if_payment_method_has_been_attached(self):
         self.assertEqual(self.attach_payment_method_response.status_code, status.HTTP_200_OK)
 
-    def test_is_offer_accepted(self):
+    def test_is_oportunity_accepted(self):
         self.assertEqual(self.accept_order_response.status_code, status.HTTP_201_CREATED)
 
     # def test_buyer_spent_what_expected(self):

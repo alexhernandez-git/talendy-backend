@@ -2,20 +2,20 @@
 from rest_framework import serializers
 
 # Models
-from api.activities.models import OfferActivity
+from api.activities.models import CancelOrderActivity
 
 # Serializers
 from api.orders.serializers import CancelOrderModelSerializer
 
 
 class CancelOrderActivityModelSerializer(serializers.ModelSerializer):
-    """Offer model serializer."""
+    """Oportunity model serializer."""
     cancel_order = CancelOrderModelSerializer(read_only=True)
 
     class Meta:
         """Meta class."""
 
-        model = OfferActivity
+        model = CancelOrderActivity
         fields = (
             "id",
             "cancel_order",

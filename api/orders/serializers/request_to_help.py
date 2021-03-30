@@ -9,14 +9,14 @@ from django.shortcuts import get_object_or_404
 
 
 # Models
-from api.orders.models import Offer, Order
+from api.orders.models import Oportunity, Order
 from api.activities.models import Activity, RequestToHelpActivity
 from api.users.models import User
 from api.chats.models import Message, Chat, SeenBy
 
 # Serializers
 from api.users.serializers import UserModelSerializer
-from api.orders.serializers import OfferModelSerializer
+from api.orders.serializers import OportunityModelSerializer
 
 # Utils
 from datetime import timedelta
@@ -24,28 +24,27 @@ import re
 from django.utils import timezone
 
 
-class OfferModelSerializer(serializers.ModelSerializer):
-    """Offer model serializer."""
+class RequestToHelpSerializer(serializers.ModelSerializer):
+    """Oportunity model serializer."""
     seller = UserModelSerializer(read_only=True)
-    offer = OfferModelSerializer(read_only=True)
+    oportunity = OportunityModelSerializer(read_only=True)
 
     class Meta:
         """Meta class."""
 
-        model = Offer
+        model = Oportunity
         fields = (
             "id",
-            "offer",
-            "seller",
+            "oportunity",
+            "buyer",
             "text",
-            "accepted"
         )
         read_only_fields = ("id",)
 
     def validate(self, data):
-        offer = get_object_or_404(Offer, id=self.context['offer'])
+        oportunity = get_object_or_404(Oportunity, id=self.context['oportunity'])
 
-        orders = Order.objects.filter(offer=offer.id, status=Order.ACTIVE)
+        orders = Order.objects.filter(oportunity=oportunity.id, status=Order.ACTIVE)
 
         if orders.exists():
             raise serializers.ValidationError(
@@ -54,7 +53,7 @@ class OfferModelSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         from api.taskapp.tasks import send_request_to_help
         request = self.context['request']
-        offer = get_object_or_404(Offer, id=self.context['offer'])
+        oportunity = get_object_or_404(Oportunity, id=self.context['oportunity'])
 
         # Get the seller
         seller = request.user
@@ -75,7 +74,7 @@ class OfferModelSerializer(serializers.ModelSerializer):
         except:
             buyer = None
 
-        request_to_help = Offer.objects.create(**validated_data)
+        request_to_help = Oportunity.objects.create(**validated_data)
 
         # Create the actions
         activity = Activity.objects.create(
@@ -93,7 +92,7 @@ class OfferModelSerializer(serializers.ModelSerializer):
 
         # Check if user exists
 
-        send_request_to_help(seller, buyer.email, True, offer.id, buyer.id)
+        send_request_to_help(seller, buyer.email, True, oportunity.id, buyer.id)
 
         # Get or create the chat
 
@@ -126,4 +125,4 @@ class OfferModelSerializer(serializers.ModelSerializer):
             seen_by.message = chat_instance.last_message
             seen_by.save()
 
-        return offer
+        return oportunity

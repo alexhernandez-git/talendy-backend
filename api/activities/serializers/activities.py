@@ -5,16 +5,12 @@ from rest_framework import serializers
 from api.activities.models import (
     Activity,
     CancelOrderActivity,
-    ChangeDeliveryTimeActivity,
     DeliveryActivity,
-    IncreaseAmountActivity,
-    OfferActivity,
     RevisionActivity,
 
 )
 
 # Serializers
-from .offers_activity import OfferActivityModelSerializer
 from api.utils import helpers
 
 

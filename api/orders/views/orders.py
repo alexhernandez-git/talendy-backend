@@ -107,7 +107,7 @@ class OrderViewSet(
 
         serializer = AcceptOrderSerializer(
             data=request.data,
-            context={"request": request, "stripe": stripe, "offer": request.data['offer']},
+            context={"request": request, "stripe": stripe, "oportunity": request.data['oportunity']},
         )
         serializer.is_valid(raise_exception=True)
         order = serializer.save()

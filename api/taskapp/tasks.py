@@ -11,7 +11,7 @@ from django.utils.module_loading import import_string
 from api.users.models import User, Earning
 from rest_framework.authtoken.models import Token
 from api.notifications.models import NotificationUser, notifications
-from api.activities.models import Activity, OfferActivity, DeliveryActivity, CancelOrderActivity
+from api.activities.models import Activity, RequestToHelpActivity, DeliveryActivity, CancelOrderActivity
 from api.orders.models import Order
 from djmoney.money import Money
 
@@ -94,8 +94,8 @@ def send_invitation_email(user, email, message, type):
     msg.send()
 
 
-@task(name='send_offer_to_followers', max_retries=3)
-def send_offer_to_followers(user, followers_emails, offer):
+@task(name='send_oportunity_to_followers', max_retries=3)
+def send_oportunity_to_followers(user, followers_emails, oportunity):
     """Send account verification link to given user."""
 
     subject = '@{} has asked for help'.format(
@@ -103,32 +103,10 @@ def send_offer_to_followers(user, followers_emails, offer):
     from_email = 'Talendy <no-reply@talendy.com>'
 
     content = render_to_string(
-        'emails/users/new_offer.html',
-        {'user': user, 'offer': offer}
+        'emails/users/new_oportunity.html',
+        {'user': user, 'oportunity': oportunity}
     )
     msg = EmailMultiAlternatives(subject, content, from_email, followers_emails)
-    msg.attach_alternative(content, "text/html")
-    msg.send()
-
-
-@task(name='send_request_to_help', max_retries=3)
-def send_request_to_help(user, email, user_exists, offer_id, buyer_id=None):
-    """Send account verification link to given user."""
-    user_token = None
-    verification_token = None
-
-    if user_exists:
-        verification_token = helpers.get_user_token(buyer_id)
-
-    subject = '@{} sent you an request to help '.format(
-        user.username)
-    from_email = 'Talendy <no-reply@talendy.com>'
-
-    content = render_to_string(
-        'emails/users/request_to_help.html',
-        {'token': verification_token, 'user': user, 'offer': offer_id}
-    )
-    msg = EmailMultiAlternatives(subject, content, from_email, [email])
     msg.attach_alternative(content, "text/html")
     msg.send()
 
@@ -155,13 +133,29 @@ def send_activity_notification(activity, type):
     """send_activity_notification."""
     print(type)
 
+    def request_to_help():
+        order = Order.objects.get(oportunity=activity.request_to_help.oportunity)
+        return render_to_string(
+            'emails/users/request_to_help.html',
+            {'user': order.seller, 'oportunity': activity.request_to_help.oportunity.id}
+        ), order.buyer, '@{} has sent a request to help '.format(
+            order.seller.username)
+
+    def request_to_help_accepted():
+        order = Order.objects.get(oportunity=activity.request_to_help.oportunity)
+        return render_to_string(
+            'emails/users/request_to_help_accepted.html',
+            {'user': order.buyer, 'order': order.id}
+        ), order.seller, '@{} has accepted the help request '.format(
+            order.buyer.username)
+
     def order_delivery_email():
 
         order = activity.delivery.order
         return render_to_string(
             'emails/users/order_delivery.html',
             {'user': order.seller, 'order': order.id}
-        ), order.buyer.email, '@{} has delivered the offer '.format(
+        ), order.buyer.email, '@{} has delivered the oportunity '.format(
             order.seller.username)
 
     def order_delivery_accepted_email():
@@ -234,6 +228,8 @@ def send_activity_notification(activity, type):
     from_email = 'Talendy <no-reply@talendy.com>'
 
     switcher = {
+        Activity.REQUEST_TO_HELP+RequestToHelpActivity.PENDENDT: request_to_help,
+        Activity.REQUEST_TO_HELP+RequestToHelpActivity.ACCEPTED: request_to_help_accepted,
         Activity.DELIVERY+DeliveryActivity.PENDENDT: order_delivery_email,
         Activity.DELIVERY+DeliveryActivity.ACCEPTED: order_delivery_accepted_email,
         Activity.REVISION: order_delivery_revision_email,
@@ -259,7 +255,7 @@ def check_if_pending_clearance_has_ended():
     today = timezone.now()
 
     earnings = Earning.objects.filter(
-        type__in=[Earning.ORDER_REVENUE, Earning.REFUND],
+        type__in=[Earning.TIP_REVENUE],
         available_for_withdrawn_date__lt=today, setted_to_available_for_withdrawn=False)
 
     for earning in earnings:

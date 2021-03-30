@@ -9,7 +9,7 @@ from api.orders.serializers import RevisionModelSerializer
 
 
 class RevisionActivityModelSerializer(serializers.ModelSerializer):
-    """Offer model serializer."""
+    """Oportunity model serializer."""
     revision = RevisionModelSerializer(read_only=True)
 
     class Meta:

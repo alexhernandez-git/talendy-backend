@@ -173,7 +173,7 @@ class AcceptDeliveryModelSerializer(serializers.ModelSerializer):
                     "default_payment_method": payment_method_id
                 }
             )
-            product = stripe.Product.create(name='Tip of ' + order.offer.title + '_' + user.username)
+            product = stripe.Product.create(name='Tip of ' + order.oportunity.title + '_' + user.username)
             unit_amount = float(order_checkout['tip'])
 
             price = stripe.Price.create(

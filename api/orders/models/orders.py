@@ -4,8 +4,8 @@ from django.db import models
 
 class Order(CModel):
 
-    offer = models.ForeignKey("orders.Offer", on_delete=models.SET_NULL,
-                              related_name="order_offer", null=True, blank=True)
+    oportunity = models.ForeignKey("orders.Oportunity", on_delete=models.SET_NULL,
+                                   related_name="order_oportunity", null=True, blank=True)
 
     buyer = models.ForeignKey("users.User", on_delete=models.SET_NULL,
                               related_name="buyer_order", null=True, blank=True)

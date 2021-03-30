@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404
 from api.orders.models import Order
 from api.users.models import User, Earning
 from api.activities.models import Activity, RequestToHelpActivity
-from api.orders.models import Offer, RequestToHelp
+from api.orders.models import Oportunity, RequestToHelp
 from api.chats.models import Message, Chat, SeenBy
 from djmoney.models.fields import Money
 
@@ -55,27 +55,27 @@ class AcceptOrderSerializer(serializers.Serializer):
         request_to_help_object = get_object_or_404(RequestToHelp, id=request_to_help['id'])
         self.context['request_to_help_object'] = request_to_help_object
 
-        orders = Order.objects.filter(offer=request_to_help_object.offer.id, status=Order.ACTIVE)
+        orders = Order.objects.filter(oportunity=request_to_help_object.oportunity.id, status=Order.ACTIVE)
 
         if orders.exists():
             raise serializers.ValidationError(
                 "There is already someone doing this task")
 
-        offer_object = get_object_or_404(Offer, id=request_to_help_object.offer.id)
-        self.context['offer_object'] = offer_object
+        oportunity_object = get_object_or_404(Oportunity, id=request_to_help_object.oportunity.id)
+        self.context['oportunity_object'] = oportunity_object
 
         return data
 
     def create(self, validated_data):
 
-        offer_object = self.context['offer_object']
+        oportunity_object = self.context['oportunity_object']
         request_to_help_object = self.context['request_to_help_object']
 
         new_order = Order.objects.create(
-            offer=offer_object,
-            buyer=offer_object.buyer,
-            seller=offer_object.seller,
-            karmas_amount=offer_object.karmas_amount,
+            oportunity=oportunity_object,
+            buyer=oportunity_object.buyer,
+            seller=oportunity_object.seller,
+            karmas_amount=oportunity_object.karmas_amount,
         )
 
         request_to_help_queryset = RequestToHelpActivity.objects.filter(

@@ -6,7 +6,7 @@ from asgiref.sync import async_to_sync
 # Models
 from api.chats.models import Message, Chat
 from api.notifications.models import Notification, NotificationUser
-from api.orders.models import Offer, Order
+from api.orders.models import Oportunity, Order
 
 # Utils
 from api.utils import helpers

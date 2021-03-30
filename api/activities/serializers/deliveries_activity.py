@@ -2,20 +2,20 @@
 from rest_framework import serializers
 
 # Models
-from api.activities.models import OfferActivity
+from api.activities.models import DeliveryActivity
 
 # Serializers
 from api.orders.serializers import DeliveryModelSerializer
 
 
 class DeliveryActivityModelSerializer(serializers.ModelSerializer):
-    """Offer model serializer."""
+    """Oportunity model serializer."""
     delivery = DeliveryModelSerializer(read_only=True)
 
     class Meta:
         """Meta class."""
 
-        model = OfferActivity
+        model = DeliveryActivity
         fields = (
             "id",
             "delivery",

@@ -26,8 +26,8 @@ from stripe.api_resources import plan
 from api.users.permissions import IsAccountOwner
 
 # Models
-from api.users.models import User, UserLoginActivity, PlanSubscription, Earning, Follow, PlanPayment
-from api.orders.models import OrderPayment, Order
+from api.users.models import User, UserLoginActivity, Earning, Follow
+from api.orders.models import Order
 from djmoney.money import Money
 
 # Serializers

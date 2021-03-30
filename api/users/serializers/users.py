@@ -14,7 +14,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.validators import UniqueValidator
 
 # Models
-from api.users.models import User, UserLoginActivity, PlanSubscription, Earning
+from api.users.models import User, UserLoginActivity, Earning
 from api.notifications.models import Notification
 from api.plans.models import Plan
 from api.activities.models import Activity
@@ -22,7 +22,6 @@ from djmoney.models.fields import Money
 
 
 # Serializers
-from .plan_subscriptions import PlanSubscriptionModelSerializer
 
 # Celery
 from api.taskapp.tasks import (

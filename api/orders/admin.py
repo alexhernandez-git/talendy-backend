@@ -4,12 +4,12 @@
 from django.contrib import admin
 
 # Models
-from api.orders.models import Offer, Order, OrderPayment, Revision, CancelOrder, Delivery
+from api.orders.models import Oportunity, Order, OrderTip, Revision, CancelOrder, Delivery
 
 
-@admin.register(Offer)
-class OfferAdmin(admin.ModelAdmin):
-    """Offer model admin."""
+@admin.register(Oportunity)
+class OportunityAdmin(admin.ModelAdmin):
+    """Oportunity model admin."""
 
     list_display = ("id",)
 
@@ -21,8 +21,8 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ("id",)
 
 
-@admin.register(OrderPayment)
-class OrderPaymentAdmin(admin.ModelAdmin):
+@admin.register(OrderTip)
+class OrderTipAdmin(admin.ModelAdmin):
     """Order Payment model admin."""
 
     list_display = ("id",)

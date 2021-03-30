@@ -73,7 +73,7 @@ class DeliveryTwoPaymentsOrderAPITestCase(TwoPaymentsOrderAPITestCase):
         # Attach payment method
         self.client.credentials(HTTP_AUTHORIZATION="Token {}".format(self.buyer_token))
 
-        # Send accepting offer
+        # Send accepting oportunity
         buyer = User.objects.get(id=self.buyer['id'])
         order_data = {
             "order_checkout": order,
