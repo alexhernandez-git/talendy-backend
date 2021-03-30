@@ -50,9 +50,7 @@ class AcceptOrderSerializer(serializers.Serializer):
 
         payment_method_id = data['payment_method_id']
         request_to_help = self.context['request_to_help']
-        stripe = self.context['stripe']
         request = self.context['request']
-        user = request.user
 
         request_to_help_object = get_object_or_404(RequestToHelp, id=request_to_help['id'])
         self.context['request_to_help_object'] = request_to_help_object

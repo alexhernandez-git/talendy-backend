@@ -44,17 +44,10 @@ from api.users.serializers import (
     IsEmailAvailableSerializer,
     IsUsernameAvailableSerializer,
     InviteUserSerializer,
-    StripeConnectSerializer,
-    StripeSellerSubscriptionSerializer,
     GetCurrencySerializer,
-    SellerChangePaymentMethodSerializer,
-    SellerCancelSubscriptionSerializer,
-    SellerReactivateSubscriptionSerializer,
     AttachPaymentMethodSerializer,
-    AttachPlanPaymentMethodSerializer,
     DetachPaymentMethodSerializer,
     GetUserByJwtSerializer,
-    BecomeASellerSerializer,
     PaypalConnectSerializer
 )
 

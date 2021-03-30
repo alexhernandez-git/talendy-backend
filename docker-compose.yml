@@ -39,7 +39,7 @@ services:
 
   celeryworker:
     <<: *django
-    image: freelanium_local_celeryworker
+    image: talendy_local_celeryworker
     depends_on:
       - redis
       - postgres
@@ -48,7 +48,7 @@ services:
 
   celerybeat:
     <<: *django
-    image: freelanium_local_celerybeat
+    image: talendy_local_celerybeat
     depends_on:
       - redis
       - postgres
@@ -58,7 +58,7 @@ services:
 
   flower:
     <<: *django
-    image: freelanium_local_flower
+    image: talendy_local_flower
     ports:
       - "5555:5555"
     command: /start-flower

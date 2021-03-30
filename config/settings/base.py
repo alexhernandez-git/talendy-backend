@@ -29,7 +29,7 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env.bool("DEBUG", default=True)
 
 ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['localhost'])
-CORS_ALLOWED_ORIGINS = ["https://freelanium.com"]
+CORS_ALLOWED_ORIGINS = ["https://talendy.com"]
 
 if DEBUG:
     ALLOWED_HOSTS.append("localhost")
@@ -289,7 +289,7 @@ PASSWORD_HASHERS = [
 
 if 'SENDGRID_API_KEY' in env:
     # Email
-    DEFAULT_FROM_EMAIL = "Freelanium <no-reply@freelanium.com>"
+    DEFAULT_FROM_EMAIL = "Talendy <no-reply@talendy.com>"
     SERVER_EMAIL = DEFAULT_FROM_EMAIL
     EMAIL_SUBJECT_PREFIX = "DJANGO_EMAIL_SUBJECT_PREFIX"
 

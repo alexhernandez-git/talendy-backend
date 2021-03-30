@@ -251,7 +251,6 @@ def get_activity_classes(type):
             "model": CancelOrderActivity,
             "serializer": CancelOrderActivityModelSerializer
         },
-
     }
     activity_classes = switcher.get(type, {"model": None, "serializer": None})
     model = None

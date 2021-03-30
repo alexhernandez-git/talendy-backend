@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404
 # Models
 from api.orders.models import Offer, Order
 from api.activities.models import Activity, OfferActivity
-from api.users.models import User
+from api.users.models import User, Follow
 from api.chats.models import Message, Chat, SeenBy
 
 # Serializers
@@ -81,7 +81,10 @@ class OfferModelSerializer(serializers.ModelSerializer):
         validated_data['buyer'] = buyer
 
         offer = Offer.objects.create(**validated_data)
-        send
+
         # Send the offer to all follewers
+        followers_emails = Follow.objects.filter(follow_user=buyer).values_list('follow_user__email')
+        followers_emails_list = [x[0] for x in followers_emails]
+        send_offer_to_followers(buyer, followers_emails_list, offer)
 
         return offer

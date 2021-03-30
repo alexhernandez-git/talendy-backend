@@ -15,13 +15,9 @@ class Earning(CModel):
 
     TIP_REVENUE = 'TR'
     WITHDRAWN = 'WI'
-    REFUND = 'RE'
-    SPENT = 'SP'
     EARNING_TYPES = [
         (TIP_REVENUE, 'Tip Revenue'),
         (WITHDRAWN, 'Withdrawn'),
-        (REFUND, 'Refund'),
-        (SPENT, 'Spent'),
     ]
 
     type = models.CharField(

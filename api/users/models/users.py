@@ -71,6 +71,8 @@ class User(CModel, AbstractUser):
 
     followed = models.ManyToManyField("users.User", through="users.Follow", verbose_name="user_follow")
 
+    karmas_amount = models.IntegerField(default=1000)
+
     # Payments
 
     stripe_customer_id = models.CharField(
@@ -89,7 +91,7 @@ class User(CModel, AbstractUser):
         "notifications.Notification", through="notifications.NotificationUser", related_name="user_notifications"
     )
 
-    # Earnings
+    # Donation Earnings
 
     net_income = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
     withdrawn = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
