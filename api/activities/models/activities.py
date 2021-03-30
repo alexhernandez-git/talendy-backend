@@ -9,19 +9,20 @@ class Activity(CModel):
     )
 
     # Orders
-    CHANGE_DELIVERY_TIME = 'CT'
+    REQUEST_TO_HELP = 'RH'
     INCREASE_AMOUNT = 'IA'
     DELIVERY = 'DE'
     REVISION = 'RE'
     CANCEL = 'CA'
 
     TYPE_CHOICES = [
-        (CHANGE_DELIVERY_TIME, 'Change delivery time order'),
+        (REQUEST_TO_HELP, 'Request to help'),
         (INCREASE_AMOUNT, 'Increase order amount'),
         (DELIVERY, 'Delivery order'),
         (REVISION, 'Revision order'),
         (CANCEL, 'Delivery order'),
     ]
+
     type = models.CharField(
         max_length=2,
         choices=TYPE_CHOICES,

@@ -94,8 +94,27 @@ def send_invitation_email(user, email, message, type):
     msg.send()
 
 
-@task(name='send_offer', max_retries=3)
-def send_offer(user, email, user_exists, offer_id, buyer_id=None):
+@task(name='send_offer_to_followers', max_retries=3)
+def send_offer_to_followers(user, followers_emails, offer):
+    """Send account verification link to given user."""
+    user_token = None
+    verification_token = None
+
+    subject = '@{} has asked for help'.format(
+        user.username)
+    from_email = 'Freelanium <no-reply@freelanium.com>'
+
+    content = render_to_string(
+        'emails/users/new_offer.html',
+        {'token': verification_token, 'user': user, 'offer': offer}
+    )
+    msg = EmailMultiAlternatives(subject, content, from_email, followers_emails)
+    msg.attach_alternative(content, "text/html")
+    msg.send()
+
+
+@task(name='send_request_to_help', max_retries=3)
+def send_request_to_help(user, email, user_exists, offer_id, buyer_id=None):
     """Send account verification link to given user."""
     user_token = None
     verification_token = None
@@ -103,35 +122,17 @@ def send_offer(user, email, user_exists, offer_id, buyer_id=None):
     if user_exists:
         verification_token = helpers.get_user_token(buyer_id)
 
-    subject = '@{} sent you an offer '.format(
+    subject = '@{} sent you an request to help '.format(
         user.username)
     from_email = 'Freelanium <no-reply@freelanium.com>'
 
     content = render_to_string(
-        'emails/users/order_offer.html',
-        {'token': verification_token, 'user': user, 'user_exists': user_exists, 'offer': offer_id}
+        'emails/users/request_to_help.html',
+        {'token': verification_token, 'user': user, 'offer': offer_id}
     )
     msg = EmailMultiAlternatives(subject, content, from_email, [email])
     msg.attach_alternative(content, "text/html")
     msg.send()
-
-
-# @task(name='check_if_free_trial_have_ended')
-# def check_if_free_trial_have_ended():
-#     """Check if the free trial has ended and turn off"""
-#     now = timezone.now()
-
-#     # Update rides that have already finished
-#     users = User.objects.filter(
-#         free_trial_expiration__gte=now,
-#         is_free_trial=True
-#     )
-#     users.update(is_free_trial=False, passed_free_trial_once=True)
-#     print("Users that has been updated")
-#     print("Total: "+str(users.count()))
-#     for user in users:
-#         print("---------------------------------")
-#         print(user.username)
 
 
 @task(name='send_have_messages_from_email', max_retries=3)
@@ -155,14 +156,6 @@ def send_have_messages_from_email(sent_to, sent_by):
 def send_activity_notification(activity, type):
     """send_activity_notification."""
     print(type)
-
-    def offer_accepted_email():
-        order = Order.objects.get(offer=activity.offer)
-        return render_to_string(
-            'emails/users/order_offer.html',
-            {'user': order.buyer, 'order': order.id}
-        ), order.seller, '@{} has accepted the offer '.format(
-            order.buyer.username)
 
     def order_delivery_email():
 
@@ -243,7 +236,6 @@ def send_activity_notification(activity, type):
     from_email = 'Freelanium <no-reply@freelanium.com>'
 
     switcher = {
-        Activity.OFFER+OfferActivity.ACCEPTED: offer_accepted_email,
         Activity.DELIVERY+DeliveryActivity.PENDENDT: order_delivery_email,
         Activity.DELIVERY+DeliveryActivity.ACCEPTED: order_delivery_accepted_email,
         Activity.REVISION: order_delivery_revision_email,

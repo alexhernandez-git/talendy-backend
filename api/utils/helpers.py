@@ -17,10 +17,8 @@ from api.users.models import User, Earning
 from api.activities.models import (
     Activity,
     CancelOrderActivity,
-    ChangeDeliveryTimeActivity,
+    RequestToHelpActivity,
     DeliveryActivity,
-    IncreaseAmountActivity,
-    OfferActivity,
     RevisionActivity,
 )
 from api.chats.models import Chat
@@ -29,10 +27,10 @@ from api.notifications.models import Notification, NotificationUser
 
 # Serializers
 from api.activities.serializers import (
-    OfferActivityModelSerializer,
     DeliveryActivityModelSerializer,
     CancelOrderActivityModelSerializer,
-    RevisionActivityModelSerializer
+    RevisionActivityModelSerializer,
+    RequestToHelpActivitySerializer
 )
 
 # Utilities
@@ -246,6 +244,7 @@ def get_plan(currency):
 
 def get_activity_classes(type):
     switcher = {
+        Activity.REQUEST_TO_HELP: {"model": RequestToHelpActivity, "serializer": RequestToHelpActivitySerializer},
         Activity.DELIVERY: {"model": DeliveryActivity, "serializer": DeliveryActivityModelSerializer},
         Activity.REVISION: {"model": RevisionActivity, "serializer": RevisionActivityModelSerializer},
         Activity.CANCEL: {
