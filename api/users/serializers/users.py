@@ -1,7 +1,6 @@
 """Users serializers."""
 
 # Django
-from ccy.core.currency import currency
 from django.conf import settings
 from django.contrib.auth import password_validation, authenticate
 from django.core.validators import RegexValidator, validate_email
@@ -49,7 +48,6 @@ class UserModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
     pending_notifications = serializers.SerializerMethodField(read_only=True)
     pending_messages = serializers.SerializerMethodField(read_only=True)
-    current_plan_subscription = serializers.SerializerMethodField(read_only=True)
     earned_this_month = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -78,8 +76,6 @@ class UserModelSerializer(serializers.ModelSerializer):
             'pending_messages',
             'pending_notifications',
             'default_payment_method',
-            'plan_default_payment_method',
-            'current_plan_subscription',
             'earned_this_month',
         )
 
@@ -93,22 +89,14 @@ class UserModelSerializer(serializers.ModelSerializer):
 
     def get_pending_messages(self, obj):
         return obj.notifications.through.objects.filter(
-            user=obj, is_read=False, notification__type__in=[Notification.MESSAGES, Notification.ACTIVITY]).exists()
-
-    def get_current_plan_subscription(self, obj):
-
-        subscriptions_queryset = DonationItemSubscription.objects.filter(user=obj, cancelled=False)
-        if not subscriptions_queryset.exists():
-            return None
-        plan_subscription = subscriptions_queryset.first()
-        return DonationItemSubscriptionModelSerializer(plan_subscription, many=False).data
+            user=obj, is_read=False, notification__type__in=[Notification.MESSAGES]).exists()
 
     def get_earned_this_month(self, obj):
 
         today = timezone.now()
 
         earnings = Earning.objects.filter(
-            created__month=today.month, user=obj, type=Earning.ORDER_REVENUE).aggregate(
+            created__month=today.month, user=obj, type=Earning.DONATION_REVENUE).aggregate(
             Sum('amount'))
         return earnings.get('amount__sum', None)
 
@@ -227,13 +215,12 @@ class UserSignUpSerializer(serializers.Serializer):
 
         currency, country = helpers.get_currency_and_country_anonymous(request)
 
-        if 'currency' in data:
-            currency = data['currency']
+        if not 'currency' in data or not data['currency'] and currency:
+            data['currency'] = currency
 
         user = User.objects.create_user(**data,
                                         is_verified=False,
                                         is_client=True,
-                                        currency=currency,
                                         country=country
                                         )
         token, created = Token.objects.get_or_create(

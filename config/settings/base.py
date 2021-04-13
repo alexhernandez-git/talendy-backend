@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "api.notifications.apps.NotificationsAppConfig",
     "api.donations.apps.DonationsAppConfig",
     "api.tasks.apps.TasksAppConfig",
+    "api.communities.apps.CommunitiesAppConfig",
     "api.chats",
     # THIRD_PARTY_APPS
     "rest_framework",
