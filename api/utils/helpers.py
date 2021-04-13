@@ -12,26 +12,14 @@ from django.db.models import Sum
 from rest_framework import serializers
 
 # Models
-from api.plans.models import Plan
+from api.donations.models import DonationItem
 from api.users.models import User, Earning
-from api.activities.models import (
-    Activity,
-    CancelOrderActivity,
-    RequestToHelpActivity,
-    DeliveryActivity,
-    RevisionActivity,
-)
+
 from api.chats.models import Chat
 from api.notifications.models import Notification, NotificationUser
 
 
 # Serializers
-from api.activities.serializers import (
-    DeliveryActivityModelSerializer,
-    CancelOrderActivityModelSerializer,
-    RevisionActivityModelSerializer,
-    RequestToHelpActivitySerializer
-)
 
 # Utilities
 import jwt
@@ -141,7 +129,7 @@ def get_currency_api(current_login_ip):
 
         try:
             currency = ccy.countryccy(country_code)
-            if Plan.objects.filter(type=Plan.BASIC, currency=currency).exists():
+            if DonationItem.objects.filter(type=DonationItem.BASIC, currency=currency).exists():
                 return currency
         except Exception as e:
             print(e)
@@ -175,7 +163,7 @@ def get_currency_and_country_anonymous(request):
 
                 try:
                     country_currency = ccy.countryccy(country_code)
-                    if Plan.objects.filter(type=Plan.BASIC, currency=country_currency).exists():
+                    if DonationItem.objects.filter(type=DonationItem.BASIC, currency=country_currency).exists():
                         currency = country_currency
                 except Exception as e:
                     print(e)
@@ -211,7 +199,7 @@ def get_currency_and_country(request):
 
                 try:
                     country_currency = ccy.countryccy(country_code)
-                    if Plan.objects.filter(type=Plan.BASIC, currency=country_currency).exists():
+                    if DonationItem.objects.filter(type=DonationItem.BASIC, currency=country_currency).exists():
                         currency = country_currency
                 except Exception as e:
                     print(e)
@@ -230,36 +218,16 @@ def get_plan(currency):
     plan = None
 
     try:
-        plans_queryset = Plan.objects.filter(currency=currency, type=Plan.BASIC)
+        plans_queryset = DonationItem.objects.filter(currency=currency, type=DonationItem.BASIC)
         if plans_queryset.exists():
             plan = plans_queryset.first()
 
-    except Plan.DoesNotExist:
-        plans_queryset = Plan.objects.filter(currency="USD", type=Plan.BASIC)
+    except DonationItem.DoesNotExist:
+        plans_queryset = DonationItem.objects.filter(currency="USD", type=DonationItem.BASIC)
         if plans_queryset.exists():
             plan = plans_queryset.first()
 
     return plan
-
-
-def get_activity_classes(type):
-    switcher = {
-        Activity.REQUEST_TO_HELP: {"model": RequestToHelpActivity, "serializer": RequestToHelpActivitySerializer},
-        Activity.DELIVERY: {"model": DeliveryActivity, "serializer": DeliveryActivityModelSerializer},
-        Activity.REVISION: {"model": RevisionActivity, "serializer": RevisionActivityModelSerializer},
-        Activity.CANCEL: {
-            "model": CancelOrderActivity,
-            "serializer": CancelOrderActivityModelSerializer
-        },
-    }
-    activity_classes = switcher.get(type, {"model": None, "serializer": None})
-    model = None
-    if "model" in activity_classes:
-        model = activity_classes["model"]
-    serializer = None
-    if "serializer" in activity_classes:
-        serializer = activity_classes["serializer"]
-    return model, serializer
 
 
 def get_chat(sent_by, sent_to):

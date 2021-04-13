@@ -27,7 +27,6 @@ from api.users.permissions import IsAccountOwner
 
 # Models
 from api.users.models import User, UserLoginActivity, Earning, Follow
-from api.orders.models import Order
 from djmoney.money import Money
 
 # Serializers

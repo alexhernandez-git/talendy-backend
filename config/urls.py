@@ -7,8 +7,7 @@ urlpatterns = [
     path("api/", include(("api.users.urls", "users"), namespace="users")),
     path("api/", include(("api.chats.urls", "chats"), namespace="chats")),
     path("api/", include(("api.notifications.urls", "notifications"), namespace="notifications")),
-    path("api/", include(("api.plans.urls", "plans"), namespace="plans")),
-    path("api/", include(("api.orders.urls", "orders"), namespace="orders")),
-    path("api/", include(("api.activities.urls", "activities"), namespace="activities")),
+    path("api/", include(("api.donations.urls", "donations"), namespace="donations")),
+    path("api/", include(("api.tasks.urls", "tasks"), namespace="tasks")),
     path("admin/", admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

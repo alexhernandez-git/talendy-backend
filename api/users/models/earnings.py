@@ -2,7 +2,7 @@ from api.utils.models import CModel
 from django.db import models
 
 # Models
-from api.plans.models import Plan
+from api.donations.models import DonationItem
 from djmoney.models.fields import MoneyField
 
 # Utils
@@ -13,22 +13,20 @@ class Earning(CModel):
 
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
 
-    TIP_REVENUE = 'TR'
+    DONATION_REVENUE = 'DR'
     WITHDRAWN = 'WI'
     EARNING_TYPES = [
-        (TIP_REVENUE, 'Tip Revenue'),
+        (DONATION_REVENUE, 'Donation Revenue'),
         (WITHDRAWN, 'Withdrawn'),
     ]
 
     type = models.CharField(
         max_length=2,
         choices=EARNING_TYPES,
-        default=TIP_REVENUE
+        default=DONATION_REVENUE
     )
 
     amount = MoneyField(max_digits=14, decimal_places=2, default_currency='USD')
-
-    order_tip = models.ForeignKey("orders.Order", on_delete=models.SET_NULL, blank=True, null=True)
 
     batch_id = models.CharField(max_length=100, blank=True, null=True)
 

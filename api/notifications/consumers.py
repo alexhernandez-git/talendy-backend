@@ -29,10 +29,6 @@ class NoseyConsumer(AsyncJsonWebsocketConsumer):
 
         await self.send_json(event)
 
-    async def new_activity(self, event):
-
-        await self.send_json(event)
-
     @database_sync_to_async
     def update_user_status(self, is_online):
         return User.objects.filter(id=self.user_id) .update(is_online=is_online)

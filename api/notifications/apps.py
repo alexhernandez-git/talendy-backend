@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 
 
-class NotificationsConfig(AppConfig):
+class NotificationsAppConfig(AppConfig):
     name = 'api.notifications'
 
     def ready(self):

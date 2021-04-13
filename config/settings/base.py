@@ -65,13 +65,12 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # LOCAL_APPS
-    "api.utils",
+    "api.utils.apps.UtilsAppConfig",
     "api.users.apps.UsersAppConfig",
-    "api.plans.apps.PlansAppConfig",
     "api.taskapp.celery.CeleryAppConfig",
-    "api.notifications.apps.NotificationsConfig",
-    "api.orders.apps.OrdersAppConfig",
-    "api.activities.apps.ActivitiesAppConfig",
+    "api.notifications.apps.NotificationsAppConfig",
+    "api.donations.apps.DonationsAppConfig",
+    "api.tasks.apps.TasksAppConfig",
     "api.chats",
     # THIRD_PARTY_APPS
     "rest_framework",

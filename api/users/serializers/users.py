@@ -16,8 +16,7 @@ from rest_framework.validators import UniqueValidator
 # Models
 from api.users.models import User, UserLoginActivity, Earning
 from api.notifications.models import Notification
-from api.plans.models import Plan
-from api.activities.models import Activity
+from api.donations.models import DonationItem
 from djmoney.models.fields import Money
 
 
@@ -98,11 +97,11 @@ class UserModelSerializer(serializers.ModelSerializer):
 
     def get_current_plan_subscription(self, obj):
 
-        subscriptions_queryset = PlanSubscription.objects.filter(user=obj, cancelled=False)
+        subscriptions_queryset = DonationItemSubscription.objects.filter(user=obj, cancelled=False)
         if not subscriptions_queryset.exists():
             return None
         plan_subscription = subscriptions_queryset.first()
-        return PlanSubscriptionModelSerializer(plan_subscription, many=False).data
+        return DonationItemSubscriptionModelSerializer(plan_subscription, many=False).data
 
     def get_earned_this_month(self, obj):
 
