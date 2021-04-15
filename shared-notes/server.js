@@ -14,15 +14,24 @@ const io = socketio(server, {
     methods: ["GET", "POST"],
   },
 });
+io.sockets.on("connection", connection);
 
-io.on("connection", (socket) => {
-  console.log("We have a new connection!!!");
-  socket.on("message", (msg) => console.log(msg));
-  socket.on("disconnect", () => {
-    console.log("User had left!!!");
-  });
-});
+const text = {
+  text: "",
+};
 
+function connection(socket) {
+  console.log("a new user with id " + socket.id + " has entered");
+  socket.emit("newUser", text);
+  socket.emit("message", "hola que tal");
+
+  function handleTextSent(data) {
+    console.log("data", data);
+    text.text = data;
+    socket.broadcast.emit("text", text);
+  }
+  socket.on("text", handleTextSent);
+}
 app.use(cors());
 app.use(router);
 
