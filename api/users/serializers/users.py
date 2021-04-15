@@ -172,7 +172,6 @@ class UserSignUpSerializer(serializers.Serializer):
 
     # Password
     password = serializers.CharField(min_length=8, max_length=64)
-    password_confirmation = serializers.CharField(min_length=8, max_length=64)
 
     # Name
     first_name = serializers.CharField(min_length=2, max_length=30)
@@ -184,9 +183,7 @@ class UserSignUpSerializer(serializers.Serializer):
     def validate(self, data):
         """Verify passwords match."""
         passwd = data['password']
-        passwd_conf = data['password_confirmation']
-        if passwd != passwd_conf:
-            raise serializers.ValidationError('Las contraseñas no coinciden')
+
         password_validation.validate_password(passwd)
 
         # Verifiy token is valid
@@ -208,8 +205,6 @@ class UserSignUpSerializer(serializers.Serializer):
     def create(self, data):
         """Handle user and profile creation."""
         request = self.context['request']
-
-        data.pop('password_confirmation')
 
         # Create the free trial expiration date
 

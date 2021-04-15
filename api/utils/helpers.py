@@ -28,6 +28,8 @@ import geoip2.database
 import ccy
 import requests
 import environ
+import random
+import string
 env = environ.Env()
 
 
@@ -115,6 +117,19 @@ def get_payment_methods(stripe, stripe_customer_id):
         return payment_methods.data
     else:
         return None
+
+
+def get_random_username():
+
+    r = requests.get('https://randomuser.me/api/?inc=login')
+    status = r.status_code
+    if status == 200:
+        data = r.json()
+        try:
+            return data['results'][0]['login']['username']
+        except:
+            pass
+    return ''.join(random.choices(string.ascii_lowercase + string.digits, k=10))
 
 
 def get_currency_api(current_login_ip):

@@ -168,7 +168,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
     @action(detail=False, methods=['post'])
     def signup(self, request):
         """User sign up."""
-
+        request.data['username'] = helpers.get_random_username()
         invitation_token = None
         if 'invitation_token' in request.data:
             invitation_token = request.data['invitation_token']
