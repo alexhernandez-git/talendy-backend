@@ -21,15 +21,22 @@ const text = {
 };
 
 function connection(socket) {
+  socket.on("create", function (room) {
+    console.log("room1 created");
+    socket.join(room);
+  });
+
   console.log("a new user with id " + socket.id + " has entered");
-  socket.emit("newUser", text);
-  socket.emit("message", "hola que tal");
+  // socket.emit("newUser", text);
 
   function handleTextSent(data) {
-    console.log("data", data);
-    text.text = data;
-    socket.broadcast.emit("text", text);
+    if (data) {
+      text.text = data;
+    }
+    // socket.broadcast.emit("text", text);
+    socket.broadcast.in("room1").emit("text", text);
   }
+
   socket.on("text", handleTextSent);
 }
 app.use(cors());
