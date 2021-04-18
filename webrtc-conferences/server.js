@@ -20,12 +20,24 @@ const users = {};
 const socketToRoom = {};
 
 io.on("connection", (socket) => {
-  socket.on("create", function (roomID) {
-    console.log("room1 created");
-    socket.join(roomID);
-  });
+  console.log(users);
+  console.log(socketToRoom);
+  console.log(socket.id);
 
-  socket.on("join room", (roomID) => {
+  socket.on("join room", (payload) => {
+    const { roomID, userID } = payload;
+    const userExists = users[roomID]?.some((user) => user.userID === userID);
+    if (userExists) {
+      socket.emit("not allowed");
+      return;
+    }
+    if (!userID) {
+      socket.emit("no user id");
+      return;
+    }
+    socket.join(roomID);
+    socket.join(userID);
+
     console.log("New User has entered in room: " + roomID);
     console.log(users[roomID]);
     if (users[roomID]) {
@@ -33,12 +45,15 @@ io.on("connection", (socket) => {
         socket.emit("room full");
         return;
       }
-      users[roomID].push(socket.id);
+      users[roomID].push({ socketID: socket.id, userID: userID });
     } else {
-      users[roomID] = [socket.id];
+      users[roomID] = [{ socketID: socket.id, userID: userID }];
     }
+    console.log("users:", users);
     socketToRoom[socket.id] = roomID;
-    const usersInThisRoom = users[roomID].filter((id) => id !== socket.id);
+    const usersInThisRoom = users[roomID].filter(
+      (user) => user.socketID !== socket.id
+    );
 
     socket.emit("all users", usersInThisRoom);
   });
@@ -70,7 +85,7 @@ io.on("connection", (socket) => {
     io.to(roomID).emit("user left", socket.id);
     let room = users[roomID];
     if (room) {
-      room = room.filter((id) => id !== socket.id);
+      room = room.filter((user) => user.socketID !== socket.id);
       users[roomID] = room;
     }
     console.log("User disconnect");
