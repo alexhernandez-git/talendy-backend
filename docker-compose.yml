@@ -63,15 +63,6 @@ services:
       - "5555:5555"
     command: /start-flower
 
-  sharednotes:
-    build:
-      context: .
-      dockerfile: ./compose/dev/shared-notes/Dockerfile
-    expose:
-      - "5000"
-    ports:
-      - "5000:5000"
-    command: node server.js
 
   webrtcconferences:
     build:

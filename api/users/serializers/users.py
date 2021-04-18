@@ -71,6 +71,7 @@ class UserModelSerializer(serializers.ModelSerializer):
             'paypal_email',
             'net_income',
             'withdrawn',
+            'karma_amount',
             'available_for_withdrawal',
             'pending_clearance',
             'pending_messages',

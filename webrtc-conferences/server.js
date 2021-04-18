@@ -20,10 +20,16 @@ const users = {};
 const socketToRoom = {};
 
 io.on("connection", (socket) => {
+  socket.on("create", function (roomID) {
+    console.log("room1 created");
+    socket.join(roomID);
+  });
+
   socket.on("join room", (roomID) => {
+    console.log("New User has entered in room: " + roomID);
+    console.log(users[roomID]);
     if (users[roomID]) {
-      const length = users[roomID].length;
-      if (length === 4) {
+      if (users[roomID].length === 5) {
         socket.emit("room full");
         return;
       }
@@ -51,13 +57,23 @@ io.on("connection", (socket) => {
     });
   });
 
+  // SHARED NOTES
+  socket.on("text", (payload) => {
+    const { roomID, text } = payload;
+    console.log(roomID);
+    console.log(text);
+    socket.broadcast.emit("text", text);
+  });
+
   socket.on("disconnect", () => {
     const roomID = socketToRoom[socket.id];
+    io.to(roomID).emit("user left", socket.id);
     let room = users[roomID];
     if (room) {
       room = room.filter((id) => id !== socket.id);
       users[roomID] = room;
     }
+    console.log("User disconnect");
   });
 });
 

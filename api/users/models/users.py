@@ -71,7 +71,7 @@ class User(CModel, AbstractUser):
 
     followed = models.ManyToManyField("users.User", through="users.Follow", verbose_name="user_follow")
 
-    karmas_amount = models.IntegerField(default=1000)
+    karma_amount = models.IntegerField(default=1000)
 
     # Payments
 
