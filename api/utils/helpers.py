@@ -120,22 +120,33 @@ def get_payment_methods(stripe, stripe_customer_id):
 
 
 def get_random_username():
+    r = None
+    status = None
+    try:
+        r = requests.get('https://randomuser.me/api/?inc=login')
+        status = r.status_code
+    except:
+        pass
 
-    r = requests.get('https://randomuser.me/api/?inc=login')
-    status = r.status_code
     if status == 200:
         data = r.json()
         try:
             return data['results'][0]['login']['username']
         except:
             pass
+
     return ''.join(random.choices(string.ascii_lowercase + string.digits, k=10))
 
 
 def get_currency_api(current_login_ip):
+    r = None
+    status = None
+    try:
+        r = requests.get('http://ip-api.com/json/{}'.format(current_login_ip))
+        status = r.status_code
+    except:
+        pass
 
-    r = requests.get('http://ip-api.com/json/{}'.format(current_login_ip))
-    status = r.status_code
     if status == 200:
         data = r.json()
         country_code = data['countryCode']
@@ -165,8 +176,14 @@ def get_currency_and_country_anonymous(request):
             if env.bool("DEBUG", default=True):
                 current_login_ip = "147.161.106.227"
             # Get country
-            r = requests.get('http://ip-api.com/json/{}'.format(current_login_ip))
-            status = r.status_code
+            r = None
+            status = None
+            try:
+                r = requests.get('http://ip-api.com/json/{}'.format(current_login_ip))
+                status = r.status_code
+            except:
+                pass
+
             if status == 200:
                 data = r.json()
                 country_code = data['countryCode']
@@ -201,8 +218,14 @@ def get_currency_and_country(request):
             if env.bool("DEBUG", default=True):
                 current_login_ip = "147.161.106.227"
             # Get country
-            r = requests.get('http://ip-api.com/json/{}'.format(current_login_ip))
-            status = r.status_code
+
+            r = None
+            status = None
+            try:
+                r = requests.get('http://ip-api.com/json/{}'.format(current_login_ip))
+                status = r.status_code
+            except:
+                pass
             if status == 200:
                 data = r.json()
                 country_code = data['countryCode']
@@ -259,8 +282,13 @@ def get_chat(sent_by, sent_to):
 
 
 def get_currency_rate(currency, rate_date='latest'):
-    r = requests.get("https://api.exchangeratesapi.io/"+rate_date+"?base=USD")
-    status = r.status_code
+    r = None
+    status = None
+    try:
+        r = requests.get("https://api.exchangeratesapi.io/"+rate_date+"?base=USD")
+        status = r.status_code
+    except:
+        pass
     if status == 200:
         data = r.json()
         currency_rate = data['rates'][currency.upper()]
@@ -273,8 +301,14 @@ def get_currency_rate(currency, rate_date='latest'):
 
 
 def convert_currency(currency, base, price, rate_date='latest'):
-    r = requests.get("https://api.exchangeratesapi.io/"+rate_date+"?base="+base.upper())
-    status = r.status_code
+    r = None
+    status = None
+    try:
+        r = requests.get("https://api.exchangeratesapi.io/"+rate_date+"?base="+base.upper())
+        status = r.status_code
+    except:
+        pass
+
     if status == 200:
         data = r.json()
         currency_rate = data['rates'][currency.upper()]

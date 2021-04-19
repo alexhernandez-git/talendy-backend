@@ -85,6 +85,7 @@ class FollowViewSet(
         return FollowModelSerializer
 
     def create(self, request, *args, **kwargs):
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         follow = serializer.save()
