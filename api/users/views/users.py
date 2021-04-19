@@ -47,7 +47,8 @@ from api.users.serializers import (
     AttachPaymentMethodSerializer,
     DetachPaymentMethodSerializer,
     GetUserByJwtSerializer,
-    PaypalConnectSerializer
+    PaypalConnectSerializer,
+    DetailedUserModelSerializer
 )
 
 # Filters
@@ -111,8 +112,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
     def get_serializer_class(self):
         """Return serializer based on action."""
 
-        if self.action in ['list', 'partial_update', 'retrieve']:
-            return UserModelSerializer
+        if self.action in ['partial_update', 'retrieve', 'get_user', 'login', 'register']:
+            return DetailedUserModelSerializer
         elif self.action == 'change_password':
             return ChangePasswordSerializer
         elif self.action == 'invite_user':
@@ -226,9 +227,10 @@ class UserViewSet(mixins.RetrieveModelMixin,
         user, token = serializer.save()
 
         data = {
-            'user': UserModelSerializer(user).data,
+            'user': DetailedUserModelSerializer(user).data,
             'access_token': token,
         }
+
         if 'STRIPE_API_KEY' in env:
             stripe.api_key = env('STRIPE_API_KEY')
         else:
@@ -336,7 +338,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             return Response(status=404)
 
         data = {
-            'user': UserModelSerializer(request.user, many=False).data,
+            'user': DetailedUserModelSerializer(request.user, many=False).data,
 
         }
         if 'STRIPE_API_KEY' in env:

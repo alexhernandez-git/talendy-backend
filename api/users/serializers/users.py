@@ -5,7 +5,8 @@ from django.conf import settings
 from django.contrib.auth import password_validation, authenticate
 from django.core.validators import RegexValidator, validate_email
 from django.shortcuts import get_object_or_404
-from django.db.models import Sum
+from django.db.models import Sum, Q
+
 
 # Django REST Framework
 from rest_framework import serializers
@@ -13,7 +14,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.validators import UniqueValidator
 
 # Models
-from api.users.models import User, UserLoginActivity, Earning
+from api.users.models import User, UserLoginActivity, Earning, Connection, Follow
 from api.notifications.models import Notification
 from api.donations.models import DonationItem
 from djmoney.models.fields import Money
@@ -44,7 +45,7 @@ import environ
 env = environ.Env()
 
 
-class UserModelSerializer(serializers.ModelSerializer):
+class DetailedUserModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
     pending_notifications = serializers.SerializerMethodField(read_only=True)
     pending_messages = serializers.SerializerMethodField(read_only=True)
@@ -78,6 +79,7 @@ class UserModelSerializer(serializers.ModelSerializer):
             'pending_notifications',
             'default_payment_method',
             'earned_this_month',
+
         )
 
         read_only_fields = (
@@ -102,8 +104,45 @@ class UserModelSerializer(serializers.ModelSerializer):
         return earnings.get('amount__sum', None)
 
 
+class UserModelSerializer(serializers.ModelSerializer):
+    """User model serializer."""
+    is_followed = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        """Meta class."""
+
+        model = User
+        fields = (
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'email',
+            'about',
+            'phone_number',
+            'country',
+            'is_staff',
+            'is_verified',
+            'picture',
+            'currency',
+            'paypal_email',
+            'karma_amount',
+            'is_followed'
+        )
+
+        read_only_fields = (
+            'id',
+        )
+
+    def get_is_followed(self, obj):
+        if 'request' in self.context and self.context['request'].user.id:
+            user = self.context['request'].user
+            return Follow.objects.filter(from_user=user, followed_user=obj).exists()
+        return False
+
+
 class GetUserByJwtSerializer(serializers.Serializer):
-    user = UserModelSerializer(read_only=True)
+    user = DetailedUserModelSerializer(read_only=True)
     access_token = serializers.CharField(read_only=True)
     token = serializers.CharField()
 
