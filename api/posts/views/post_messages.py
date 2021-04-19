@@ -47,7 +47,7 @@ from django.core.files.base import ContentFile
 import base64
 
 
-class TaskMessageViewSet(
+class PostMessageViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,

@@ -70,7 +70,7 @@ INSTALLED_APPS = [
     "api.taskapp.celery.CeleryAppConfig",
     "api.notifications.apps.NotificationsAppConfig",
     "api.donations.apps.DonationsAppConfig",
-    "api.tasks.apps.TasksAppConfig",
+    "api.posts.apps.PostsAppConfig",
     "api.communities.apps.CommunitiesAppConfig",
     "api.chats",
     # THIRD_PARTY_APPS

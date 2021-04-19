@@ -2,7 +2,7 @@ from api.utils.models import CModel
 from django.db import models
 
 
-class TaskMessage(CModel):
+class PostMessage(CModel):
     # Login Status
 
     chat = models.ForeignKey("chats.Chat", on_delete=models.CASCADE)
@@ -13,9 +13,9 @@ class TaskMessage(CModel):
         ordering = ["-created"]
 
 
-class TaskMessageFile(CModel):
+class PostMessageFile(CModel):
     chat = models.ForeignKey("chats.Chat", on_delete=models.CASCADE, null=True, blank=True)
-    message = models.ForeignKey(TaskMessage, on_delete=models.CASCADE)
+    message = models.ForeignKey(PostMessage, on_delete=models.CASCADE)
     file = models.FileField(
         upload_to='messages/files/',
         max_length=500
@@ -25,10 +25,10 @@ class TaskMessageFile(CModel):
     def save(self, **kwargs):
 
         try:
-            this = TaskMessageFile.objects.get(id=self.id)
+            this = PostMessageFile.objects.get(id=self.id)
             if this.file != self.file:
                 this.file.delete(save=False)
         except:
             pass
 
-        super(TaskMessageFile, self).save(**kwargs)
+        super(PostMessageFile, self).save(**kwargs)

@@ -2,18 +2,18 @@
 from rest_framework import serializers
 
 # Models
-from api.tasks.models import TaskMessageFile
+from api.posts.models import PostMessageFile
 
 # Serializers
 
 
-class TaskMessageFileModelSerializer(serializers.ModelSerializer):
+class PostMessageFileModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
 
     class Meta:
         """Meta class."""
 
-        model = TaskMessageFile
+        model = PostMessageFile
         fields = ("id", "file", "name")
 
         read_only_fields = ("id",)

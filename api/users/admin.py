@@ -12,7 +12,7 @@ from api.users.models import User, Earning, Follow, UserLoginActivity
 class ContactAdmin(admin.ModelAdmin):
     """Contact model admin."""
 
-    list_display = ("id", "from_user", "follow_user")
+    list_display = ("id", "from_user", "followed_user")
 
 
 class CustomUserAdmin(UserAdmin):

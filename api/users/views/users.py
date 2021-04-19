@@ -94,15 +94,18 @@ class UserViewSet(mixins.RetrieveModelMixin,
             'verify',
             'stripe_webhooks',
             'stripe_webhooks_invoice_payment_failed',
-            'stripe_webhooks_invoice_payment_failed',
-                'forget_password']:
+            'forget_password',
+            'list_users_with_most_karma',
+            'retrieve',
+                'list']:
             permissions = [AllowAny]
         elif self.action in ['update', 'delete', 'partial_update', 'change_password', 'change_email', 'stripe_connect', 'paypal_connect', 'destroy']:
             permissions = [IsAccountOwner, IsAuthenticated]
-        elif self.action in ['list', 'retrieve']:
+        elif self.action in ['list_users_not_followed']:
             permissions = [IsAuthenticated]
         else:
             permissions = []
+
         return [p() for p in permissions]
 
     def get_serializer_class(self):
@@ -119,12 +122,16 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return UserModelSerializer
 
     def get_queryset(self):
-        if self.action == "list_users_not_followed":
+        if self.action == 'list_users_with_most_karma':
+
+            return User.objects.filter(account_deactivated=False, is_staff=False).order_by('karma_amount')
+        elif self.action == "list_users_not_followed":
             user = self.request.user
             users = Follow.objects.filter(from_user=user).values_list('follow_user__pk')
             users_list = [x[0] for x in users]
             users_list.append(user.pk)
             return User.objects.filter(account_deactivated=False, is_staff=False).exclude(pk__in=users_list)
+
         return User.objects.filter(account_deactivated=False, is_staff=False)
 
     # User destroy
@@ -133,6 +140,18 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
         instance.account_deactivated = True
         instance.save()
+
+    @action(detail=False, methods=['get'])
+    def list_users_with_most_karma(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def get_currency(self, request):

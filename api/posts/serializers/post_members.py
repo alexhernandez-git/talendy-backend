@@ -15,10 +15,10 @@ from api.chats.serializers import MessageModelSerializer
 
 # Models
 from api.users.models import User
-from api.tasks.models import Task
+from api.posts.models import Post
 
 
-class TaskModelSerializer(serializers.ModelSerializer):
+class PostModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
 
     actor = UserModelSerializer(read_only=True)
@@ -28,17 +28,18 @@ class TaskModelSerializer(serializers.ModelSerializer):
     class Meta:
         """Meta class."""
 
-        model = Task
+        model = Post
         fields = (
             "id",
             "type",
             "actor",
             "messages",
             "modified",
-            "is_chat_notification"
         )
 
         read_only_fields = ("id",)
 
     def get_messages(self, obj):
         return MessageModelSerializer(obj.messages, many=True).data
+
+        return False
