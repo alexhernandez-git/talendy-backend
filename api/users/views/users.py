@@ -112,7 +112,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
     def get_serializer_class(self):
         """Return serializer based on action."""
 
-        if self.action in ['partial_update', 'retrieve', 'get_user', 'login', 'register']:
+        if self.action in ['partial_update', 'get_user', 'login', 'register']:
             return DetailedUserModelSerializer
         elif self.action == 'change_password':
             return ChangePasswordSerializer
