@@ -55,3 +55,21 @@ class CreateFollowSerializer(serializers.Serializer):
         followed_user = validated_data["followed_user"]
         follow = Follow.objects.create(from_user=from_user, followed_user=followed_user)
         return follow
+
+
+class UnfollowSerializer(serializers.Serializer):
+    """User model serializer."""
+
+    followed_user = serializers.UUIDField()
+
+    def validate(self, data):
+        request = self.context["request"]
+        from_user = request.user
+        followed_user = User.objects.get(id=data["followed_user"])
+
+        if not Follow.objects.filter(from_user=from_user, followed_user=followed_user).exists():
+            raise serializers.ValidationError("Your are not following this user")
+
+        follow = Follow.objects.get(from_user=from_user, followed_user=followed_user)
+        follow.delete()
+        return data

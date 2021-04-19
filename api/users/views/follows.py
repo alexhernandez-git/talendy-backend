@@ -29,7 +29,7 @@ from api.users.permissions import IsAccountOwner
 from api.users.models import Follow
 
 # Serializers
-from api.users.serializers import FollowModelSerializer, CreateFollowSerializer
+from api.users.serializers import FollowModelSerializer, CreateFollowSerializer, UnfollowSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -80,6 +80,8 @@ class FollowViewSet(
         """Return serializer based on action."""
         if self.action == "create":
             return CreateFollowSerializer
+        if self.action == "unfollow":
+            return UnfollowSerializer
         return FollowModelSerializer
 
     def create(self, request, *args, **kwargs):
@@ -89,3 +91,9 @@ class FollowViewSet(
         follow_data = FollowModelSerializer(follow, many=False).data
         headers = self.get_success_headers(serializer.data)
         return Response(follow_data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @action(detail=False, methods=['post'])
+    def unfollow(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(status=status.HTTP_204_NO_CONTENT)

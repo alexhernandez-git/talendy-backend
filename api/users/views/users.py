@@ -14,7 +14,6 @@ from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
-from rest_framework.pagination import PageNumberPagination
 from django.http import HttpResponse
 # Permissions
 from rest_framework.permissions import (
@@ -64,6 +63,7 @@ import json
 
 # Utils
 from api.utils import helpers
+from api.utils.paginations import ShortResultsSetPagination
 
 from datetime import timedelta
 from django.utils import timezone
@@ -145,7 +145,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
     @action(detail=False, methods=['get'])
     def list_users_with_most_karma(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-
+        self.pagination_class = ShortResultsSetPagination
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
