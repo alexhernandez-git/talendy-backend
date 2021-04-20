@@ -10,12 +10,14 @@ from rest_framework.routers import DefaultRouter
 from .views import users as user_views
 from .views import follows as follow_views
 from .views import earnings as earning_views
+from .views import connections as connection_views
 
 
 router = DefaultRouter()
 router.register(r'users', user_views.UserViewSet, basename='users')
 router.register(r'follows', follow_views.FollowViewSet, basename='follow')
 router.register(r'earnings', earning_views.EarningViewSet, basename='earnings')
+router.register(r'connections', connection_views.ConnectionViewSet, basename='connections')
 urlpatterns = [
     path('', include(router.urls))
 ]

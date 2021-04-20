@@ -70,6 +70,6 @@ class UnfollowSerializer(serializers.Serializer):
         if not Follow.objects.filter(from_user=from_user, followed_user=followed_user).exists():
             raise serializers.ValidationError("Your are not following this user")
 
-        follow = Follow.objects.get(from_user=from_user, followed_user=followed_user)
-        follow.delete()
+        Follow.objects.filter(from_user=from_user, followed_user=followed_user).delete()
+
         return data
