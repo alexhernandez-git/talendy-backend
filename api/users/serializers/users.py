@@ -50,6 +50,9 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
     pending_notifications = serializers.SerializerMethodField(read_only=True)
     pending_messages = serializers.SerializerMethodField(read_only=True)
     earned_this_month = serializers.SerializerMethodField(read_only=True)
+    invitations = serializers.SerializerMethodField(read_only=True)
+    connections = serializers.SerializerMethodField(read_only=True)
+    following = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -79,6 +82,9 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
             'pending_notifications',
             'default_payment_method',
             'earned_this_month',
+            'invitations',
+            'connections',
+            'following'
         )
 
         read_only_fields = (
@@ -101,6 +107,16 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
             created__month=today.month, user=obj, type=Earning.DONATION_REVENUE).aggregate(
             Sum('amount'))
         return earnings.get('amount__sum', None)
+
+    def get_invitations(self, obj):
+        return Connection.objects.filter(addressee=obj, accepted=False).count()
+
+    def get_connections(self, obj):
+        return Connection.objects.filter(Q(addressee=obj) |
+                                         Q(requester=obj), accepted=True).count()
+
+    def get_following(self, obj):
+        return Follow.objects.filter(from_user=obj).count()
 
 
 class UserModelSerializer(serializers.ModelSerializer):
@@ -132,7 +148,8 @@ class UserModelSerializer(serializers.ModelSerializer):
             'is_followed',
             'connection_invitation_sent',
             'is_connection',
-            'accept_invitation'
+            'accept_invitation',
+
         )
 
         read_only_fields = (
