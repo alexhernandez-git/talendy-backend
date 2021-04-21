@@ -25,6 +25,10 @@ class NoseyConsumer(AsyncJsonWebsocketConsumer):
 
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
+    async def send_notification(self, event):
+
+        await self.send_json(event)
+
     async def message_sent(self, event):
 
         await self.send_json(event)

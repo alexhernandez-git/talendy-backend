@@ -9,12 +9,15 @@ from django.contrib.auth import password_validation, authenticate
 from django.core.validators import RegexValidator
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 # Serializers
 from api.users.serializers import UserModelSerializer
 
 # Models
 from api.users.models import Connection, User
+from api.notifications.models import Notification, NotificationUser
 
 
 class ConnectionModelSerializer(serializers.ModelSerializer):
@@ -62,6 +65,25 @@ class ConnectInvitationSerialzer(serializers.Serializer):
         requester = validated_data["requester"]
         addressee = validated_data["addressee"]
         connection = Connection.objects.create(requester=requester, addressee=addressee)
+
+        # Notificate the invitation to the addressee
+        notification = Notification.objects.create(
+            type=Notification.NEW_INVITATION,
+            chat=connection,
+        )
+        user_notification = NotificationUser.objects.create(
+            notification=notification,
+            user=addressee
+        )
+
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "user-%s" % addressee.id, {
+                "type": "send.notification",
+                "event": "NEW_INVITATION",
+                "notification__pk": str(user_notification.pk),
+            }
+        )
         return connection
 
 
@@ -81,9 +103,29 @@ class AcceptConnectionSerializer(serializers.Serializer):
         if not Connection.objects.filter(requester=requester, addressee=addressee, accepted=False).exists():
             raise serializers.ValidationError("You don't have a connect invitation from this user")
 
-        Connection.objects.filter(
+        connections = Connection.objects.filter(
             requester=requester, addressee=addressee, accepted=False).update(
             accepted=True)
+
+        # Notificate the new connection to the users
+        notification = Notification.objects.create(
+            type=Notification.NEW_INVITATION,
+            chat=connections.first(),
+        )
+        for user in [addressee, requester]:
+            user_notification = NotificationUser.objects.create(
+                notification=notification,
+                user=user
+            )
+
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "user-%s" % user.id, {
+                    "type": "send.notification",
+                    "event": "NEW_CONNECTION",
+                    "notification__pk": str(user_notification.pk),
+                }
+            )
         return data
 
 
