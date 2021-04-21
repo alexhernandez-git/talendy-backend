@@ -50,6 +50,8 @@ io.on("connection", (socket) => {
     }
     console.log("users:", users);
     socketToRoom[socket.id] = roomID;
+  });
+  socket.on("user media getted", (roomID) => {
     const usersInThisRoom = users[roomID].filter(
       (user) => user.socketID !== socket.id
     );
@@ -74,9 +76,8 @@ io.on("connection", (socket) => {
   // SHARED NOTES
   socket.on("text", (payload) => {
     const { roomID, text } = payload;
-    console.log(roomID);
-    console.log(text);
-    socket.broadcast.emit("text", text);
+    console.log(roomID, text);
+    socket.in(roomID).emit("text", text);
   });
 
   socket.on("disconnect", () => {
