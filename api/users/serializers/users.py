@@ -79,7 +79,6 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
             'pending_notifications',
             'default_payment_method',
             'earned_this_month',
-
         )
 
         read_only_fields = (
@@ -108,6 +107,8 @@ class UserModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
     is_followed = serializers.SerializerMethodField(read_only=True)
     connection_invitation_sent = serializers.SerializerMethodField(read_only=True)
+    is_connection = serializers.SerializerMethodField(read_only=True)
+    accept_invitation = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -129,7 +130,9 @@ class UserModelSerializer(serializers.ModelSerializer):
             'paypal_email',
             'karma_amount',
             'is_followed',
-            'connection_invitation_sent'
+            'connection_invitation_sent',
+            'is_connection',
+            'accept_invitation'
         )
 
         read_only_fields = (
@@ -146,6 +149,19 @@ class UserModelSerializer(serializers.ModelSerializer):
         if 'request' in self.context and self.context['request'].user.id:
             user = self.context['request'].user
             return Connection.objects.filter(requester=user, addressee=obj, accepted=False).exists()
+        return False
+
+    def get_accept_invitation(self, obj):
+        if 'request' in self.context and self.context['request'].user.id:
+            user = self.context['request'].user
+            return Connection.objects.filter(requester=obj, addressee=user, accepted=False).exists()
+        return False
+
+    def get_is_connection(self, obj):
+        if 'request' in self.context and self.context['request'].user.id:
+            user = self.context['request'].user
+            return Connection.objects.filter(Q(requester=user, addressee=obj) |
+                                             Q(requester=obj, addressee=user), accepted=True).exists()
         return False
 
 
