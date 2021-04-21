@@ -69,7 +69,7 @@ class ConnectInvitationSerialzer(serializers.Serializer):
         # Notificate the invitation to the addressee
         notification = Notification.objects.create(
             type=Notification.NEW_INVITATION,
-            chat=connection,
+            connection=connection,
         )
         user_notification = NotificationUser.objects.create(
             notification=notification,
@@ -104,13 +104,13 @@ class AcceptConnectionSerializer(serializers.Serializer):
             raise serializers.ValidationError("You don't have a connect invitation from this user")
 
         connections = Connection.objects.filter(
-            requester=requester, addressee=addressee, accepted=False).update(
+            requester=requester, addressee=addressee, accepted=False)
+        connections.update(
             accepted=True)
-
         # Notificate the new connection to the users
         notification = Notification.objects.create(
             type=Notification.NEW_INVITATION,
-            chat=connections.first(),
+            connection=connections.first(),
         )
         for user in [addressee, requester]:
             user_notification = NotificationUser.objects.create(
@@ -165,4 +165,11 @@ class RemoveConnectionSerializer(serializers.Serializer):
 
         Connection.objects.filter(Q(requester=requester, addressee=user) |
                                   Q(requester=user, addressee=requester), accepted=True).delete()
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "user-%s" % user.id, {
+                "type": "send.notification",
+                "event": "CONNECTION_REMOVED",
+            }
+        )
         return data

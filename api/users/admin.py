@@ -5,14 +5,21 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 # Models
-from api.users.models import User, Earning, Follow, UserLoginActivity
+from api.users.models import User, Earning, Follow, UserLoginActivity, Connection
 
 
 @admin.register(Follow)
-class ContactAdmin(admin.ModelAdmin):
-    """Contact model admin."""
+class FollowAdmin(admin.ModelAdmin):
+    """Follow model admin."""
 
     list_display = ("id", "from_user", "followed_user")
+
+
+@admin.register(Connection)
+class ConnectionAdmin(admin.ModelAdmin):
+    """Connection model admin."""
+
+    list_display = ("id", "requester", "addressee")
 
 
 class CustomUserAdmin(UserAdmin):
