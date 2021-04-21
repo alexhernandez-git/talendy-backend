@@ -10,7 +10,7 @@ from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
 
 # Serializers
-from api.users.serializers import UserModelSerializer
+from api.users.serializers import UserModelSerializer, ConnectionModelSerializer
 from api.chats.serializers import MessageModelSerializer
 
 # Models
@@ -23,7 +23,7 @@ class NotificationModelSerializer(serializers.ModelSerializer):
 
     actor = UserModelSerializer(read_only=True)
     messages = serializers.SerializerMethodField(read_only=True)
-    is_chat_notification = serializers.SerializerMethodField(read_only=True)
+    connection = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -34,6 +34,7 @@ class NotificationModelSerializer(serializers.ModelSerializer):
             "type",
             "actor",
             "messages",
+            "connection",
             "modified",
         )
 
@@ -41,6 +42,11 @@ class NotificationModelSerializer(serializers.ModelSerializer):
 
     def get_messages(self, obj):
         return MessageModelSerializer(obj.messages, many=True).data
+
+    def get_connection(self, obj):
+        if obj.connection:
+            return ConnectionModelSerializer(obj.connection, many=False).data
+        return False
 
 
 class NotificationUserModelSerializer(serializers.ModelSerializer):

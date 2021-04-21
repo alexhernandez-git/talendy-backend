@@ -103,29 +103,29 @@ class AcceptConnectionSerializer(serializers.Serializer):
         if not Connection.objects.filter(requester=requester, addressee=addressee, accepted=False).exists():
             raise serializers.ValidationError("You don't have a connect invitation from this user")
 
-        connections = Connection.objects.filter(
-            requester=requester, addressee=addressee, accepted=False)
-        connections.update(
-            accepted=True)
+        connection = Connection.objects.filter(
+            requester=requester, addressee=addressee, accepted=False).first()
+        connection.accepted = True
+        connection.save()
         # Notificate the new connection to the users
         notification = Notification.objects.create(
-            type=Notification.NEW_INVITATION,
-            connection=connections.first(),
+            type=Notification.NEW_CONNECTION,
+            connection=connection,
         )
-        for user in [addressee, requester]:
-            user_notification = NotificationUser.objects.create(
-                notification=notification,
-                user=user
-            )
 
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                "user-%s" % user.id, {
-                    "type": "send.notification",
-                    "event": "NEW_CONNECTION",
-                    "notification__pk": str(user_notification.pk),
-                }
-            )
+        user_notification = NotificationUser.objects.create(
+            notification=notification,
+            user=requester
+        )
+
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "user-%s" % requester.id, {
+                "type": "send.notification",
+                "event": "NEW_CONNECTION",
+                "notification__pk": str(user_notification.pk),
+            }
+        )
         return data
 
 

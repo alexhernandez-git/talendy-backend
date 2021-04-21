@@ -35,10 +35,6 @@ from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
 
-import os
-from api.utils import helpers
-
-
 class NotificationViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
@@ -63,12 +59,6 @@ class NotificationViewSet(
     def get_queryset(self):
         """Restrict list to public-only."""
         user = self.request.user
-        queryset = NotificationUser.objects.filter(user=user, is_read=False)
+        queryset = NotificationUser.objects.filter(user=user)
 
         return queryset
-
-    @action(detail=False, methods=['get'])
-    def set_all_notifications_read(self, request):
-        """Set read all my notifications."""
-        self.queryset.update(is_read=True)
-        return Response(status=status.HTTP_200_OK)
