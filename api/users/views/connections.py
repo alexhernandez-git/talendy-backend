@@ -30,7 +30,7 @@ from api.users.permissions import IsAccountOwner
 from api.users.models import Connection
 
 # Serializers
-from api.users.serializers import ConnectionModelSerializer, RequestConnectionSerializer, UnconnectSerializer, AcceptConnectionSerializer, DeclineConnectionSerializer
+from api.users.serializers import ConnectionModelSerializer, ConnectInvitationSerialzer, RemoveConnectionSerializer, AcceptConnectionSerializer, IgnoreConnectionSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -84,13 +84,13 @@ class ConnectionViewSet(
     def get_serializer_class(self):
         """Return serializer based on action."""
         if self.action == "create":
-            return RequestConnectionSerializer
+            return ConnectInvitationSerialzer
         if self.action == "accept":
             return AcceptConnectionSerializer
-        if self.action == "decline":
-            return DeclineConnectionSerializer
-        if self.action == "unconnect":
-            return UnconnectSerializer
+        if self.action == "ignore":
+            return IgnoreConnectionSerializer
+        if self.action == "remove":
+            return RemoveConnectionSerializer
         return ConnectionModelSerializer
 
     def create(self, request, *args, **kwargs):
@@ -109,13 +109,13 @@ class ConnectionViewSet(
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['patch'])
-    def decline(self, request, *args, **kwargs):
+    def ignore(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, methods=['post'])
-    def unconnect(self, request, *args, **kwargs):
+    @action(detail=False, methods=['patch'])
+    def remove(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(status=status.HTTP_204_NO_CONTENT)

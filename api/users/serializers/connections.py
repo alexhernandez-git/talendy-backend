@@ -21,6 +21,7 @@ class ConnectionModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
 
     requester = UserModelSerializer(read_only=True)
+    addressee = UserModelSerializer(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -35,7 +36,7 @@ class ConnectionModelSerializer(serializers.ModelSerializer):
         read_only_fields = ("id",)
 
 
-class RequestConnectionSerializer(serializers.Serializer):
+class ConnectInvitationSerialzer(serializers.Serializer):
     """User model serializer."""
 
     addressee = serializers.UUIDField()
@@ -78,7 +79,7 @@ class AcceptConnectionSerializer(serializers.Serializer):
         if requester == addressee:
             raise serializers.ValidationError("You can not be your connection")
         if not Connection.objects.filter(requester=requester, addressee=addressee, accepted=False).exists():
-            raise serializers.ValidationError("You don't have a connection request from this user")
+            raise serializers.ValidationError("You don't have a connect invitation from this user")
 
         Connection.objects.filter(
             requester=requester, addressee=addressee, accepted=False).update(
@@ -86,7 +87,7 @@ class AcceptConnectionSerializer(serializers.Serializer):
         return data
 
 
-class DeclineConnectionSerializer(serializers.Serializer):
+class IgnoreConnectionSerializer(serializers.Serializer):
     """User model serializer."""
 
     requester = serializers.UUIDField()
@@ -100,13 +101,13 @@ class DeclineConnectionSerializer(serializers.Serializer):
         if requester == addressee:
             raise serializers.ValidationError("You can not be your connection")
         if not Connection.objects.filter(requester=requester, addressee=addressee, accepted=False).exists():
-            raise serializers.ValidationError("You don't have a connection request from this user")
+            raise serializers.ValidationError("You don't have a connect invitation from this user")
 
         Connection.objects.filter(requester=requester, addressee=addressee, accepted=False).delete()
         return data
 
 
-class UnconnectSerializer(serializers.Serializer):
+class RemoveConnectionSerializer(serializers.Serializer):
     """User model serializer."""
 
     user = serializers.UUIDField()

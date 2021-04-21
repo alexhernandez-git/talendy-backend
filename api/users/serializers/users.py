@@ -107,6 +107,7 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
 class UserModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
     is_followed = serializers.SerializerMethodField(read_only=True)
+    connection_invitation_sent = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -127,7 +128,8 @@ class UserModelSerializer(serializers.ModelSerializer):
             'currency',
             'paypal_email',
             'karma_amount',
-            'is_followed'
+            'is_followed',
+            'connection_invitation_sent'
         )
 
         read_only_fields = (
@@ -138,6 +140,12 @@ class UserModelSerializer(serializers.ModelSerializer):
         if 'request' in self.context and self.context['request'].user.id:
             user = self.context['request'].user
             return Follow.objects.filter(from_user=user, followed_user=obj).exists()
+        return False
+
+    def get_connection_invitation_sent(self, obj):
+        if 'request' in self.context and self.context['request'].user.id:
+            user = self.context['request'].user
+            return Connection.objects.filter(requester=user, addressee=obj, accepted=False).exists()
         return False
 
 
