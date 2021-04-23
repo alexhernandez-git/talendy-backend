@@ -108,6 +108,7 @@ class AcceptConnectionSerializer(serializers.Serializer):
         connection.accepted = True
         connection.save()
         # Notificate the new connection to the users
+
         notification = Notification.objects.create(
             type=Notification.NEW_CONNECTION,
             connection=connection,

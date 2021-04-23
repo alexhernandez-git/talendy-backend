@@ -26,6 +26,7 @@ class ChatModelSerializer(serializers.ModelSerializer):
     last_message_seen = serializers.SerializerMethodField(read_only=True)
     last_message_sent_by = serializers.SerializerMethodField(read_only=True)
     last_message_sent_by_username = serializers.SerializerMethodField(read_only=True)
+    last_message_created = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -39,7 +40,9 @@ class ChatModelSerializer(serializers.ModelSerializer):
             "created",
             "last_message_seen",
             "last_message_sent_by",
-            "last_message_sent_by_username"
+            "last_message_sent_by_username",
+            "last_message_created"
+
 
         )
 
@@ -96,6 +99,12 @@ class ChatModelSerializer(serializers.ModelSerializer):
 
         return None
 
+    def get_last_message_created(self, obj):
+        if obj.last_message:
+            return obj.last_message.created
+
+        return None
+
 
 class RetrieveChatModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
@@ -106,6 +115,7 @@ class RetrieveChatModelSerializer(serializers.ModelSerializer):
     last_message_seen = serializers.SerializerMethodField(read_only=True)
     last_message_sent_by = serializers.SerializerMethodField(read_only=True)
     last_message_sent_by_username = serializers.SerializerMethodField(read_only=True)
+    last_message_created = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -119,7 +129,8 @@ class RetrieveChatModelSerializer(serializers.ModelSerializer):
             "created",
             "last_message_seen",
             "last_message_sent_by",
-            "last_message_sent_by_username"
+            "last_message_sent_by_username",
+            "last_message_created"
         )
 
         read_only_fields = ("id",)
@@ -171,6 +182,12 @@ class RetrieveChatModelSerializer(serializers.ModelSerializer):
     def get_last_message_sent_by_username(self, obj):
         if obj.last_message:
             return obj.last_message.sent_by.username
+
+        return None
+
+    def get_last_message_created(self, obj):
+        if obj.last_message:
+            return obj.last_message.created
 
         return None
 
