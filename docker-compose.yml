@@ -68,9 +68,8 @@ services:
     build:
       context: .
       dockerfile: ./compose/dev/webrtc-conferences/Dockerfile
-    expose:
-      - "5500"
+
     ports:
       - "5500:5500"
-    command: node server.js
+    command: yarn start
   

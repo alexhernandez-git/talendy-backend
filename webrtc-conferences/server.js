@@ -51,7 +51,8 @@ io.on("connection", (socket) => {
     console.log("users:", users);
     socketToRoom[socket.id] = roomID;
   });
-  socket.on("user media getted", (roomID) => {
+  socket.on("media ready", (roomID) => {
+    console.log("media ready");
     const usersInThisRoom = users[roomID].filter(
       (user) => user.socketID !== socket.id
     );
