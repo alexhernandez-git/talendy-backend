@@ -64,12 +64,21 @@ services:
     command: /start-flower
 
 
-  webrtcconferences:
+  contributerooms:
     build:
       context: .
-      dockerfile: ./compose/dev/webrtc-conferences/Dockerfile
+      dockerfile: ./compose/dev/contribute-rooms/Dockerfile
 
     ports:
       - "5500:5500"
+    command: yarn start
+  
+  chats:
+    build:
+      context: .
+      dockerfile: ./compose/dev/chats/Dockerfile
+
+    ports:
+      - "5400:5400"
     command: yarn start
   
