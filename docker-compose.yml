@@ -11,16 +11,19 @@ services:
       dockerfile: ./compose/dev/Dockerfile
     depends_on:
       - postgres
+      - redis
+
     volumes:
       - .:/app
     env_file:
       - ./.envs/.local/.django
       - ./.envs/.local/.postgres
+    expose:
+      - 8000
     ports:
       - "8000:8000"
     command: /start
-    depends_on:
-      - redis
+
   postgres:
     image: postgres:12-alpine
     volumes:
@@ -63,7 +66,6 @@ services:
       - "5555:5555"
     command: /start-flower
 
-
   contributerooms:
     build:
       context: .
@@ -72,13 +74,13 @@ services:
     ports:
       - "5500:5500"
     command: yarn start
-  
+
   chats:
     build:
       context: .
       dockerfile: ./compose/dev/chats/Dockerfile
-
+    depends_on:
+      - django
     ports:
       - "5400:5400"
     command: yarn start
-  

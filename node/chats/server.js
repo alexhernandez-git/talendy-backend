@@ -3,9 +3,10 @@ const socketio = require("socket.io");
 const http = require("http");
 const cors = require("cors");
 const PORT = process.env.PORT || 5400;
-
+const API_HOST = process.env.API_HOST || "http://django:8000";
+const fs = require("fs");
+const axios = require("axios");
 const router = require("./router");
-
 const app = express();
 const server = http.createServer(app);
 const io = socketio(server, {
@@ -20,8 +21,30 @@ io.on("connection", (socket) => {
     socket.join(roomID);
   });
 
-  socket.on("text", (payload) => {
+  socket.on("text", async (payload) => {
     const { roomID } = payload;
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+
+        Authorization: `Token ${payload.token}`,
+      },
+    };
+    console.log(`${API_HOST}/api/chats/${roomID}/messages/`);
+    axios
+      .post(
+        `${API_HOST}/api/chats/${roomID}/messages/`,
+        {
+          text: payload.message.text,
+        },
+        config
+      )
+      .then((res) => {
+        console.log(res.data);
+      })
+      .catch((err) => {
+        console.log(err.response);
+      });
     socket.in(roomID).emit("text", payload);
   });
 

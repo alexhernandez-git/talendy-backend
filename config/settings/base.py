@@ -34,7 +34,11 @@ CORS_ALLOWED_ORIGINS = ["https://talendy.com"]
 if DEBUG:
     ALLOWED_HOSTS.append("localhost")
     ALLOWED_HOSTS.append("127.0.0.1")
+    ALLOWED_HOSTS.append("chats")
+    ALLOWED_HOSTS.append("django")
     CORS_ALLOWED_ORIGINS.append("http://localhost:3000")
+    CORS_ALLOWED_ORIGINS.append("http://chats:5400")
+    CORS_ALLOWED_ORIGINS.append("http://django:8000")
 
 CORS_ORIGIN_WHITELIST = env.tuple('CORS_ORIGIN_WHITELIST', default=('localhost:3000',))
 
