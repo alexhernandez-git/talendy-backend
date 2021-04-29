@@ -24,7 +24,7 @@ class PostImageModelSerializer(serializers.ModelSerializer):
     class Meta:
         """Meta class."""
 
-        model = Post
+        model = PostImage
         fields = (
             "id",
             "image",
@@ -70,14 +70,13 @@ class PostModelSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context['request'].user
-        import pdb
-        pdb.set_trace()
         images = self.context["images"]
         post = Post.objects.create(admin=user, **validated_data)
         for image in images:
             PostImage.objects.create(
+                post=post,
                 name=image.name,
-                image=image.file
+                image=image
             )
         PostMember.objects.create(post=post, user=user, role=PostMember.ADMIN)
         return post
