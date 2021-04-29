@@ -25,10 +25,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from api.users.permissions import IsAccountOwner
 
 # Models
-from api.notifications.models import NotificationUser
+from api.posts.models import Post
 
 # Serializers
-from api.notifications.serializers import NotificationUserModelSerializer
+from api.posts.serializers import PostModelSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -39,9 +39,12 @@ import os
 from api.utils import helpers
 
 
-class NotificationViewSet(
+class PostViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    mixins.CreateModelMixin,
     viewsets.GenericViewSet,
 ):
     """User view set.
@@ -49,9 +52,9 @@ class NotificationViewSet(
     Handle sign up, login and account verification.
     """
 
-    queryset = NotificationUser.objects.all()
+    queryset = Post.objects.all()
     lookup_field = "id"
-    serializer_class = NotificationUserModelSerializer
+    serializer_class = PostModelSerializer
     filter_backends = (SearchFilter, DjangoFilterBackend)
 
     def get_permissions(self):
@@ -63,6 +66,14 @@ class NotificationViewSet(
     def get_queryset(self):
         """Restrict list to public-only."""
         user = self.request.user
-        queryset = NotificationUser.objects.filter(user=user, is_read=False)
+        queryset = Post.objects.filter(status=Post.ACTIVE)
 
         return queryset
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={
+                                         "request": request, "images": request.data['images']})
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

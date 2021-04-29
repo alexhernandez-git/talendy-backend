@@ -4,6 +4,6 @@ from django.db import models
 
 class RequestToContribute(CModel):
 
+    post = models.ForeignKey("posts.Post", on_delete=models.CASCADE)
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
-    notification = models.ForeignKey("notifications.Notification", on_delete=models.CASCADE)
-    is_read = models.BooleanField(default=False)
+    is_accepted = models.BooleanField(default=False)

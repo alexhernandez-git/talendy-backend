@@ -15,15 +15,11 @@ from api.chats.serializers import MessageModelSerializer
 
 # Models
 from api.users.models import User
-from api.posts.models import Post
+from api.posts.models import Post, PostImage, PostMember
 
 
-class PostModelSerializer(serializers.ModelSerializer):
+class PostImageModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
-
-    actor = UserModelSerializer(read_only=True)
-    messages = serializers.SerializerMethodField(read_only=True)
-    is_chat_notification = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -31,14 +27,57 @@ class PostModelSerializer(serializers.ModelSerializer):
         model = Post
         fields = (
             "id",
-            "type",
-            "actor",
-            "messages",
-            "modified",
-            "is_chat_notification"
+            "image",
+            "name",
         )
 
         read_only_fields = ("id",)
 
-    def get_messages(self, obj):
-        return MessageModelSerializer(obj.messages, many=True).data
+
+class PostModelSerializer(serializers.ModelSerializer):
+    """User model serializer."""
+
+    admin = UserModelSerializer(read_only=True)
+    images = serializers.SerializerMethodField(read_only=True)
+    members = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        """Meta class."""
+
+        model = Post
+        fields = (
+            "id",
+            "admin",
+            "title",
+            "text",
+            "members",
+            "privacity",
+            "created",
+            "images",
+        )
+
+        read_only_fields = ("id",)
+
+    def get_images(self, obj):
+        return PostImageModelSerializer(PostImage.objects.filter(post=obj.id), many=True).data
+
+    def get_members(self, obj):
+        return UserModelSerializer(obj.members, many=True).data
+
+    def validate(self, data):
+
+        return data
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        import pdb
+        pdb.set_trace()
+        images = self.context["images"]
+        post = Post.objects.create(admin=user, **validated_data)
+        for image in images:
+            PostImage.objects.create(
+                name=image.name,
+                image=image.file
+            )
+        PostMember.objects.create(post=post, user=user, role=PostMember.ADMIN)
+        return post

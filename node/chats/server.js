@@ -26,7 +26,6 @@ io.on("connection", (socket) => {
     const config = {
       headers: {
         "Content-Type": "application/json",
-
         Authorization: `Token ${payload.token}`,
       },
     };
@@ -45,6 +44,7 @@ io.on("connection", (socket) => {
       .catch((err) => {
         console.log(err.response);
       });
+    payload.token = null;
     socket.in(roomID).emit("text", payload);
   });
 

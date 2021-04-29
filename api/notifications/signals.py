@@ -55,7 +55,6 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
             "user-%s" % sent_to.id, {
                 "type": "message.sent",
                 "event": "MESSAGE_RECEIVED",
-                "type": "new.activity",
                 "chat__pk": str(chat.pk),
                 "message__pk": str(instance.pk),
                 "message__text": instance.text,

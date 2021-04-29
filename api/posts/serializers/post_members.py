@@ -18,12 +18,10 @@ from api.users.models import User
 from api.posts.models import Post
 
 
-class PostModelSerializer(serializers.ModelSerializer):
+class PostMemberModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
 
-    actor = UserModelSerializer(read_only=True)
-    messages = serializers.SerializerMethodField(read_only=True)
-    is_chat_notification = serializers.SerializerMethodField(read_only=True)
+    user = UserModelSerializer(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -31,15 +29,7 @@ class PostModelSerializer(serializers.ModelSerializer):
         model = Post
         fields = (
             "id",
-            "type",
-            "actor",
-            "messages",
-            "modified",
+            "user",
         )
 
         read_only_fields = ("id",)
-
-    def get_messages(self, obj):
-        return MessageModelSerializer(obj.messages, many=True).data
-
-        return False
