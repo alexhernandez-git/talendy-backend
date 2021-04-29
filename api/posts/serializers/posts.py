@@ -37,7 +37,7 @@ class PostImageModelSerializer(serializers.ModelSerializer):
 class PostModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
 
-    admin = UserModelSerializer(read_only=True)
+    user = UserModelSerializer(read_only=True)
     images = serializers.SerializerMethodField(read_only=True)
     members = serializers.SerializerMethodField(read_only=True)
 
@@ -47,13 +47,13 @@ class PostModelSerializer(serializers.ModelSerializer):
         model = Post
         fields = (
             "id",
-            "admin",
+            "user",
             "title",
             "text",
             "members",
             "privacity",
-            "created",
             "images",
+            "created",
         )
 
         read_only_fields = ("id",)
@@ -71,7 +71,7 @@ class PostModelSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['request'].user
         images = self.context["images"]
-        post = Post.objects.create(admin=user, **validated_data)
+        post = Post.objects.create(user=user, **validated_data)
         for image in images:
             PostImage.objects.create(
                 post=post,
