@@ -71,6 +71,7 @@ class PostViewSet(
         return queryset
 
     def create(self, request, *args, **kwargs):
+
         serializer = PostModelSerializer(data=request.data, context={
                                          "request": request, "images": request.data.getlist('images')})
         serializer.is_valid(raise_exception=True)

@@ -50,9 +50,11 @@ class PostModelSerializer(serializers.ModelSerializer):
             "user",
             "title",
             "text",
+            "community",
             "members",
             "privacity",
             "images",
+            "karma_offered",
             "created",
         )
 
@@ -73,10 +75,12 @@ class PostModelSerializer(serializers.ModelSerializer):
         images = self.context["images"]
         post = Post.objects.create(user=user, **validated_data)
         for image in images:
+
             PostImage.objects.create(
                 post=post,
                 name=image.name,
-                image=image
+                image=image,
+                size=image.size
             )
         PostMember.objects.create(post=post, user=user, role=PostMember.ADMIN)
         return post

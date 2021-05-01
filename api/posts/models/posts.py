@@ -8,6 +8,7 @@ class Post(CModel):
     members = models.ManyToManyField("users.User", through="posts.PostMember", related_name="post_members")
     title = models.CharField(max_length=300)
     text = models.TextField(null=True, blank=True)
+    karma_offered = models.IntegerField(default=0)
 
     ANYONE = 'AN'
     CONNECTIONS_ONLY = 'CO'
@@ -39,13 +40,14 @@ class Post(CModel):
 
 
 class PostImage(CModel):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True, blank=True)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
     image = models.ImageField(
         'posts images',
         upload_to='posts/images/',
         max_length=500
     )
     name = models.CharField(max_length=500)
+    size = models.IntegerField()
 
     def save(self, **kwargs):
 
