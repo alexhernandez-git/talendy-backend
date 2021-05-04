@@ -40,9 +40,11 @@ io.on("connection", (socket) => {
       )
       .then((res) => {
         console.log(res.data);
+        console.log("Post message to django successfully");
       })
       .catch((err) => {
         console.log(err.response);
+        console.log("Post message to django failed");
       });
     payload.token = null;
     socket.in(roomID).emit("text", payload);

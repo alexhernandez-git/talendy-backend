@@ -79,8 +79,7 @@ services:
     build:
       context: .
       dockerfile: ./compose/dev/chats/Dockerfile
-    depends_on:
-      - django
+
     ports:
       - "5400:5400"
     command: yarn start
