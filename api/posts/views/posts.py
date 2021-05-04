@@ -57,6 +57,7 @@ class PostViewSet(
     lookup_field = "id"
     serializer_class = PostModelSerializer
     filter_backends = (SearchFilter, DjangoFilterBackend)
+    filterset_fields = ['community']
 
     def get_permissions(self):
         """Assign permissions based on action."""
@@ -71,6 +72,7 @@ class PostViewSet(
     def get_queryset(self):
         """Restrict list to public-only."""
         if self.action == "list":
+
             queryset = Post.objects.filter(status=Post.ACTIVE)
         elif self.action == "list_most_karma_posts":
             queryset = Post.objects.filter(status=Post.ACTIVE).order_by('-karma_offered')
