@@ -69,9 +69,22 @@ class PostViewSet(
 
     def get_queryset(self):
         """Restrict list to public-only."""
-        queryset = Post.objects.filter(status=Post.ACTIVE)
-
+        if self.action == "list":
+            queryset = Post.objects.filter(status=Post.ACTIVE)
+        if self.action == "list_most_karma_posts":
+            queryset = Post.objects.filter(status=Post.ACTIVE).order_by('-karma_offered')
         return queryset
+
+    @action(detail=False, methods=['get'])
+    def list_most_karma_posts(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
 
