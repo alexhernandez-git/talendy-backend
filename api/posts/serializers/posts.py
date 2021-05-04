@@ -12,6 +12,7 @@ from django.shortcuts import get_object_or_404
 # Serializers
 from api.users.serializers import UserModelSerializer
 from api.chats.serializers import MessageModelSerializer
+from .post_members import PostMemberModelSerializer
 
 # Models
 from api.users.models import User
@@ -53,18 +54,20 @@ class PostModelSerializer(serializers.ModelSerializer):
             "community",
             "members",
             "privacity",
+            "status",
             "images",
             "karma_offered",
             "created",
         )
 
-        read_only_fields = ("id",)
+        read_only_fields = ("id", "created")
 
     def get_images(self, obj):
         return PostImageModelSerializer(PostImage.objects.filter(post=obj.id), many=True).data
 
     def get_members(self, obj):
-        return UserModelSerializer(obj.members, many=True).data
+        members = PostMember.objects.filter(post=obj.id)
+        return PostMemberModelSerializer(members, many=True).data
 
     def validate(self, data):
 
@@ -84,3 +87,17 @@ class PostModelSerializer(serializers.ModelSerializer):
             )
         PostMember.objects.create(post=post, user=user, role=PostMember.ADMIN)
         return post
+
+    def update(self, instance, validated_data):
+        validated_data.pop("karma_offered", None)
+        images = self.context["images"]
+
+        PostImage.objects.filter(post=instance).delete()
+        for image in images:
+            PostImage.objects.create(
+                post=instance,
+                name=image.name,
+                image=image,
+                size=image.size
+            )
+        return super(PostModelSerializer, self).update(instance, validated_data)

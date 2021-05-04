@@ -15,7 +15,7 @@ from api.chats.serializers import MessageModelSerializer
 
 # Models
 from api.users.models import User
-from api.posts.models import Post
+from api.posts.models import PostMember
 
 
 class PostMemberModelSerializer(serializers.ModelSerializer):
@@ -26,9 +26,10 @@ class PostMemberModelSerializer(serializers.ModelSerializer):
     class Meta:
         """Meta class."""
 
-        model = Post
+        model = PostMember
         fields = (
             "id",
+            "role",
             "user",
         )
 

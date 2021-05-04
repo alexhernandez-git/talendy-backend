@@ -22,7 +22,7 @@ from django.http import HttpResponse
 
 # Permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
-from api.users.permissions import IsAccountOwner
+from api.posts.permissions import IsPostOwner
 
 # Models
 from api.posts.models import Post
@@ -59,13 +59,16 @@ class PostViewSet(
 
     def get_permissions(self):
         """Assign permissions based on action."""
-
-        permissions = [IsAuthenticated]
+        if self.action in ['create']:
+            permissions = [IsAuthenticated]
+        elif self.action in ['update']:
+            permissions = [IsPostOwner, IsAuthenticated]
+        else:
+            permissions = []
         return [p() for p in permissions]
 
     def get_queryset(self):
         """Restrict list to public-only."""
-        user = self.request.user
         queryset = Post.objects.filter(status=Post.ACTIVE)
 
         return queryset
@@ -78,3 +81,20 @@ class PostViewSet(
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        post = self.get_object()
+
+        partial = request.method == 'PATCH'
+
+        serializer = PostModelSerializer(
+            post,
+            data=request.data,
+            context={
+                "request": request, "images": request.data.getlist('images')},
+            partial=partial
+        )
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
