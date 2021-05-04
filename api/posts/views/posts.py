@@ -26,6 +26,7 @@ from api.posts.permissions import IsPostOwner
 
 # Models
 from api.posts.models import Post
+from api.users.models import Follow
 
 # Serializers
 from api.posts.serializers import PostModelSerializer
@@ -71,12 +72,29 @@ class PostViewSet(
         """Restrict list to public-only."""
         if self.action == "list":
             queryset = Post.objects.filter(status=Post.ACTIVE)
-        if self.action == "list_most_karma_posts":
+        elif self.action == "list_most_karma_posts":
             queryset = Post.objects.filter(status=Post.ACTIVE).order_by('-karma_offered')
+        elif self.action == "list_followed_users_posts":
+            user = self.request.user
+            queryset = Post.objects.filter(
+                status=Post.ACTIVE, user__id__in=Follow.objects.filter(from_user=user).values_list(
+                    'followed_user'))
+
         return queryset
 
     @action(detail=False, methods=['get'])
     def list_most_karma_posts(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def list_followed_users_posts(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
