@@ -88,12 +88,10 @@ class PostViewSet(
         partial = request.method == 'PATCH'
 
         serializer = PostModelSerializer(
-            post,
-            data=request.data,
-            context={
-                "request": request, "images": request.data.getlist('images')},
-            partial=partial
-        )
+            post, data=request.data,
+            context={"request": request, "images": request.data.getlist('images'),
+                     "current_images": request.data['current_images']},
+            partial=partial)
 
         serializer.is_valid(raise_exception=True)
         serializer.save()

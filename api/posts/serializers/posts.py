@@ -18,6 +18,9 @@ from .post_members import PostMemberModelSerializer
 from api.users.models import User
 from api.posts.models import Post, PostImage, PostMember
 
+# Utils
+import json
+
 
 class PostImageModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
@@ -91,8 +94,9 @@ class PostModelSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         validated_data.pop("karma_offered", None)
         images = self.context["images"]
+        current_images = json.loads(self.context["current_images"])
 
-        PostImage.objects.filter(post=instance).delete()
+        PostImage.objects.filter(post=instance).exclude(pk__in=current_images).delete()
         for image in images:
             PostImage.objects.create(
                 post=instance,
