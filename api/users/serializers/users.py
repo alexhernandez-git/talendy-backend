@@ -84,7 +84,8 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
             'earned_this_month',
             'invitations',
             'connections',
-            'following'
+            'following',
+
         )
 
         read_only_fields = (
