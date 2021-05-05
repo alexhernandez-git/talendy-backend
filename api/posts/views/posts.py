@@ -25,7 +25,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from api.posts.permissions import IsPostOwner
 
 # Models
-from api.posts.models import Post
+from api.posts.models import Post, PostMember
 from api.users.models import Follow
 
 # Serializers
@@ -94,13 +94,13 @@ class PostViewSet(
             queryset = Post.objects.filter(user=user, status=Post.SOLVED)
         elif self.action == "list_contributed_posts":
             user = self.request.user
-            queryset = Post.objects.filter(members=user)
+            queryset = Post.objects.filter(members=user).exclude(user=user)
         elif self.action == "list_contributed_active_posts":
             user = self.request.user
-            queryset = Post.objects.filter(members=user, status=Post.ACTIVE)
+            queryset = Post.objects.filter(members=user, status=Post.ACTIVE).exclude(user=user)
         elif self.action == "list_contributed_solved_posts":
             user = self.request.user
-            queryset = Post.objects.filter(members=user, status=Post.SOLVED)
+            queryset = Post.objects.filter(members=user, status=Post.SOLVED).exclude(user=user)
         return queryset
 
     @action(detail=False, methods=['get'])
