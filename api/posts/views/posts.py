@@ -71,6 +71,8 @@ class PostViewSet(
 
     def get_queryset(self):
         """Restrict list to public-only."""
+        queryset = Post.objects.all()
+
         if self.action == "list":
 
             queryset = Post.objects.filter(status=Post.ACTIVE)
@@ -81,7 +83,15 @@ class PostViewSet(
             queryset = Post.objects.filter(
                 status=Post.ACTIVE, user__id__in=Follow.objects.filter(from_user=user).values_list(
                     'followed_user'))
-
+        elif self.action == "list_my_posts":
+            user = self.request.user
+            queryset = Post.objects.filter(user=user)
+        elif self.action == "list_my_active_posts":
+            user = self.request.user
+            queryset = Post.objects.filter(user=user, status=Post.ACTIVE)
+        elif self.action == "list_my_solved_posts":
+            user = self.request.user
+            queryset = Post.objects.filter(user=user, status=Post.SOLVED)
         return queryset
 
     @action(detail=False, methods=['get'])
@@ -97,6 +107,39 @@ class PostViewSet(
 
     @action(detail=False, methods=['get'])
     def list_followed_users_posts(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def list_my_posts(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def list_my_active_posts(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def list_my_solved_posts(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
