@@ -117,6 +117,15 @@ class PostViewSet(
         elif self.action == "list_user_posts":
             user = get_object_or_404(User, id=self.kwargs['id'])
             queryset = Post.objects.filter(user=user)
+
+        elif self.action == "list_active_user_posts":
+            user = get_object_or_404(User, id=self.kwargs['id'])
+            queryset = Post.objects.filter(user=user, status=Post.ACTIVE)
+
+        elif self.action == "list_solved_user_posts":
+            user = get_object_or_404(User, id=self.kwargs['id'])
+            queryset = Post.objects.filter(user=user, status=Post.SOLVED)
+
         return queryset
 
     @action(detail=False, methods=['get'])
@@ -220,6 +229,28 @@ class PostViewSet(
 
     @action(detail=True, methods=['get'])
     def list_user_posts(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def list_active_user_posts(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def list_solved_user_posts(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
