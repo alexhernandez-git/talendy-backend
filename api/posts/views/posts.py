@@ -58,6 +58,14 @@ class PostViewSet(
     serializer_class = PostModelSerializer
     filter_backends = (SearchFilter, DjangoFilterBackend)
     filterset_fields = ['community']
+    search_fields = (
+        "title",
+        "text",
+        "user__username",
+        "user__email",
+        "user__first_name",
+        "user__last_name",
+    )
 
     def get_permissions(self):
         """Assign permissions based on action."""
