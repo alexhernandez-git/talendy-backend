@@ -92,6 +92,15 @@ class PostViewSet(
         elif self.action == "list_my_solved_posts":
             user = self.request.user
             queryset = Post.objects.filter(user=user, status=Post.SOLVED)
+        elif self.action == "list_contributed_posts":
+            user = self.request.user
+            queryset = Post.objects.filter(members=user)
+        elif self.action == "list_contributed_active_posts":
+            user = self.request.user
+            queryset = Post.objects.filter(members=user, status=Post.ACTIVE)
+        elif self.action == "list_contributed_solved_posts":
+            user = self.request.user
+            queryset = Post.objects.filter(members=user, status=Post.SOLVED)
         return queryset
 
     @action(detail=False, methods=['get'])
@@ -140,6 +149,39 @@ class PostViewSet(
 
     @action(detail=False, methods=['get'])
     def list_my_solved_posts(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def list_contributed_posts(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def list_contributed_active_posts(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def list_contributed_solved_posts(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
