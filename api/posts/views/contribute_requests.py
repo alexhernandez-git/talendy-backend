@@ -25,10 +25,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from api.users.permissions import IsAccountOwner
 
 # Models
-from api.notifications.models import NotificationUser
+from api.posts.models import ContributeRequest
 
 # Serializers
-from api.notifications.serializers import NotificationUserModelSerializer
+from api.posts.serializers import ContributeRequestModelSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -49,10 +49,9 @@ class NotificationViewSet(
     Handle sign up, login and account verification.
     """
 
-    queryset = NotificationUser.objects.all()
+    queryset = ContributeRequest.objects.all()
     lookup_field = "id"
-    serializer_class = NotificationUserModelSerializer
-    filter_backends = (SearchFilter, DjangoFilterBackend)
+    serializer_class = ContributeRequestModelSerializer
 
     def get_permissions(self):
         """Assign permissions based on action."""
@@ -63,6 +62,6 @@ class NotificationViewSet(
     def get_queryset(self):
         """Restrict list to public-only."""
         user = self.request.user
-        queryset = NotificationUser.objects.filter(user=user, is_read=False)
+        queryset = ContributeRequest.objects.filter(user=user, is_read=False)
 
         return queryset

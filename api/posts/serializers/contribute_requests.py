@@ -15,7 +15,7 @@ from api.chats.serializers import MessageModelSerializer
 
 # Models
 from api.users.models import User
-from api.posts.models import ContributeRequest
+from api.posts.models import ContributeRequest, Post
 
 
 class ContributeRequestModelSerializer(serializers.ModelSerializer):
@@ -34,3 +34,21 @@ class ContributeRequestModelSerializer(serializers.ModelSerializer):
         )
 
         read_only_fields = ("id",)
+
+    def validate(self, data):
+        request = self.context["request"]
+        user = request.user
+        post = User.objects.get(id=data["post"])
+
+        # Check if is not already follow
+        if Post.objects.filter(id=post.id, members=user).exists():
+            raise serializers.ValidationError("You already are a member of this post")
+        if ContributeRequest.objects.filter(user=user, post=post).exists():
+            raise serializers.ValidationError("This contribute request has already been issued")
+        return {"user": user, "post": post}
+
+    def create(self, validated_data):
+        user = validated_data["user"]
+        post = validated_data["post"]
+        follow = ContributeRequest.objects.create(user=user, post=post)
+        return follow
