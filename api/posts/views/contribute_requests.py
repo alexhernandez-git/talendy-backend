@@ -65,3 +65,12 @@ class NotificationViewSet(
         queryset = ContributeRequest.objects.filter(user=user, is_read=False)
 
         return queryset
+
+    def create(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        contribute_request = serializer.save()
+        contribute_request_data = ContributeRequestModelSerializer(contribute_request, many=False).data
+        headers = self.get_success_headers(serializer.data)
+        return Response(contribute_request_data, status=status.HTTP_201_CREATED, headers=headers)

@@ -35,6 +35,10 @@ class ContributeRequestModelSerializer(serializers.ModelSerializer):
 
         read_only_fields = ("id",)
 
+
+class RequestContributeSerializer(serializers.Serializer):
+    post = serializers.UUIDField()
+
     def validate(self, data):
         request = self.context["request"]
         user = request.user
@@ -50,5 +54,5 @@ class ContributeRequestModelSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = validated_data["user"]
         post = validated_data["post"]
-        follow = ContributeRequest.objects.create(user=user, post=post)
-        return follow
+        contribute_request = ContributeRequest.objects.create(user=user, post=post)
+        return contribute_request
