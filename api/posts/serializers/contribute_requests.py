@@ -15,10 +15,10 @@ from api.chats.serializers import MessageModelSerializer
 
 # Models
 from api.users.models import User
-from api.posts.models import Post
+from api.posts.models import ContributeRequest
 
 
-class RequestToContributeModelSerializer(serializers.ModelSerializer):
+class ContributeRequestModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
 
     user = UserModelSerializer(read_only=True)
@@ -26,7 +26,7 @@ class RequestToContributeModelSerializer(serializers.ModelSerializer):
     class Meta:
         """Meta class."""
 
-        model = Post
+        model = ContributeRequest
         fields = (
             "id",
             "user",

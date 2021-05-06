@@ -16,7 +16,7 @@ from .post_members import PostMemberModelSerializer
 
 # Models
 from api.users.models import User
-from api.posts.models import Post, PostImage, PostMember
+from api.posts.models import Post, PostImage, PostMember, ContributeRequest
 
 # Utils
 import json
@@ -44,6 +44,7 @@ class PostModelSerializer(serializers.ModelSerializer):
     user = UserModelSerializer(read_only=True)
     images = serializers.SerializerMethodField(read_only=True)
     members = serializers.SerializerMethodField(read_only=True)
+    is_contribute_requested = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -61,6 +62,7 @@ class PostModelSerializer(serializers.ModelSerializer):
             "images",
             "karma_offered",
             "created",
+            "is_contribute_requested"
         )
 
         read_only_fields = ("id", "created")
@@ -71,6 +73,13 @@ class PostModelSerializer(serializers.ModelSerializer):
     def get_members(self, obj):
         members = PostMember.objects.filter(post=obj.id)
         return PostMemberModelSerializer(members, many=True).data
+
+    def get_is_contribute_requested(self, obj):
+        request = self.context['request']
+        if request.user.id:
+            user = request.user
+            return ContributeRequest.objects.filter(post=obj.id, user=user).exists()
+        return False
 
     def validate(self, data):
 
