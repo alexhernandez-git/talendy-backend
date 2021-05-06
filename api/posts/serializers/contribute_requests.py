@@ -42,7 +42,7 @@ class RequestContributeSerializer(serializers.Serializer):
     def validate(self, data):
         request = self.context["request"]
         user = request.user
-        post = User.objects.get(id=data["post"])
+        post = Post.objects.get(id=data["post"])
 
         # Check if is not already follow
         if Post.objects.filter(id=post.id, members=user).exists():

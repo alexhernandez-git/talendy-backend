@@ -28,7 +28,7 @@ from api.users.permissions import IsAccountOwner
 from api.posts.models import ContributeRequest
 
 # Serializers
-from api.posts.serializers import ContributeRequestModelSerializer
+from api.posts.serializers import ContributeRequestModelSerializer, RequestContributeSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -39,9 +39,10 @@ import os
 from api.utils import helpers
 
 
-class NotificationViewSet(
+class ContributeRequestViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
     viewsets.GenericViewSet,
 ):
     """User view set.
@@ -58,6 +59,13 @@ class NotificationViewSet(
 
         permissions = [IsAuthenticated]
         return [p() for p in permissions]
+
+    def get_serializer_class(self):
+        """Return serializer based on action."""
+        if self.action == "create":
+            return RequestContributeSerializer
+
+        return ContributeRequestModelSerializer
 
     def get_queryset(self):
         """Restrict list to public-only."""
