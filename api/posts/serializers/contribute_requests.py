@@ -126,3 +126,5 @@ class AcceptContributeRequestSerializer(serializers.Serializer):
                 "notification__pk": str(user_notification.pk),
             }
         )
+
+        return instance
