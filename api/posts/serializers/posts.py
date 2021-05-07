@@ -91,6 +91,8 @@ class PostModelSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         images = self.context["images"]
         post = Post.objects.create(user=user, **validated_data, members_count=1)
+        user.posts_count += 1
+        user.save()
         for image in images:
 
             PostImage.objects.create(

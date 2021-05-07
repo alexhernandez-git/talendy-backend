@@ -110,6 +110,9 @@ class AcceptContributeRequestSerializer(serializers.Serializer):
         post.members_count += 1
         post.save()
 
+        requester_user.contributed_posts_count += 1
+        requester_user.save()
+
         # Remove the contribute request
         ContributeRequest.objects.filter(id=contribute_request.id).delete()
 

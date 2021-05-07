@@ -77,6 +77,10 @@ class User(CModel, AbstractUser):
 
     followed_count = models.IntegerField(default=0)
 
+    posts_count = models.IntegerField(default=0)
+
+    contributed_posts_count = models.IntegerField(default=0)
+
     karma_amount = models.IntegerField(default=1000)
 
     # Payments

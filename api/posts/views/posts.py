@@ -283,3 +283,16 @@ class PostViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+    def perform_destroy(self, instance):
+        user = instance.user
+
+        # Update statistics on post deletion
+        user.posts_count -= 1
+        user.save()
+
+        for member in instance.members:
+            member.contributed_posts_count -= 1
+            member.save()
+
+        instance.delete()
