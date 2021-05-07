@@ -32,7 +32,6 @@ from api.posts.serializers import (
     ContributeRequestModelSerializer,
     RequestContributeSerializer,
     AcceptContributeRequestSerializer,
-    IgnoreContributeRequestSerializer
 )
 
 # Filters
@@ -48,6 +47,7 @@ class ContributeRequestViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
     """User view set.
@@ -69,10 +69,7 @@ class ContributeRequestViewSet(
         """Return serializer based on action."""
         if self.action == "create":
             return RequestContributeSerializer
-        if self.action == "accept":
-            return AcceptContributeRequestSerializer
-        if self.action == "ignore":
-            return IgnoreContributeRequestSerializer
+
         return ContributeRequestModelSerializer
 
     def get_queryset(self):
@@ -91,16 +88,18 @@ class ContributeRequestViewSet(
         headers = self.get_success_headers(serializer.data)
         return Response(contribute_request_data, status=status.HTTP_201_CREATED, headers=headers)
 
-    @action(detail=False, methods=['patch'])
+    @action(detail=True, methods=['patch'])
     def accept(self, request, *args, **kwargs):
 
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        contribute_request = get_object_or_404(ContributeRequest, id=kwargs['id'])
 
-    @action(detail=False, methods=['patch'])
-    def ignore(self, request, *args, **kwargs):
-
-        serializer = self.get_serializer(data=request.data)
+        partial = request.method == 'PATCH'
+        serializer = AcceptContributeRequestSerializer(
+            contribute_request,
+            data=request.data,
+            context={"request": request},
+            partial=partial
+        )
         serializer.is_valid(raise_exception=True)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        data = serializer.save()
+        return Response(data, status=status.HTTP_200_OK)

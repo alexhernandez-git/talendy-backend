@@ -90,10 +90,12 @@ class RequestContributeSerializer(serializers.Serializer):
 class AcceptContributeRequestSerializer(serializers.Serializer):
     """User model serializer."""
 
-    contribute_request = serializers.UUIDField()
-
     def validate(self, data):
-        contribute_request = get_object_or_404(ContributeRequest, id=data["contribute_request"])
+
+        return data
+
+    def update(self, instance, validated_data):
+        contribute_request = instance
         post = contribute_request.post
         requester_user = contribute_request.user
 
@@ -124,18 +126,3 @@ class AcceptContributeRequestSerializer(serializers.Serializer):
                 "notification__pk": str(user_notification.pk),
             }
         )
-        return data
-
-
-class IgnoreContributeRequestSerializer(serializers.Serializer):
-    """User model serializer."""
-
-    contribute_request = serializers.UUIDField()
-
-    def validate(self, data):
-        contribute_request = get_object_or_404(ContributeRequest, id=data["contribute_request"])
-        post = contribute_request.post
-        requester_user = contribute_request.user
-        ContributeRequest.objects.filter(id=contribute_request.id).delete()
-
-        return data
