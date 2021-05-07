@@ -101,5 +101,5 @@ class ContributeRequestViewSet(
             partial=partial
         )
         serializer.is_valid(raise_exception=True)
-        data = serializer.save()
-        return Response(data, status=status.HTTP_200_OK)
+        serializer.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
