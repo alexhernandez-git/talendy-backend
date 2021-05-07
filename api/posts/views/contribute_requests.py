@@ -70,7 +70,7 @@ class ContributeRequestViewSet(
     def get_queryset(self):
         """Restrict list to public-only."""
         user = self.request.user
-        queryset = ContributeRequest.objects.filter(user=user, is_read=False)
+        queryset = ContributeRequest.objects.filter(user=user)
 
         return queryset
 

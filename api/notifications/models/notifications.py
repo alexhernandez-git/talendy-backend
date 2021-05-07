@@ -14,10 +14,12 @@ class Notification(CModel):
     MESSAGES = 'ME'
     NEW_INVITATION = 'NI'
     NEW_CONNECTION = 'NC'
+    NEW_CONTRIBUTE_REQUEST = 'CR'
     TYPE_CHOICES = [
         (MESSAGES, 'Messages'),
         (NEW_INVITATION, 'New invitation'),
         (NEW_CONNECTION, 'New connection'),
+        (NEW_CONTRIBUTE_REQUEST, 'New contribute request'),
     ]
     type = models.CharField(
         max_length=2,
@@ -32,5 +34,8 @@ class Notification(CModel):
 
     # CONNECTIONS
     connection = models.ForeignKey("users.Connection", on_delete=models.CASCADE, null=True)
+
+    # CONTRIBUTE_REQUESTS
+    contribute_request = models.ForeignKey("posts.ContributeRequest", on_delete=models.CASCADE, null=True)
 
     actor = models.ForeignKey("users.User", on_delete=models.SET_NULL, null=True)

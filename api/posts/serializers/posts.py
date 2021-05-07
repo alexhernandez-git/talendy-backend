@@ -75,10 +75,11 @@ class PostModelSerializer(serializers.ModelSerializer):
         return PostMemberModelSerializer(members, many=True).data
 
     def get_is_contribute_requested(self, obj):
-        request = self.context['request']
-        if request.user.id:
-            user = request.user
-            return ContributeRequest.objects.filter(post=obj.id, user=user).exists()
+        if 'request' in self.context:
+            request = self.context['request']
+            if request.user.id:
+                user = request.user
+                return ContributeRequest.objects.filter(post=obj.id, user=user).exists()
         return False
 
     def validate(self, data):

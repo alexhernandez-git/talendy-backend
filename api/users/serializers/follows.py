@@ -54,6 +54,7 @@ class CreateFollowSerializer(serializers.Serializer):
         from_user = validated_data["from_user"]
         followed_user = validated_data["followed_user"]
         follow = Follow.objects.create(from_user=from_user, followed_user=followed_user)
+
         return follow
 
 
