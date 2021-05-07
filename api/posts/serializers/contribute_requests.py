@@ -59,7 +59,7 @@ class RequestContributeSerializer(serializers.Serializer):
             raise serializers.ValidationError("You already are a member of this post")
         if ContributeRequest.objects.filter(user=user, post=post, reason=data['reason']).exists():
             raise serializers.ValidationError("This contribute request has already been issued")
-        if post.members.count() >= 10:
+        if post.members_count == 10:
             raise serializers.ValidationError("This post can't be more than 10 members")
         return {"user": user, "post": post}
 
@@ -95,7 +95,7 @@ class AcceptContributeRequestSerializer(serializers.Serializer):
     def validate(self, data):
         contribute_request = self.instance
         post = contribute_request.post
-        if post.members_count >= 10:
+        if post.members_count == 10:
             raise serializers.ValidationError("This post can't be more than 10 members")
 
         return data
