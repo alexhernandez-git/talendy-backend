@@ -28,7 +28,12 @@ from api.users.permissions import IsAccountOwner
 from api.posts.models import ContributeRequest
 
 # Serializers
-from api.posts.serializers import ContributeRequestModelSerializer, RequestContributeSerializer
+from api.posts.serializers import (
+    ContributeRequestModelSerializer,
+    RequestContributeSerializer,
+    AcceptContributeRequestSerializer,
+    IgnoreContributeRequestSerializer
+)
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -64,13 +69,16 @@ class ContributeRequestViewSet(
         """Return serializer based on action."""
         if self.action == "create":
             return RequestContributeSerializer
-
+        if self.action == "accept":
+            return AcceptContributeRequestSerializer
+        if self.action == "ignore":
+            return IgnoreContributeRequestSerializer
         return ContributeRequestModelSerializer
 
     def get_queryset(self):
         """Restrict list to public-only."""
         user = self.request.user
-        queryset = ContributeRequest.objects.filter(post__user=user, is_accepted=False)
+        queryset = ContributeRequest.objects.filter(post__user=user)
 
         return queryset
 
@@ -82,3 +90,17 @@ class ContributeRequestViewSet(
         contribute_request_data = ContributeRequestModelSerializer(contribute_request, many=False).data
         headers = self.get_success_headers(serializer.data)
         return Response(contribute_request_data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @action(detail=False, methods=['patch'])
+    def accept(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['patch'])
+    def ignore(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(status=status.HTTP_204_NO_CONTENT)

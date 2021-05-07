@@ -38,6 +38,7 @@ class ContributeRequestModelSerializer(serializers.ModelSerializer):
             "id",
             "user",
             "post",
+            "reason",
             "created"
         )
 
@@ -46,6 +47,7 @@ class ContributeRequestModelSerializer(serializers.ModelSerializer):
 
 class RequestContributeSerializer(serializers.Serializer):
     post = serializers.UUIDField()
+    reason = serializers.CharField(max_length=300)
 
     def validate(self, data):
         request = self.context["request"]
@@ -55,7 +57,7 @@ class RequestContributeSerializer(serializers.Serializer):
         # Check if is not already follow
         if Post.objects.filter(id=post.id, members=user).exists():
             raise serializers.ValidationError("You already are a member of this post")
-        if ContributeRequest.objects.filter(user=user, post=post).exists():
+        if ContributeRequest.objects.filter(user=user, post=post, reason=data['reason']).exists():
             raise serializers.ValidationError("This contribute request has already been issued")
         return {"user": user, "post": post}
 
@@ -83,3 +85,57 @@ class RequestContributeSerializer(serializers.Serializer):
             }
         )
         return contribute_request
+
+
+class AcceptContributeRequestSerializer(serializers.Serializer):
+    """User model serializer."""
+
+    contribute_request = serializers.UUIDField()
+
+    def validate(self, data):
+        contribute_request = get_object_or_404(ContributeRequest, id=data["contribute_request"])
+        post = contribute_request.post
+        requester_user = contribute_request.user
+
+        # Add the member
+        post.members.add(requester_user)
+        post.save()
+
+        # Remove the contribute request
+        ContributeRequest.objects.filter(id=contribute_request.id).delete()
+
+        # Notificate the new post to the users
+
+        notification = Notification.objects.create(
+            type=Notification.JOINED_MEMBERSHIP,
+            post=post,
+        )
+
+        user_notification = NotificationUser.objects.create(
+            notification=notification,
+            user=requester_user
+        )
+
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "user-%s" % requester_user.id, {
+                "type": "send.notification",
+                "event": "JOINED_MEMBERSHIP",
+                "notification__pk": str(user_notification.pk),
+            }
+        )
+        return data
+
+
+class IgnoreContributeRequestSerializer(serializers.Serializer):
+    """User model serializer."""
+
+    contribute_request = serializers.UUIDField()
+
+    def validate(self, data):
+        contribute_request = get_object_or_404(ContributeRequest, id=data["contribute_request"])
+        post = contribute_request.post
+        requester_user = contribute_request.user
+        ContributeRequest.objects.filter(id=contribute_request.id).delete()
+
+        return data
