@@ -49,10 +49,6 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
     pending_notifications = serializers.SerializerMethodField(read_only=True)
     pending_messages = serializers.SerializerMethodField(read_only=True)
-    earned_this_month = serializers.SerializerMethodField(read_only=True)
-    invitations = serializers.SerializerMethodField(read_only=True)
-    connections = serializers.SerializerMethodField(read_only=True)
-    following = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -81,10 +77,9 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
             'pending_messages',
             'pending_notifications',
             'default_payment_method',
-            'earned_this_month',
-            'invitations',
-            'connections',
-            'following',
+            'invitations_count',
+            'connections_count',
+            'followed_count',
 
         )
 
@@ -99,25 +94,6 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
     def get_pending_messages(self, obj):
         return obj.notifications.through.objects.filter(
             user=obj, is_read=False, notification__type__in=[Notification.MESSAGES]).exists()
-
-    def get_earned_this_month(self, obj):
-
-        today = timezone.now()
-
-        earnings = Earning.objects.filter(
-            created__month=today.month, user=obj, type=Earning.DONATION_REVENUE).aggregate(
-            Sum('amount'))
-        return earnings.get('amount__sum', None)
-
-    def get_invitations(self, obj):
-        return Connection.objects.filter(addressee=obj, accepted=False).count()
-
-    def get_connections(self, obj):
-        return Connection.objects.filter(Q(addressee=obj) |
-                                         Q(requester=obj), accepted=True).count()
-
-    def get_following(self, obj):
-        return Follow.objects.filter(from_user=obj).count()
 
 
 class UserModelSerializer(serializers.ModelSerializer):

@@ -65,7 +65,8 @@ class ConnectInvitationSerialzer(serializers.Serializer):
         requester = validated_data["requester"]
         addressee = validated_data["addressee"]
         connection = Connection.objects.create(requester=requester, addressee=addressee)
-
+        addressee.invitation_count += 1
+        addressee.save()
         # Notificate the invitation to the addressee
         notification = Notification.objects.create(
             type=Notification.NEW_INVITATION,
@@ -107,6 +108,12 @@ class AcceptConnectionSerializer(serializers.Serializer):
             requester=requester, addressee=addressee, accepted=False).first()
         connection.accepted = True
         connection.save()
+
+        addressee.invitations_count -= 1
+        addressee.connections_count += 1
+        requester.connections_count += 1
+        addressee.save()
+
         # Notificate the new connection to the users
 
         notification = Notification.objects.create(
@@ -147,6 +154,8 @@ class IgnoreConnectionSerializer(serializers.Serializer):
             raise serializers.ValidationError("You don't have a connect invitation from this user")
 
         Connection.objects.filter(requester=requester, addressee=addressee, accepted=False).delete()
+        addressee.invitations_count -= 1
+        addressee.save()
         return data
 
 
@@ -166,6 +175,13 @@ class RemoveConnectionSerializer(serializers.Serializer):
 
         Connection.objects.filter(Q(requester=requester, addressee=user) |
                                   Q(requester=user, addressee=requester), accepted=True).delete()
+
+        user.connections_count -= 1
+        user.save()
+
+        requester.connections_count -= 1
+        requester.save()
+
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
             "user-%s" % user.id, {
