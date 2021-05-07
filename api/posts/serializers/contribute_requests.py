@@ -91,6 +91,10 @@ class AcceptContributeRequestSerializer(serializers.Serializer):
     """User model serializer."""
 
     def validate(self, data):
+        contribute_request = self.instance
+        post = contribute_request.post
+        if post.members.count() >= 10:
+            raise serializers.ValidationError("This post can't be more than 10 members")
 
         return data
 
