@@ -291,7 +291,7 @@ class PostViewSet(
         user.posts_count -= 1
         user.save()
 
-        for member in instance.members:
+        for member in instance.members.all():
             member.contributed_posts_count -= 1
             member.save()
 
