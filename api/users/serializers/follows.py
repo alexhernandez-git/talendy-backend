@@ -55,6 +55,12 @@ class CreateFollowSerializer(serializers.Serializer):
         followed_user = validated_data["followed_user"]
         follow = Follow.objects.create(from_user=from_user, followed_user=followed_user)
 
+        from_user.following_count += 1
+        from_user.save()
+
+        followed_user.followed_count += 1
+        followed_user.save()
+
         return follow
 
 
@@ -72,5 +78,9 @@ class UnfollowSerializer(serializers.Serializer):
             raise serializers.ValidationError("Your are not following this user")
 
         Follow.objects.filter(from_user=from_user, followed_user=followed_user).delete()
+        from_user.following_count -= 1
+        from_user.save()
 
+        followed_user.followed_count -= 1
+        followed_user.save()
         return data

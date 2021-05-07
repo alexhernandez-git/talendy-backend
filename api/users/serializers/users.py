@@ -80,6 +80,7 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
             'invitations_count',
             'connections_count',
             'followed_count',
+            'following_count',
 
         )
 

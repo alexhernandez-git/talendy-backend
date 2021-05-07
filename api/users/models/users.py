@@ -69,11 +69,13 @@ class User(CModel, AbstractUser):
 
     country = models.CharField(max_length=2, blank=True, null=True)
 
-    followed = models.ManyToManyField("users.User", through="users.Follow", verbose_name="user_follow")
+    following = models.ManyToManyField("users.User", through="users.Follow", verbose_name="user_follow")
+    following_count = models.IntegerField(default=0)
 
-    followed_count = models.IntegerField(default=0)
     connections_count = models.IntegerField(default=0)
     invitations_count = models.IntegerField(default=0)
+
+    followed_count = models.IntegerField(default=0)
 
     karma_amount = models.IntegerField(default=1000)
 

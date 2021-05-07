@@ -57,6 +57,7 @@ class PostModelSerializer(serializers.ModelSerializer):
             "text",
             "community",
             "members",
+            "members_count",
             "privacity",
             "status",
             "images",
