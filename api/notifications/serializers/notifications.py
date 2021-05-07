@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404
 # Serializers
 from api.users.serializers import UserModelSerializer, ConnectionModelSerializer
 from api.chats.serializers import MessageModelSerializer
-from api.posts.serializers import ContributeRequestModelSerializer
+from api.posts.serializers import ContributeRequestModelSerializer, PostModelSerializer
 
 # Models
 from api.users.models import User
@@ -26,6 +26,8 @@ class NotificationModelSerializer(serializers.ModelSerializer):
     messages = serializers.SerializerMethodField(read_only=True)
     connection = serializers.SerializerMethodField(read_only=True)
     contribute_request = serializers.SerializerMethodField(read_only=True)
+    post = serializers.SerializerMethodField(read_only=True)
+    member_joined = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -37,6 +39,8 @@ class NotificationModelSerializer(serializers.ModelSerializer):
             "actor",
             "messages",
             "connection",
+            "post",
+            "member_joined",
             "contribute_request",
             "modified",
         )
@@ -54,6 +58,16 @@ class NotificationModelSerializer(serializers.ModelSerializer):
     def get_contribute_request(self, obj):
         if obj.contribute_request:
             return ContributeRequestModelSerializer(obj.contribute_request, many=False).data
+        return False
+
+    def get_post(self, obj):
+        if obj.post:
+            return PostModelSerializer(obj.post, many=False).data
+        return False
+
+    def get_member_joined(self, obj):
+        if obj.member_joined:
+            return UserModelSerializer(obj.member_joined, many=False).data
         return False
 
 

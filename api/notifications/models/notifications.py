@@ -42,5 +42,6 @@ class Notification(CModel):
 
     # JOINED_MEMBERSHIP
     post = models.ForeignKey("posts.Post", on_delete=models.CASCADE, null=True)
+    member_joined = models.ForeignKey("users.User", on_delete=models.CASCADE, null=True, related_name="member_joined")
 
     actor = models.ForeignKey("users.User", on_delete=models.SET_NULL, null=True)

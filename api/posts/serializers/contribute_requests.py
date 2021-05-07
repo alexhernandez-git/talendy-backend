@@ -121,6 +121,7 @@ class AcceptContributeRequestSerializer(serializers.Serializer):
         notification = Notification.objects.create(
             type=Notification.JOINED_MEMBERSHIP,
             post=post,
+            member_joined=requester_user
         )
 
         user_notification = NotificationUser.objects.create(

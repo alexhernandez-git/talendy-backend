@@ -1,31 +1,17 @@
 """Users views."""
 
 # Django
-import pdb
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
-from django.db.models import F, Count
-
-# Django REST Framework
-import stripe
-import json
-import uuid
-
-from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
-from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
-from rest_framework.pagination import PageNumberPagination
-from django.http import HttpResponse
 
 # Permissions
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated
 from api.posts.permissions import IsPostOwner
 
 # Models
-from api.posts.models import Post, PostMember
+from api.posts.models import Post
 from api.users.models import Follow, User
 
 # Serializers
@@ -34,10 +20,6 @@ from api.posts.serializers import PostModelSerializer
 # Filters
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
-
-
-import os
-from api.utils import helpers
 
 
 class PostViewSet(
@@ -82,30 +64,37 @@ class PostViewSet(
         queryset = Post.objects.all()
 
         if self.action == "list":
-
             queryset = Post.objects.filter(status=Post.ACTIVE, members_count__lte=10)
+
         elif self.action == "list_most_karma_posts":
             queryset = Post.objects.filter(status=Post.ACTIVE, members_count__lte=10).order_by('-karma_offered')
+
         elif self.action == "list_followed_users_posts":
             user = self.request.user
             queryset = Post.objects.filter(
                 status=Post.ACTIVE, user__id__in=Follow.objects.filter(from_user=user).values_list(
                     'followed_user'), members_count__lte=10)
+
         elif self.action == "list_my_posts":
             user = self.request.user
             queryset = Post.objects.filter(user=user)
+
         elif self.action == "list_my_active_posts":
             user = self.request.user
             queryset = Post.objects.filter(user=user, status=Post.ACTIVE)
+
         elif self.action == "list_my_solved_posts":
             user = self.request.user
             queryset = Post.objects.filter(user=user, status=Post.SOLVED)
+
         elif self.action == "list_contributed_posts":
             user = self.request.user
             queryset = Post.objects.filter(members=user).exclude(user=user)
+
         elif self.action == "list_contributed_active_posts":
             user = self.request.user
             queryset = Post.objects.filter(members=user, status=Post.ACTIVE).exclude(user=user)
+
         elif self.action == "list_contributed_solved_posts":
             user = self.request.user
             queryset = Post.objects.filter(members=user, status=Post.SOLVED).exclude(user=user)
@@ -261,7 +250,6 @@ class PostViewSet(
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
-
         serializer = PostModelSerializer(data=request.data, context={
                                          "request": request, "images": request.data.getlist('images')})
         serializer.is_valid(raise_exception=True)
