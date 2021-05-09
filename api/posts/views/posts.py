@@ -40,7 +40,7 @@ class PostViewSet(
     lookup_field = "id"
     serializer_class = PostModelSerializer
     filter_backends = (SearchFilter, DjangoFilterBackend)
-    filterset_fields = ['community']
+    filterset_fields = ['community', 'status']
     search_fields = (
         "title",
         "text",
