@@ -65,7 +65,7 @@ class ConnectInvitationSerialzer(serializers.Serializer):
         requester = validated_data["requester"]
         addressee = validated_data["addressee"]
         connection = Connection.objects.create(requester=requester, addressee=addressee)
-        addressee.invitation_count += 1
+        addressee.invitations_count += 1
         addressee.save()
         # Notificate the invitation to the addressee
         notification = Notification.objects.create(

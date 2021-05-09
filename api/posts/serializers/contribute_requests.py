@@ -57,7 +57,7 @@ class RequestContributeSerializer(serializers.Serializer):
         # Check if is not already follow
         if Post.objects.filter(id=post.id, members=user).exists():
             raise serializers.ValidationError("You already are a member of this post")
-        if ContributeRequest.objects.filter(user=user, post=post, reason=data['reason']).exists():
+        if ContributeRequest.objects.filter(user=user, post=post).exists():
             raise serializers.ValidationError("This contribute request has already been issued")
         if post.members_count == 10:
             raise serializers.ValidationError("This post can't be more than 10 members")
@@ -66,7 +66,8 @@ class RequestContributeSerializer(serializers.Serializer):
     def create(self, validated_data):
         user = validated_data["user"]
         post = validated_data["post"]
-        contribute_request = ContributeRequest.objects.create(user=user, post=post)
+        reason = validated_data['reason']
+        contribute_request = ContributeRequest.objects.create(user=user, post=post, reason=reason)
         # Notificate the invitation to the addressee
         notification = Notification.objects.create(
             type=Notification.NEW_CONTRIBUTE_REQUEST,

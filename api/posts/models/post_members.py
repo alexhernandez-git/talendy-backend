@@ -19,3 +19,5 @@ class PostMember(CModel):
         choices=ROLE_TYPES,
         default=BASIC
     )
+    # Rate
+    # Comment

@@ -9,6 +9,7 @@ class Post(CModel):
     members_count = models.IntegerField(default=0)
     title = models.CharField(max_length=300)
     text = models.TextField(null=True, blank=True)
+    solution = models.TextField(null=True, blank=True)
     karma_offered = models.IntegerField(default=0)
 
     ANYONE = 'AN'

@@ -20,10 +20,6 @@ const users = {};
 const socketToRoom = {};
 
 io.on("connection", (socket) => {
-  console.log(users);
-  console.log(socketToRoom);
-  console.log(socket.id);
-
   socket.on("join room", (payload) => {
     const { roomID, userID } = payload;
     const userExists = users[roomID]?.some((user) => user.userID === userID);
@@ -40,7 +36,7 @@ io.on("connection", (socket) => {
     console.log("New User has entered in room: " + roomID);
     console.log(users[roomID]);
     if (users[roomID]) {
-      if (users[roomID].length === 5) {
+      if (users[roomID].length === 10) {
         socket.emit("room full");
         return;
       }
@@ -50,6 +46,7 @@ io.on("connection", (socket) => {
     }
     console.log("users:", users);
     socketToRoom[socket.id] = roomID;
+    socket.emit("joined members", users[roomID]);
   });
   socket.on("media ready", (roomID) => {
     console.log("media ready");
@@ -89,7 +86,7 @@ io.on("connection", (socket) => {
       room = room.filter((user) => user.socketID !== socket.id);
       users[roomID] = room;
     }
-    console.log("User disconnect");
+    console.log("User  ");
   });
 });
 
