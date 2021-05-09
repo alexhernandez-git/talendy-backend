@@ -5,6 +5,7 @@ from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
+from django.db.models import Q
 
 # Permissions
 from rest_framework.permissions import IsAuthenticated
@@ -102,21 +103,17 @@ class PostViewSet(
             user = self.request.user
             queryset = Post.objects.filter(members=user, status=Post.SOLVED).exclude(user=user)
 
-        elif self.action == "list_user_contributed":
-            user = get_object_or_404(User, id=self.kwargs['id'])
-            queryset = Post.objects.filter(members=user).exclude(user=user)
-
         elif self.action == "list_user_posts":
+            user = get_object_or_404(User, id=self.kwargs['id'])
+            queryset = Post.objects.filter(Q(user=user) | Q(members=user))
+
+        elif self.action == "list_user_created":
             user = get_object_or_404(User, id=self.kwargs['id'])
             queryset = Post.objects.filter(user=user)
 
-        elif self.action == "list_active_user_posts":
+        elif self.action == "list_user_contributed":
             user = get_object_or_404(User, id=self.kwargs['id'])
-            queryset = Post.objects.filter(user=user, status=Post.ACTIVE)
-
-        elif self.action == "list_solved_user_posts":
-            user = get_object_or_404(User, id=self.kwargs['id'])
-            queryset = Post.objects.filter(user=user, status=Post.SOLVED)
+            queryset = Post.objects.filter(members=user).exclude(user=user)
 
         return queryset
 
@@ -209,17 +206,6 @@ class PostViewSet(
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
-    def list_user_contributed(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['get'])
     def list_user_posts(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
@@ -231,7 +217,7 @@ class PostViewSet(
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
-    def list_active_user_posts(self, request, *args, **kwargs):
+    def list_user_created(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -242,7 +228,7 @@ class PostViewSet(
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
-    def list_solved_user_posts(self, request, *args, **kwargs):
+    def list_user_contributed(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
