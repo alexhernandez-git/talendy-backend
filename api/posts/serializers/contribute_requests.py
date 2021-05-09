@@ -127,12 +127,12 @@ class AcceptContributeRequestSerializer(serializers.Serializer):
 
         user_notification = NotificationUser.objects.create(
             notification=notification,
-            user=requester_user
+            user=post.user
         )
 
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            "user-%s" % requester_user.id, {
+            "user-%s" % post.user.id, {
                 "type": "send.notification",
                 "event": "JOINED_MEMBERSHIP",
                 "notification__pk": str(user_notification.pk),
