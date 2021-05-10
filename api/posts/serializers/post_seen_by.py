@@ -8,7 +8,7 @@ from api.posts.models import PostSeenBy
 from api.users.serializers import UserModelSerializer
 
 
-class SeenByModelSerializer(serializers.ModelSerializer):
+class PostSeenByModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
 
     class Meta:
@@ -20,7 +20,7 @@ class SeenByModelSerializer(serializers.ModelSerializer):
         read_only_fields = ("id",)
 
 
-class CreateSeenBySerializer(serializers.Serializer):
+class CreatePostSeenBySerializer(serializers.Serializer):
     def validate(self, data):
         post = self.context["post"]
 

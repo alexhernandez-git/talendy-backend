@@ -17,7 +17,7 @@ from api.posts.models import Post
 from api.users.models import Follow, User
 
 # Serializers
-from api.posts.serializers import PostModelSerializer, CreatePostSeenBySerializer
+from api.posts.serializers import PostModelSerializer, CreatePostSeenBySerializer, ClearPostChatNotificationSerializer, RetrieveContributeRoomModelSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -60,6 +60,13 @@ class PostViewSet(
         else:
             permissions = []
         return [p() for p in permissions]
+
+    def get_serializer_class(self):
+        """Return serializer based on action."""
+
+        if self.action == "retrieve_contribute_room":
+            return RetrieveContributeRoomModelSerializer
+        return PostModelSerializer
 
     def get_queryset(self):
         """Restrict list to public-only."""
@@ -244,17 +251,17 @@ class PostViewSet(
         instance = self.get_object()
         # Create seen by
         createSeenSerializer = CreatePostSeenBySerializer(
-            data={}, context={"request": request, "chat": instance}
+            data={}, context={"request": request, "post": instance}
         )
         is_valid = createSeenSerializer.is_valid(raise_exception=False)
         if is_valid:
             createSeenSerializer.save()
 
-        # Clear chat notifications
-        clearChatNotification = ClearChatNotification(
+        # Clear post notifications
+        clearChatNotification = ClearPostChatNotificationSerializer(
             instance,
             data={},
-            context={"request": request, "chat": instance},
+            context={"request": request, "post": instance},
             partial=True
         )
         is_valid = clearChatNotification.is_valid(raise_exception=False)

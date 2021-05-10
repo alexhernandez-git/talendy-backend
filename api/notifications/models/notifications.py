@@ -45,7 +45,7 @@ class Notification(CModel):
     # JOINED_MEMBERSHIP
     member_joined = models.ForeignKey("users.User", on_delete=models.CASCADE, null=True, related_name="member_joined")
 
-    # Post messages
+    # POST_MESSAGES
     post_messages = models.ManyToManyField(
         "posts.Post", blank=True, related_name="notifications_post_messages"
     )

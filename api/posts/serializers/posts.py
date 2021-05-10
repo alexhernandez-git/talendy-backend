@@ -11,12 +11,11 @@ from django.shortcuts import get_object_or_404
 
 # Serializers
 from api.users.serializers import UserModelSerializer
-from api.posts.serializers import MessageModelSerializer
 from .post_members import PostMemberModelSerializer
 
 # Models
 from api.users.models import User
-from api.posts.models import Post, PostImage, PostMember, ContributeRequest
+from api.posts.models import Post, PostImage, PostMember, ContributeRequest, PostSeenBy
 from api.notifications.models import Notification, NotificationUser
 
 # Utils
@@ -121,7 +120,40 @@ class PostModelSerializer(serializers.ModelSerializer):
         return super(PostModelSerializer, self).update(instance, validated_data)
 
 
-class ClearPostChatNotification(serializers.Serializer):
+class RetrieveContributeRoomModelSerializer(serializers.ModelSerializer):
+    """User model serializer."""
+
+    is_last_message_seen = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        """Meta class."""
+
+        model = Post
+        fields = (
+            "id",
+            "is_last_message_seen",
+            "user",
+            "title",
+            "text",
+            "community",
+            "members",
+            "members_count",
+            "privacity",
+            "status",
+            "images",
+            "karma_offered",
+            "created",
+        )
+
+        read_only_fields = ("id",)
+
+    def get_is_last_message_seen(self, obj):
+        user = self.context["request"].user
+        return NotificationUser.objects.filter(
+            notification__post=obj, type=NotificationUser.POST_MESSAGES, is_read=False, user=user).exists()
+
+
+class ClearPostChatNotificationSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         user = self.context['request'].user
