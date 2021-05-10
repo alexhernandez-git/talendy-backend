@@ -79,6 +79,36 @@ io.on("connection", (socket) => {
     socket.in(roomID).emit("text", text);
   });
 
+  // CHAT
+  socket.on("message", async (payload) => {
+    const { roomID } = payload;
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${payload.token}`,
+      },
+    };
+    console.log(`${API_HOST}/api/chats/${roomID}/messages/`);
+    axios
+      .post(
+        `${API_HOST}/api/chats/${roomID}/messages/`,
+        {
+          text: payload.message.text,
+        },
+        config
+      )
+      .then((res) => {
+        console.log(res.data);
+        console.log("Post message to django successfully");
+      })
+      .catch((err) => {
+        console.log(err.response);
+        console.log("Post message to django failed");
+      });
+    payload.token = null;
+    socket.in(roomID).emit("text", payload);
+  });
+
   socket.on("disconnect", () => {
     const roomID = socketToRoom[socket.id];
     console.log("User left", socket.id);

@@ -16,12 +16,14 @@ class Notification(CModel):
     NEW_CONNECTION = 'NC'
     NEW_CONTRIBUTE_REQUEST = 'CR'
     JOINED_MEMBERSHIP = 'JM'
+    POST_MESSAGES = 'PM'
     TYPE_CHOICES = [
         (MESSAGES, 'Messages'),
         (NEW_INVITATION, 'New invitation'),
         (NEW_CONNECTION, 'New connection'),
         (NEW_CONTRIBUTE_REQUEST, 'New contribute request'),
         (JOINED_MEMBERSHIP, 'Joined membership'),
+        (POST_MESSAGES, 'Post messages'),
     ]
     type = models.CharField(
         max_length=2,
@@ -41,7 +43,11 @@ class Notification(CModel):
     contribute_request = models.ForeignKey("posts.ContributeRequest", on_delete=models.CASCADE, null=True)
 
     # JOINED_MEMBERSHIP
-    post = models.ForeignKey("posts.Post", on_delete=models.CASCADE, null=True)
     member_joined = models.ForeignKey("users.User", on_delete=models.CASCADE, null=True, related_name="member_joined")
+    # Post messages
+    post_messages = models.ManyToManyField(
+        "posts.Post", blank=True, related_name="notifications_post_messages"
+    )
+    post = models.ForeignKey("posts.Post", on_delete=models.CASCADE, null=True)
 
     actor = models.ForeignKey("users.User", on_delete=models.SET_NULL, null=True)

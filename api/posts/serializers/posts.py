@@ -11,12 +11,13 @@ from django.shortcuts import get_object_or_404
 
 # Serializers
 from api.users.serializers import UserModelSerializer
-from api.chats.serializers import MessageModelSerializer
+from api.posts.serializers import MessageModelSerializer
 from .post_members import PostMemberModelSerializer
 
 # Models
 from api.users.models import User
 from api.posts.models import Post, PostImage, PostMember, ContributeRequest
+from api.notifications.models import Notification, NotificationUser
 
 # Utils
 import json
@@ -118,3 +119,18 @@ class PostModelSerializer(serializers.ModelSerializer):
                 size=image.size
             )
         return super(PostModelSerializer, self).update(instance, validated_data)
+
+
+class ClearPostChatNotification(serializers.Serializer):
+
+    def update(self, instance, validated_data):
+        user = self.context['request'].user
+        notifications = NotificationUser.objects.filter(notification__chat=instance, is_read=False, user=user)
+
+        for notification in notifications:
+            notification.is_read = True
+            notification.save()
+
+        user.save()
+
+        return instance

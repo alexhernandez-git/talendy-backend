@@ -5,7 +5,7 @@ from django.db import models
 class PostMessage(CModel):
     # Login Status
 
-    chat = models.ForeignKey("chats.Chat", on_delete=models.CASCADE)
+    post = models.ForeignKey("posts.Post", on_delete=models.CASCADE)
     text = models.TextField(max_length=5000, null=True, blank=True)
     sent_by = models.ForeignKey("users.User", on_delete=models.SET_NULL, null=True, blank=True)
 
@@ -14,10 +14,10 @@ class PostMessage(CModel):
 
 
 class PostMessageFile(CModel):
-    chat = models.ForeignKey("chats.Chat", on_delete=models.CASCADE, null=True, blank=True)
+    post = models.ForeignKey("posts.Post", on_delete=models.CASCADE, null=True, blank=True)
     message = models.ForeignKey(PostMessage, on_delete=models.CASCADE)
     file = models.FileField(
-        upload_to='messages/files/',
+        upload_to='post/messages/files/',
         max_length=500
     )
     name = models.CharField(max_length=500)

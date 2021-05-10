@@ -11,7 +11,9 @@ class Post(CModel):
     text = models.TextField(null=True, blank=True)
     solution = models.TextField(null=True, blank=True)
     karma_offered = models.IntegerField(default=0)
-
+    last_message = models.ForeignKey(
+        "posts.PostMessage", on_delete=models.SET_NULL, null=True, related_name="last_message"
+    )
     ANYONE = 'AN'
     CONNECTIONS_ONLY = 'CO'
     PRIVACITY_TYPES = [

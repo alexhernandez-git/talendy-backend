@@ -2,12 +2,12 @@
 from rest_framework import serializers
 
 # Models
-from api.chats.models import Message, Chat, MessageFile
+from api.posts.models import PostMessage, Post, PostMessageFile
 
 # Serializers
 
 
-class MessageModelSerializer(serializers.ModelSerializer):
+class PostMessageModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
 
     sent_by = serializers.SerializerMethodField(read_only=True)
@@ -16,7 +16,7 @@ class MessageModelSerializer(serializers.ModelSerializer):
     class Meta:
         """Meta class."""
 
-        model = Message
+        model = PostMessage
         fields = (
             "id",
             "text",
@@ -34,20 +34,20 @@ class MessageModelSerializer(serializers.ModelSerializer):
 
     def get_files(self, obj):
 
-        from api.chats.serializers import MessageFileModelSerializer
-        files = MessageFile.objects.filter(message=obj.id)
-        return MessageFileModelSerializer(files, many=True).data
+        from api.posts.serializers import PostMessageFileModelSerializer
+        files = PostMessageFile.objects.filter(message=obj.id)
+        return PostMessageFileModelSerializer(files, many=True).data
 
 
-class CreateMessageSerializer(serializers.Serializer):
+class CreatePostMessageSerializer(serializers.Serializer):
     text = serializers.CharField(max_length=1000)
 
     def create(self, validated_data):
 
         user = self.context["request"].user
-        chat = self.context["chat"]
+        post = self.context["post"]
 
-        message = Message.objects.create(chat=chat, text=validated_data["text"], sent_by=user)
-        chat.last_message = message
-        chat.save()
+        message = PostMessage.objects.create(post=post, text=validated_data["text"], sent_by=user)
+        post.last_message = message
+        post.save()
         return message

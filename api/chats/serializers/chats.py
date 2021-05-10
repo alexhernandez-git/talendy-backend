@@ -234,7 +234,6 @@ class ClearChatNotification(serializers.Serializer):
             notification.is_read = True
             notification.save()
 
-        user.have_messages_notificatoin = False
         user.save()
 
         return instance
