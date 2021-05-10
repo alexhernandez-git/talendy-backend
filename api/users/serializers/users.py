@@ -126,6 +126,7 @@ class UserModelSerializer(serializers.ModelSerializer):
             'is_followed',
             'connection_invitation_sent',
             'is_connection',
+            'is_online',
             'accept_invitation',
 
         )

@@ -46,7 +46,9 @@ io.on("connection", (socket) => {
     }
     console.log("users:", users);
     socketToRoom[socket.id] = roomID;
-    socket.emit("joined members", users[roomID]);
+    io.to(roomID).emit("joined members", users[roomID]);
+
+    console.log("joined members", users[roomID]);
   });
   socket.on("media ready", (roomID) => {
     console.log("media ready");

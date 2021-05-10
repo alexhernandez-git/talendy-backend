@@ -28,10 +28,7 @@ class CustomUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + ((None,
                                         {
                                             "fields":
-                                            ("is_verified", "stripe_customer_id", "stripe_plan_customer_id", "net_income",
-                                             "withdrawn", "used_for_purchases", "available_for_withdrawal",
-                                             "pending_clearance", "active_month", "have_active_plan", "is_free_trial",
-                                             "passed_free_trial_once", "currency", "plan_default_payment_method",
+                                            ("is_verified",
                                              "is_online")}),)
 
     list_display = ("email", "first_name", "last_name", "is_staff",
