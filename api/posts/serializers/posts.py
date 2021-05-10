@@ -122,7 +122,9 @@ class PostModelSerializer(serializers.ModelSerializer):
 
 class RetrieveContributeRoomModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
-
+    user = UserModelSerializer(read_only=True)
+    images = serializers.SerializerMethodField(read_only=True)
+    members = serializers.SerializerMethodField(read_only=True)
     is_last_message_seen = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -147,10 +149,18 @@ class RetrieveContributeRoomModelSerializer(serializers.ModelSerializer):
 
         read_only_fields = ("id",)
 
+    def get_images(self, obj):
+        return PostImageModelSerializer(PostImage.objects.filter(post=obj.id), many=True).data
+
+    def get_members(self, obj):
+        members = PostMember.objects.filter(post=obj.id)
+        return PostMemberModelSerializer(members, many=True).data
+
     def get_is_last_message_seen(self, obj):
         user = self.context["request"].user
         return NotificationUser.objects.filter(
-            notification__post=obj, type=NotificationUser.POST_MESSAGES, is_read=False, user=user).exists()
+            notification__post=obj, notification__type=Notification.POST_MESSAGES, is_read=False,
+            user=user).exists()
 
 
 class ClearPostChatNotificationSerializer(serializers.Serializer):
@@ -158,7 +168,7 @@ class ClearPostChatNotificationSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
         user = self.context['request'].user
         notifications = NotificationUser.objects.filter(
-            notification__post=instance, type=NotificationUser.POST_MESSAGES, is_read=False, user=user)
+            notification__post=instance, notification__type=Notification.POST_MESSAGES, is_read=False, user=user)
 
         for notification in notifications:
             notification.is_read = True
