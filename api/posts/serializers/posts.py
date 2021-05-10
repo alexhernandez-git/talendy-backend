@@ -125,7 +125,8 @@ class ClearPostChatNotification(serializers.Serializer):
 
     def update(self, instance, validated_data):
         user = self.context['request'].user
-        notifications = NotificationUser.objects.filter(notification__chat=instance, is_read=False, user=user)
+        notifications = NotificationUser.objects.filter(
+            notification__post=instance, type=NotificationUser.POST_MESSAGES, is_read=False, user=user)
 
         for notification in notifications:
             notification.is_read = True

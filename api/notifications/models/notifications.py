@@ -44,10 +44,12 @@ class Notification(CModel):
 
     # JOINED_MEMBERSHIP
     member_joined = models.ForeignKey("users.User", on_delete=models.CASCADE, null=True, related_name="member_joined")
+
     # Post messages
     post_messages = models.ManyToManyField(
         "posts.Post", blank=True, related_name="notifications_post_messages"
     )
+
     post = models.ForeignKey("posts.Post", on_delete=models.CASCADE, null=True)
 
     actor = models.ForeignKey("users.User", on_delete=models.SET_NULL, null=True)

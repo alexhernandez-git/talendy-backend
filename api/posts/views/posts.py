@@ -17,7 +17,7 @@ from api.posts.models import Post
 from api.users.models import Follow, User
 
 # Serializers
-from api.posts.serializers import PostModelSerializer
+from api.posts.serializers import PostModelSerializer, CreatePostSeenBySerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -237,6 +237,30 @@ class PostViewSet(
             return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def retrieve_contribute_room(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Create seen by
+        createSeenSerializer = CreatePostSeenBySerializer(
+            data={}, context={"request": request, "chat": instance}
+        )
+        is_valid = createSeenSerializer.is_valid(raise_exception=False)
+        if is_valid:
+            createSeenSerializer.save()
+
+        # Clear chat notifications
+        clearChatNotification = ClearChatNotification(
+            instance,
+            data={},
+            context={"request": request, "chat": instance},
+            partial=True
+        )
+        is_valid = clearChatNotification.is_valid(raise_exception=False)
+        if is_valid:
+            clearChatNotification.update(instance, request)
+        serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):

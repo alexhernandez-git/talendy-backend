@@ -14,7 +14,7 @@ class SeenByModelSerializer(serializers.ModelSerializer):
     class Meta:
         """Meta class."""
 
-        model = SeenBy
+        model = PostSeenBy
         fields = ("id", "post", "message", "user", "modified")
 
         read_only_fields = ("id",)
@@ -33,7 +33,7 @@ class CreateSeenBySerializer(serializers.Serializer):
         user = self.context["request"].user
         post = self.context["post"]
 
-        seen_by, created = SeenBy.objects.get_or_create(post=post, user=user)
+        seen_by, created = PostSeenBy.objects.get_or_create(post=post, user=user)
         if seen_by.message != post.last_message:
 
             seen_by.message = post.last_message
