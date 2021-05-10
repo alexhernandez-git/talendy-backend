@@ -61,12 +61,13 @@ class RequestContributeSerializer(serializers.Serializer):
             raise serializers.ValidationError("This contribute request has already been issued")
         if post.members_count == 10:
             raise serializers.ValidationError("This post can't be more than 10 members")
-        return {"user": user, "post": post}
+
+        return {"user": user, "post": post, "reason": data['reason']}
 
     def create(self, validated_data):
         user = validated_data["user"]
         post = validated_data["post"]
-        reason = validated_data['reason']
+        reason = validated_data["reason"]
         contribute_request = ContributeRequest.objects.create(user=user, post=post, reason=reason)
         # Notificate the invitation to the addressee
         notification = Notification.objects.create(
