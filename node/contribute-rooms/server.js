@@ -24,8 +24,7 @@ io.on("connection", (socket) => {
     const { roomID, userID } = payload;
     const userExists = users[roomID]?.some((user) => user.userID === userID);
     if (userExists) {
-      socket.emit("not allowed");
-      return;
+      users[roomID] = users[roomID]?.filter((user) => user.userID !== userID);
     }
     if (!userID) {
       socket.emit("no user id");
@@ -82,6 +81,7 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     const roomID = socketToRoom[socket.id];
+    console.log("User left", socket.id);
     io.to(roomID).emit("user left", socket.id);
     let room = users[roomID];
     if (room) {
