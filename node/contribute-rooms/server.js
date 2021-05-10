@@ -88,6 +88,9 @@ io.on("connection", (socket) => {
       room = room.filter((user) => user.socketID !== socket.id);
       users[roomID] = room;
     }
+    console.log("members left", users[roomID]);
+    io.to(roomID).emit("members left", users[roomID]);
+
     console.log("User  ");
   });
 });
