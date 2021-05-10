@@ -1,6 +1,7 @@
 """Users views."""
 
 # Django
+from django.http.response import HttpResponse
 from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -261,11 +262,20 @@ class PostViewSet(
         serializer.save()
         return Response(serializer.data)
 
-    def perform_destroy(self, instance):
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+
         user = instance.user
+
+        if instance.members.all().count() > 1:
+
+            return Response(
+                {"message": "You cannot delete a post that already has members"},
+                status=status.HTTP_400_BAD_REQUEST)
 
         # Update statistics on post deletion
         user.posts_count -= 1
+        user.karma_amount = user.karma_amount + instance.karma_offered
         user.save()
 
         for member in instance.members.all():
@@ -273,3 +283,4 @@ class PostViewSet(
             member.save()
 
         instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
