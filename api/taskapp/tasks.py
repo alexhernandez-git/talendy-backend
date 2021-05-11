@@ -126,6 +126,23 @@ def send_have_messages_from_email(sent_to, sent_by):
     msg.send()
 
 
+@task(name='send_have_contribute_room_messages_from_email', max_retries=3)
+def send_have_contribute_room_messages_from_email(sent_to, sent_by):
+    """Check if the free trial has ended and turn off"""
+
+    subject = 'New contribute room messages from @{}'.format(
+        sent_by.username)
+
+    from_email = 'Talendy <no-reply@talendy.com>'
+    content = render_to_string(
+        'emails/users/new_messages.html',
+        {'user': sent_by}
+    )
+    msg = EmailMultiAlternatives(subject, content, from_email, [sent_to.email])
+    msg.attach_alternative(content, "text/html")
+    msg.send()
+
+
 @task(name='check_if_pending_clearance_has_ended', max_retries=3)
 def check_if_pending_clearance_has_ended():
     """Check if pending clearance has ended."""

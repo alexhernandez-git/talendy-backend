@@ -49,7 +49,7 @@ class Notification(CModel):
 
     # POST_MESSAGES
     post_messages = models.ManyToManyField(
-        "posts.Post", blank=True, related_name="notifications_post_messages"
+        "posts.PostMessage", blank=True, related_name="notifications_post_messages"
     )
 
     post = models.ForeignKey("posts.Post", on_delete=models.CASCADE, null=True)

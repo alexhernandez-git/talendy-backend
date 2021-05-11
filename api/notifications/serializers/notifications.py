@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404
 # Serializers
 from api.users.serializers import UserModelSerializer, ConnectionModelSerializer
 from api.chats.serializers import MessageModelSerializer
-from api.posts.serializers import ContributeRequestModelSerializer, PostModelSerializer
+from api.posts.serializers import ContributeRequestModelSerializer, PostModelSerializer, PostMessageModelSerializer
 
 # Models
 from api.users.models import User
@@ -28,6 +28,7 @@ class NotificationModelSerializer(serializers.ModelSerializer):
     contribute_request = serializers.SerializerMethodField(read_only=True)
     post = serializers.SerializerMethodField(read_only=True)
     member_joined = serializers.SerializerMethodField(read_only=True)
+    post_messages = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -41,6 +42,7 @@ class NotificationModelSerializer(serializers.ModelSerializer):
             "connection",
             "post",
             "member_joined",
+            "post_messages",
             "contribute_request",
             "modified",
         )
@@ -49,6 +51,9 @@ class NotificationModelSerializer(serializers.ModelSerializer):
 
     def get_messages(self, obj):
         return MessageModelSerializer(obj.messages, many=True).data
+
+    def get_post_messages(self, obj):
+        return PostMessageModelSerializer(obj.post_messages, many=True).data
 
     def get_connection(self, obj):
         if obj.connection:
