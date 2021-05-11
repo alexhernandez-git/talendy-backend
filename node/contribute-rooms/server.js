@@ -2,8 +2,9 @@ const express = require("express");
 const socketio = require("socket.io");
 const http = require("http");
 const cors = require("cors");
+const axios = require("axios");
 const PORT = process.env.PORT || 5500;
-
+const API_HOST = process.env.API_HOST || "http://django:8000";
 const router = require("./router");
 
 const app = express();
@@ -82,28 +83,28 @@ io.on("connection", (socket) => {
   // CHAT
   socket.on("message", async (payload) => {
     const { roomID } = payload;
-    // const config = {
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //     Authorization: `Token ${payload.token}`,
-    //   },
-    // };
-    // axios
-    //   .post(
-    //     `${API_HOST}/api/chats/${roomID}/messages/`,
-    //     {
-    //       text: payload.message.text,
-    //     },
-    //     config
-    //   )
-    //   .then((res) => {
-    //     console.log(res.data);
-    //     console.log("Post message to django successfully");
-    //   })
-    //   .catch((err) => {
-    //     console.log(err.response);
-    //     console.log("Post message to django failed");
-    //   });
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${payload.token}`,
+      },
+    };
+    axios
+      .post(
+        `${API_HOST}/api/posts/${roomID}/messages/`,
+        {
+          text: payload.message.text,
+        },
+        config
+      )
+      .then((res) => {
+        console.log(res.data);
+        console.log("Post message to django successfully");
+      })
+      .catch((err) => {
+        console.log(err.response);
+        console.log("Post message to django failed");
+      });
     console.log(payload);
     payload.token = null;
     socket.in(roomID).emit("message", payload);
