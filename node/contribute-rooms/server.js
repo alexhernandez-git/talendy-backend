@@ -76,6 +76,9 @@ io.on("connection", (socket) => {
   // SHARED NOTES
   socket.on("text", (payload) => {
     const { roomID, text, token } = payload;
+    if (!text) {
+      return;
+    }
     console.log(roomID, text, token);
     const config = {
       headers: {
