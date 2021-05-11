@@ -23,7 +23,7 @@ class AddPostMixin(viewsets.GenericViewSet):
 
         id = self.kwargs["slug_id"]
 
-        self.post = get_object_or_404(Post, id=id)
+        self.post_object = get_object_or_404(Post, id=id)
 
         return super(AddPostMixin, self).dispatch(request, *args, **kwargs)
 

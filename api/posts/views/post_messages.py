@@ -67,6 +67,7 @@ class PostMessageViewSet(
 
     def get_serializer_class(self):
         """Return serializer based on action."""
+
         if self.action == "create":
             return CreatePostMessageSerializer
         return PostMessageModelSerializer
@@ -79,9 +80,9 @@ class PostMessageViewSet(
             "request": self.request,
             "format": self.format_kwarg,
             "view": self,
-            "chat": self.post,
+            "post": self.post_object,
         }
 
     def get_queryset(self):
 
-        return PostMessage.objects.filter(post=self.post)
+        return PostMessage.objects.filter(post=self.post_object)

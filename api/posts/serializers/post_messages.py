@@ -40,11 +40,13 @@ class PostMessageModelSerializer(serializers.ModelSerializer):
 
 
 class CreatePostMessageSerializer(serializers.Serializer):
+
     text = serializers.CharField(max_length=1000)
 
     def create(self, validated_data):
 
         user = self.context["request"].user
+
         post = self.context["post"]
 
         message = PostMessage.objects.create(post=post, text=validated_data["text"], sent_by=user)
