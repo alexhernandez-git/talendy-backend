@@ -26,20 +26,19 @@ from api.users.permissions import IsAccountOwner
 
 # Models
 from api.users.models import User
-from api.chats.models import Chat, Message, MessageFile
+from api.posts.models import Post, PostMessage, PostMessageFile
 
 # Serializers
 from api.users.serializers import UserModelSerializer
-from api.chats.serializers import (
-    ChatModelSerializer,
-    MessageModelSerializer,
-    CreateMessageSerializer,
+from api.posts.serializers import (
+    PostMessageModelSerializer,
+    CreatePostMessageSerializer,
 )
 
 
 # Utils
 
-from api.utils.mixins import AddChatMixin
+from api.utils.mixins import AddPostMixin
 import os
 from api.utils import helpers
 from asgiref.sync import sync_to_async
@@ -52,13 +51,13 @@ class PostMessageViewSet(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     mixins.DestroyModelMixin,
-    AddChatMixin,
+    AddPostMixin,
 ):
     """Messages view set."""
 
-    queryset = Message.objects.all()
+    queryset = PostMessage.objects.all()
     lookup_field = "id"
-    serializer_class = MessageModelSerializer
+    serializer_class = PostMessageModelSerializer
 
     def get_permissions(self):
         """Assign permissions based on action."""
@@ -69,8 +68,8 @@ class PostMessageViewSet(
     def get_serializer_class(self):
         """Return serializer based on action."""
         if self.action == "create":
-            return CreateMessageSerializer
-        return MessageModelSerializer
+            return CreatePostMessageSerializer
+        return PostMessageModelSerializer
 
     def get_serializer_context(self):
         """
@@ -85,4 +84,4 @@ class PostMessageViewSet(
 
     def get_queryset(self):
 
-        return Message.objects.filter(chat=self.chat)
+        return PostMessage.objects.filter(chat=self.chat)
