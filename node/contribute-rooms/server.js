@@ -51,7 +51,7 @@ io.on("connection", (socket) => {
   });
   socket.on("media ready", (roomID) => {
     console.log("media ready");
-    const usersInThisRoom = users[roomID].filter(
+    const usersInThisRoom = users[roomID]?.filter(
       (user) => user.socketID !== socket.id
     );
 
@@ -82,31 +82,31 @@ io.on("connection", (socket) => {
   // CHAT
   socket.on("message", async (payload) => {
     const { roomID } = payload;
-    const config = {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Token ${payload.token}`,
-      },
-    };
-    console.log(`${API_HOST}/api/chats/${roomID}/messages/`);
-    axios
-      .post(
-        `${API_HOST}/api/chats/${roomID}/messages/`,
-        {
-          text: payload.message.text,
-        },
-        config
-      )
-      .then((res) => {
-        console.log(res.data);
-        console.log("Post message to django successfully");
-      })
-      .catch((err) => {
-        console.log(err.response);
-        console.log("Post message to django failed");
-      });
+    // const config = {
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Authorization: `Token ${payload.token}`,
+    //   },
+    // };
+    // axios
+    //   .post(
+    //     `${API_HOST}/api/chats/${roomID}/messages/`,
+    //     {
+    //       text: payload.message.text,
+    //     },
+    //     config
+    //   )
+    //   .then((res) => {
+    //     console.log(res.data);
+    //     console.log("Post message to django successfully");
+    //   })
+    //   .catch((err) => {
+    //     console.log(err.response);
+    //     console.log("Post message to django failed");
+    //   });
+    console.log(payload);
     payload.token = null;
-    socket.in(roomID).emit("text", payload);
+    socket.in(roomID).emit("message", payload);
   });
 
   socket.on("disconnect", () => {
@@ -115,7 +115,7 @@ io.on("connection", (socket) => {
     io.to(roomID).emit("user left", socket.id);
     let room = users[roomID];
     if (room) {
-      room = room.filter((user) => user.socketID !== socket.id);
+      room = room?.filter((user) => user.socketID !== socket.id);
       users[roomID] = room;
     }
     console.log("members left", users[roomID]);
