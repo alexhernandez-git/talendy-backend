@@ -79,9 +79,9 @@ class PostMessageViewSet(
             "request": self.request,
             "format": self.format_kwarg,
             "view": self,
-            "chat": self.chat,
+            "chat": self.post,
         }
 
     def get_queryset(self):
 
-        return PostMessage.objects.filter(chat=self.chat)
+        return PostMessage.objects.filter(post=self.post)
