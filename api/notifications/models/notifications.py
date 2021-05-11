@@ -16,6 +16,7 @@ class Notification(CModel):
     NEW_CONNECTION = 'NC'
     NEW_CONTRIBUTE_REQUEST = 'CR'
     JOINED_MEMBERSHIP = 'JM'
+    CONTRIBUTE_REQUEST_ACCEPTED = 'CA'
     POST_MESSAGES = 'PM'
     TYPE_CHOICES = [
         (MESSAGES, 'Messages'),
@@ -23,6 +24,7 @@ class Notification(CModel):
         (NEW_CONNECTION, 'New connection'),
         (NEW_CONTRIBUTE_REQUEST, 'New contribute request'),
         (JOINED_MEMBERSHIP, 'Joined membership'),
+        (CONTRIBUTE_REQUEST_ACCEPTED, 'Contribute request accepted'),
         (POST_MESSAGES, 'Post messages'),
     ]
     type = models.CharField(

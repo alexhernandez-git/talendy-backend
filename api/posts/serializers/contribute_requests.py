@@ -118,7 +118,7 @@ class AcceptContributeRequestSerializer(serializers.Serializer):
         # Remove the contribute request
         ContributeRequest.objects.filter(id=contribute_request.id).delete()
 
-        # Notificate the new post to the users
+        # Notificate the user is joining to the post
 
         notification = Notification.objects.create(
             type=Notification.JOINED_MEMBERSHIP,
@@ -136,6 +136,26 @@ class AcceptContributeRequestSerializer(serializers.Serializer):
             "user-%s" % post.user.id, {
                 "type": "send.notification",
                 "event": "JOINED_MEMBERSHIP",
+                "notification__pk": str(user_notification.pk),
+            }
+        )
+
+        notification = Notification.objects.create(
+            type=Notification.CONTRIBUTE_REQUEST_ACCEPTED,
+            post=post,
+            member_joined=requester_user
+        )
+
+        user_notification = NotificationUser.objects.create(
+            notification=notification,
+            user=requester_user
+        )
+
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "user-%s" % requester_user.id, {
+                "type": "send.notification",
+                "event": "CONTRIBUTE_REQUEST_ACCEPTED",
                 "notification__pk": str(user_notification.pk),
             }
         )
