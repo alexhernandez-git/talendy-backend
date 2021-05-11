@@ -140,6 +140,7 @@ class RetrieveContributeRoomModelSerializer(serializers.ModelSerializer):
             "community",
             "members",
             "members_count",
+            "shared_notes",
             "privacity",
             "status",
             "images",
@@ -175,5 +176,15 @@ class ClearPostChatNotificationSerializer(serializers.Serializer):
             notification.save()
 
         user.save()
+
+        return instance
+
+
+class UpdatePostSharedNotesSerializer(serializers.Serializer):
+    shared_notes = serializers.CharField()
+
+    def update(self, instance, validated_data):
+        instance.shared_notes = validated_data['shared_notes']
+        instance.save()
 
         return instance

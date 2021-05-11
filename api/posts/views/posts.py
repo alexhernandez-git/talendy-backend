@@ -17,7 +17,7 @@ from api.posts.models import Post
 from api.users.models import Follow, User
 
 # Serializers
-from api.posts.serializers import PostModelSerializer, CreatePostSeenBySerializer, ClearPostChatNotificationSerializer, RetrieveContributeRoomModelSerializer
+from api.posts.serializers import PostModelSerializer, CreatePostSeenBySerializer, ClearPostChatNotificationSerializer, RetrieveContributeRoomModelSerializer, UpdatePostSharedNotesSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -287,6 +287,22 @@ class PostViewSet(
             post, data=request.data,
             context={"request": request, "images": request.data.getlist('images'),
                      "current_images": request.data['current_images']},
+            partial=partial)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['patch'])
+    def update_shared_notes(self, request, *args, **kwargs):
+        post = self.get_object()
+
+        partial = request.method == 'PATCH'
+
+        serializer = UpdatePostSharedNotesSerializer(
+            post,
+            data=request.data,
+            context={"request": request},
             partial=partial)
 
         serializer.is_valid(raise_exception=True)

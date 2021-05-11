@@ -14,6 +14,7 @@ class Post(CModel):
     last_message = models.ForeignKey(
         "posts.PostMessage", on_delete=models.SET_NULL, null=True, related_name="post_last_message"
     )
+    shared_notes = models.TextField(null=True, blank=True)
     ANYONE = 'AN'
     CONNECTIONS_ONLY = 'CO'
     PRIVACITY_TYPES = [

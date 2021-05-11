@@ -75,25 +75,47 @@ io.on("connection", (socket) => {
 
   // SHARED NOTES
   socket.on("text", (payload) => {
-    const { roomID, text } = payload;
-    console.log(roomID, text);
+    const { roomID, text, token } = payload;
+    console.log(roomID, text, token);
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${token}`,
+      },
+    };
+    axios
+      .patch(
+        `${API_HOST}/api/posts/${roomID}/update_shared_notes/`,
+        {
+          shared_notes: text,
+        },
+        config
+      )
+      .then((res) => {
+        console.log(res.data);
+        console.log("Update shared notes to django successfully");
+      })
+      .catch((err) => {
+        console.log(err.response);
+        console.log("Update shared notes to django failed");
+      });
     socket.in(roomID).emit("text", text);
   });
 
   // CHAT
   socket.on("message", async (payload) => {
-    const { roomID } = payload;
+    const { roomID, token, message } = payload;
     const config = {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Token ${payload.token}`,
+        Authorization: `Token ${token}`,
       },
     };
     axios
       .post(
         `${API_HOST}/api/posts/${roomID}/messages/`,
         {
-          text: payload.message.text,
+          text: message.text,
         },
         config
       )
