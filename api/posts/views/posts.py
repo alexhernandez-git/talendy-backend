@@ -322,11 +322,22 @@ class PostViewSet(
 
         # Update statistics on post deletion
         user.posts_count -= 1
+        user.created_posts_count -= 1
+        if instance.status == Post.ACTIVE:
+            user.created_active_posts_count -= 1
+        elif instance.status == Post.SOLVED:
+            user.created_solved_posts_count -= 1
         user.karma_amount = user.karma_amount + instance.karma_offered
         user.save()
 
         for member in instance.members.all():
+            member.posts_count -= 1
             member.contributed_posts_count -= 1
+            if instance.status == Post.ACTIVE:
+                member.contributed_active_posts_count -= 1
+            elif instance.status == Post.SOLVED:
+                member.contributed_solved_posts_count -= 1
+
             member.save()
 
         instance.delete()

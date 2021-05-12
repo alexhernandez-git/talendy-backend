@@ -81,6 +81,13 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
             'connections_count',
             'followed_count',
             'following_count',
+            'posts_count',
+            'created_posts_count',
+            'created_active_posts_count',
+            'created_solved_posts_count',
+            'contributed_posts_count',
+            'contributed_active_posts_count',
+            'contributed_solved_posts_count'
 
         )
 
@@ -128,6 +135,13 @@ class UserModelSerializer(serializers.ModelSerializer):
             'is_connection',
             'is_online',
             'accept_invitation',
+            'posts_count',
+            'created_posts_count',
+            'created_active_posts_count',
+            'created_solved_posts_count',
+            'contributed_posts_count',
+            'contributed_active_posts_count',
+            'contributed_solved_posts_count'
 
         )
 

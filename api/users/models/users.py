@@ -70,16 +70,30 @@ class User(CModel, AbstractUser):
     country = models.CharField(max_length=2, blank=True, null=True)
 
     following = models.ManyToManyField("users.User", through="users.Follow", verbose_name="user_follow")
+
+    # Estatistics
+
     following_count = models.IntegerField(default=0)
 
     connections_count = models.IntegerField(default=0)
+
     invitations_count = models.IntegerField(default=0)
 
     followed_count = models.IntegerField(default=0)
 
     posts_count = models.IntegerField(default=0)
 
+    created_posts_count = models.IntegerField(default=0)
+
+    created_active_posts_count = models.IntegerField(default=0)
+
+    created_solved_posts_count = models.IntegerField(default=0)
+
     contributed_posts_count = models.IntegerField(default=0)
+
+    contributed_active_posts_count = models.IntegerField(default=0)
+
+    contributed_solved_posts_count = models.IntegerField(default=0)
 
     karma_amount = models.IntegerField(default=1000)
 
