@@ -94,3 +94,12 @@ class NotificationUserModelSerializer(serializers.ModelSerializer):
         )
 
         read_only_fields = ("id",)
+
+
+class ReadNotificationSerializer(serializers.Serializer):
+
+    def update(self, instance, validated_data):
+        instance.is_read = True
+        instance.save()
+
+        return instance

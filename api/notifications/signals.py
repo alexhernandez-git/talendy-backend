@@ -110,6 +110,7 @@ def announce_update_on_post_messages_model(sender, instance, created, **kwargs):
                 "user-%s" % sent_to.id, {
                     "type": "message.sent",
                     "event": "POST_MESSAGE_RECEIVED",
+                    "post__pk": str(post.pk),
                     "notification__pk": str(user_notification.pk),
                 }
             )

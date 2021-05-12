@@ -28,7 +28,7 @@ from api.users.permissions import IsAccountOwner
 from api.notifications.models import NotificationUser
 
 # Serializers
-from api.notifications.serializers import NotificationUserModelSerializer
+from api.notifications.serializers import NotificationUserModelSerializer, ReadNotificationSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -62,3 +62,19 @@ class NotificationViewSet(
         queryset = NotificationUser.objects.filter(user=user, is_read=False)
 
         return queryset
+
+    @action(detail=True, methods=['patch'])
+    def read(self, request, *args, **kwargs):
+
+        notification = self.get_object()
+
+        partial = request.method == 'PATCH'
+        serializer = ReadNotificationSerializer(
+            notification,
+            data=request.data,
+            context={"request": request},
+            partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
