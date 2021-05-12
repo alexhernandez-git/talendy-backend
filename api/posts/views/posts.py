@@ -113,7 +113,7 @@ class PostViewSet(
 
         elif self.action == "list_user_posts":
             user = get_object_or_404(User, id=self.kwargs['id'])
-            queryset = Post.objects.filter(Q(user=user) | Q(members=user))
+            queryset = Post.objects.filter(Q(user=user) | Q(members=user)).distinct()
 
         elif self.action == "list_user_created":
             user = get_object_or_404(User, id=self.kwargs['id'])
