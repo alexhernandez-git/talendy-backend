@@ -330,7 +330,8 @@ class PostViewSet(
         user.karma_amount = user.karma_amount + instance.karma_offered
         user.save()
 
-        for member in instance.members.all():
+        for member in instance.members.all().exclude(id=user.id):
+
             member.posts_count -= 1
             member.contributed_posts_count -= 1
             if instance.status == Post.ACTIVE:
