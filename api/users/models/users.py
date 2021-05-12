@@ -95,6 +95,10 @@ class User(CModel, AbstractUser):
 
     contributed_solved_posts_count = models.IntegerField(default=0)
 
+    pending_notifications = models.BooleanField(default=False)
+
+    pending_messages = models.BooleanField(default=False)
+
     karma_amount = models.IntegerField(default=1000)
 
     # Payments

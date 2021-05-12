@@ -84,6 +84,8 @@ class PostModelSerializer(serializers.ModelSerializer):
         return False
 
     def validate(self, data):
+        if 'karma_offered' in data and int(data['karma_offered']) < 100:
+            raise serializers.ValidationError("Not enough karma offered")
 
         return data
 
@@ -91,6 +93,8 @@ class PostModelSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         images = self.context["images"]
         post = Post.objects.create(user=user, **validated_data, members_count=1)
+
+        user.karma_amount = user.karma_amount - post.karma_offered
         user.posts_count += 1
         user.created_posts_count += 1
         user.created_active_posts_count += 1
