@@ -20,4 +20,8 @@ class PostMember(CModel):
         default=BASIC
     )
     # Rate
+    rate = models.FloatField(
+        default=0.0,
+    )
     # Comment
+    comment = models.TextField(null=True, blank=True)

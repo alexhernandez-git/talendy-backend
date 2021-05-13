@@ -79,7 +79,6 @@ io.on("connection", (socket) => {
     if (!text) {
       return;
     }
-    console.log(roomID, text, token);
     const config = {
       headers: {
         "Content-Type": "application/json",
@@ -137,7 +136,12 @@ io.on("connection", (socket) => {
 
   // Shared whiteboard
   socket.on("drawing", (payload) => {
+    console.log("enter on drawing", payload.roomID);
     socket.in(payload.roomID).emit("drawing", payload.data);
+  });
+
+  socket.on("clear canvas", (payload) => {
+    socket.in(payload.roomID).emit("clear canvas");
   });
 
   socket.on("disconnect", () => {

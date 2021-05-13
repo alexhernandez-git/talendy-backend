@@ -17,7 +17,14 @@ from api.posts.models import Post
 from api.users.models import Follow, User
 
 # Serializers
-from api.posts.serializers import PostModelSerializer, CreatePostSeenBySerializer, ClearPostChatNotificationSerializer, RetrieveContributeRoomModelSerializer, UpdatePostSharedNotesSerializer
+from api.posts.serializers import (
+    PostModelSerializer,
+    CreatePostSeenBySerializer,
+    ClearPostChatNotificationSerializer,
+    RetrieveContributeRoomModelSerializer,
+    UpdatePostSharedNotesSerializer,
+    UpdatePostSolutionSerializer
+)
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -55,7 +62,7 @@ class PostViewSet(
         """Assign permissions based on action."""
         if self.action in ['create']:
             permissions = [IsAuthenticated]
-        elif self.action in ['update']:
+        elif self.action in ['update', 'update_solution']:
             permissions = [IsPostOwner, IsAuthenticated]
         else:
             permissions = []
@@ -300,6 +307,22 @@ class PostViewSet(
         partial = request.method == 'PATCH'
 
         serializer = UpdatePostSharedNotesSerializer(
+            post,
+            data=request.data,
+            context={"request": request},
+            partial=partial)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['patch'])
+    def update_solution(self, request, *args, **kwargs):
+        post = self.get_object()
+
+        partial = request.method == 'PATCH'
+
+        serializer = UpdatePostSolutionSerializer(
             post,
             data=request.data,
             context={"request": request},

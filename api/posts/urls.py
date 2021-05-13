@@ -11,6 +11,7 @@ from .views import posts as post_views
 from .views import contribute_requests as contribute_request_views
 from .views import post_messages as post_message_views
 from .views import post_seen_by as post_seen_by_views
+from .views import post_members as post_member_views
 
 router = DefaultRouter()
 router.register(r'posts', post_views.PostViewSet, basename='posts')
@@ -21,6 +22,9 @@ router.register(
 )
 router.register(
     r"posts/(?P<slug_id>[-a-zA-Z0-9_]+)/seen-by", post_seen_by_views.PostSeenByViewSet, basename="post_seen_by"
+)
+router.register(
+    r"posts/(?P<slug_id>[-a-zA-Z0-9_]+)/members", post_member_views.PostMemberViewSet, basename="post_members"
 )
 urlpatterns = [
     path('', include(router.urls))

@@ -31,6 +31,9 @@ class PostMemberModelSerializer(serializers.ModelSerializer):
             "id",
             "role",
             "user",
+            "created",
+            "rate",
+            "comment"
         )
 
         read_only_fields = ("id",)

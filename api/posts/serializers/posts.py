@@ -63,7 +63,8 @@ class PostModelSerializer(serializers.ModelSerializer):
             "images",
             "karma_offered",
             "created",
-            "is_contribute_requested"
+            "solution",
+            "is_contribute_requested",
         )
 
         read_only_fields = ("id", "created")
@@ -153,6 +154,7 @@ class RetrieveContributeRoomModelSerializer(serializers.ModelSerializer):
             "status",
             "images",
             "karma_offered",
+            "solution",
             "created",
         )
 
@@ -193,6 +195,16 @@ class UpdatePostSharedNotesSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         instance.shared_notes = validated_data['shared_notes']
+        instance.save()
+
+        return instance
+
+
+class UpdatePostSolutionSerializer(serializers.Serializer):
+    solution = serializers.CharField()
+
+    def update(self, instance, validated_data):
+        instance.solution = validated_data['solution']
         instance.save()
 
         return instance

@@ -22,26 +22,27 @@ from django.http import HttpResponse
 
 # Permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
-from api.users.permissions import IsAccountOwner
+from api.posts.permissions import IsPostOwnerPostMembers
+
 
 # Models
-from api.notifications.models import NotificationUser
+from api.posts.models import PostMember
 
 # Serializers
-from api.notifications.serializers import NotificationUserModelSerializer
+from api.posts.serializers import PostMemberModelSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
-
 import os
 from api.utils import helpers
 
 
-class NotificationViewSet(
+class PostMemberViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
     """User view set.
@@ -49,20 +50,15 @@ class NotificationViewSet(
     Handle sign up, login and account verification.
     """
 
-    queryset = NotificationUser.objects.all()
+    queryset = PostMember.objects.all()
     lookup_field = "id"
-    serializer_class = NotificationUserModelSerializer
+    serializer_class = PostMemberModelSerializer
     filter_backends = (SearchFilter, DjangoFilterBackend)
 
     def get_permissions(self):
         """Assign permissions based on action."""
-
-        permissions = [IsAuthenticated]
+        if self.action in ['update']:
+            permissions = [IsAuthenticated, IsPostOwnerPostMembers]
+        else:
+            permissions = [IsAuthenticated]
         return [p() for p in permissions]
-
-    def get_queryset(self):
-        """Restrict list to public-only."""
-        user = self.request.user
-        queryset = NotificationUser.objects.filter(user=user, is_read=False)
-
-        return queryset
