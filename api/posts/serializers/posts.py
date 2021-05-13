@@ -155,6 +155,7 @@ class RetrieveContributeRoomModelSerializer(serializers.ModelSerializer):
             "images",
             "karma_offered",
             "solution",
+            "draft_solution",
             "created",
         )
 
@@ -204,7 +205,7 @@ class UpdatePostSolutionSerializer(serializers.Serializer):
     solution = serializers.CharField()
 
     def update(self, instance, validated_data):
-        instance.solution = validated_data['solution']
+        instance.draft_solution = validated_data['solution']
         instance.save()
 
         return instance

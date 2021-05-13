@@ -10,6 +10,7 @@ class Post(CModel):
     title = models.CharField(max_length=300)
     text = models.TextField(null=True, blank=True)
     solution = models.TextField(null=True, blank=True)
+    draft_solution = models.TextField(null=True, blank=True)
     karma_offered = models.IntegerField(default=100)
     last_message = models.ForeignKey(
         "posts.PostMessage", on_delete=models.SET_NULL, null=True, related_name="post_last_message"
