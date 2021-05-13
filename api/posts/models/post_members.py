@@ -21,7 +21,7 @@ class PostMember(CModel):
     )
     # Rate
     rate = models.FloatField(
-        default=0.0,
+        null=True, blank=True
     )
     # Comment
     comment = models.TextField(null=True, blank=True)
