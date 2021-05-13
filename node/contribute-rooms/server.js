@@ -137,7 +137,6 @@ io.on("connection", (socket) => {
 
   // Shared whiteboard
   socket.on("drawing", (payload) => {
-    console.log(payload);
     socket.in(payload.roomID).emit("drawing", payload.data);
   });
 
