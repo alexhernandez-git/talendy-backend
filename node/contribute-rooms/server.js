@@ -73,61 +73,6 @@ io.on("connection", (socket) => {
     });
   });
 
-  // SHARED SCREEN
-  socket.on("ss join room", (payload) => {
-    const { roomID, userID } = payload;
-    const someUserIsAlreadySharing = users[roomID]?.some(
-      (user) => user?.isSharing
-    );
-    if (someUserIsAlreadySharing) {
-      socket.emit("user already sharing");
-      return;
-    }
-    if (!userID) {
-      socket.emit("no user id");
-      return;
-    }
-    socket.join(roomID);
-
-    console.log("New User Sharing has entered in room: " + roomID);
-    console.log(users[roomID]);
-
-    users[roomID].push({
-      socketID: socket.id,
-      userID: userID,
-      isSharing: true,
-    });
-
-    console.log("users:", users);
-    socketToRoom[socket.id] = roomID;
-    io.to(roomID).emit("joined members", users[roomID]);
-
-    console.log("joined members", users[roomID]);
-  });
-  socket.on("ss media ready", (roomID) => {
-    console.log("ss media ready");
-    const usersInThisRoom = users[roomID]?.filter(
-      (user) => user.socketID !== socket.id
-    );
-
-    socket.emit("ss all users", usersInThisRoom);
-  });
-
-  socket.on("ss sending signal", (payload) => {
-    console.log("enter on ss sending signal", payload.userToSignal);
-    io.to(payload.userToSignal).emit("ss user joined", {
-      signal: payload.signal,
-      callerID: payload.callerID,
-    });
-  });
-
-  socket.on("ss returning signal", (payload) => {
-    io.to(payload.callerID).emit("ss receiving returned signal", {
-      signal: payload.signal,
-      id: socket.id,
-    });
-  });
-
   // SHARED NOTES
   socket.on("text", (payload) => {
     const { roomID, text, token } = payload;
