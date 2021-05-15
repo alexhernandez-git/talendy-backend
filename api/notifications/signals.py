@@ -50,6 +50,8 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
         user_notification.notification.messages.add(instance)
         user_notification.notification.save()
 
+        sent_to.pending_messages = True
+        sent_to.save()
         # Send the event of message to user websocket
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
@@ -114,3 +116,11 @@ def announce_update_on_post_messages_model(sender, instance, created, **kwargs):
                     "notification__pk": str(user_notification.pk),
                 }
             )
+
+
+@receiver(post_save, sender=NotificationUser)
+def announce_update_on_notificaitons_model(sender, instance, created, **kwargs):
+    user = instance.user
+
+    user.pending_notifications = True
+    user.save()

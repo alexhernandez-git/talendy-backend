@@ -59,6 +59,9 @@ class NotificationViewSet(
     def get_queryset(self):
         """Restrict list to public-only."""
         user = self.request.user
+        user.pending_notifications = False
+
+        user.save()
         queryset = NotificationUser.objects.filter(user=user, is_read=False)
 
         return queryset

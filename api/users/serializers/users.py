@@ -47,8 +47,6 @@ env = environ.Env()
 
 class DetailedUserModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
-    pending_notifications = serializers.SerializerMethodField(read_only=True)
-    pending_messages = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -97,14 +95,6 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
             'id',
         )
 
-    def get_pending_notifications(self, obj):
-
-        return obj.notifications.through.objects.filter(user=obj, is_read=False).exists()
-
-    def get_pending_messages(self, obj):
-        return obj.notifications.through.objects.filter(
-            user=obj, is_read=False, notification__type__in=[Notification.MESSAGES]).exists()
-
 
 class UserModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
@@ -143,7 +133,9 @@ class UserModelSerializer(serializers.ModelSerializer):
             'created_solved_posts_count',
             'contributed_posts_count',
             'contributed_active_posts_count',
-            'contributed_solved_posts_count'
+            'contributed_solved_posts_count',
+            'reputation',
+            'ratings_count'
 
         )
 

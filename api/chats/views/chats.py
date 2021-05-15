@@ -80,6 +80,8 @@ class ChatViewSet(
     def get_queryset(self):
         user = self.request.user
         if self.action == "list":
+            user.pending_messages = False
+            user.save()
             return Chat.objects.filter(participants=user).exclude(last_message=None)
 
         return Chat.objects.all()

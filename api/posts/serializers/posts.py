@@ -232,7 +232,7 @@ class FinalizePostSerializer(serializers.Serializer):
         admin.created_solved_posts_count += 1
 
         # Update the post finalized to members
-        members = PostMember.objects.filter(post=post)
+        members = PostMember.objects.filter(post=post).exclude(user=admin)
         for member in members:
             user = member.user
             # Substract user contributed_active_posts_count
@@ -281,7 +281,7 @@ class FinalizePostSerializer(serializers.Serializer):
             async_to_sync(channel_layer.group_send)(
                 "user-%s" % user.id, {
                     "type": "send.notification",
-                    "event": "NEW_CONTRIBUTE_REQUEST",
+                    "event": "POST_FINALIZED",
                     "notification__pk": str(user_notification.pk),
                 }
             )

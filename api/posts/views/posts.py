@@ -81,17 +81,17 @@ class PostViewSet(
         queryset = Post.objects.all()
 
         if self.action == "list":
-            queryset = Post.objects.filter(status=Post.ACTIVE, members_count__lte=10)
+            queryset = Post.objects.filter(members_count__lte=10)
 
         elif self.action == "list_most_karma_posts":
-            queryset = Post.objects.filter(status=Post.ACTIVE, members_count__lte=10).order_by('-karma_offered')
+            queryset = Post.objects.filter(members_count__lte=10).order_by('-karma_offered')
 
         elif self.action == "list_followed_users_posts":
             if self.request.user.id:
 
                 user = self.request.user
                 queryset = Post.objects.filter(
-                    status=Post.ACTIVE, user__id__in=Follow.objects.filter(from_user=user).values_list(
+                    user__id__in=Follow.objects.filter(from_user=user).values_list(
                         'followed_user'), members_count__lte=10)
             else:
                 queryset = Post.objects.none()
