@@ -21,7 +21,6 @@ class ReviewModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
 
     review_user = UserModelSerializer(read_only=True)
-    from_post = PostModelSerializer(read_only=True)
 
     class Meta:
         """Meta class."""
