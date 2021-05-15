@@ -60,7 +60,23 @@ class ReviewViewSet(
 
     def get_queryset(self):
         """Restrict list to public-only."""
-        user = self.request.user
-
-        queryset = Review.objects.filter(reviewd_user=user)
+        if self.action == "user":
+            user = get_object_or_404(User, id=self.kwargs['id'])
+            queryset = Review.objects.filter(reviewd_user=user)
+        else:
+            user = self.request.user
+            queryset = Review.objects.filter(reviewd_user=user)
         return queryset
+
+    @action(detail=True, methods=['get'])
+    def user(self, request, *args, **kwargs):
+
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
