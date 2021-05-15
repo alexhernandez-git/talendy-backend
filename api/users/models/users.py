@@ -105,7 +105,7 @@ class User(CModel, AbstractUser):
         blank=True, null=True
     )
 
-    ratings_count = models.IntegerField(default=0)
+    reviews_count = models.IntegerField(default=0)
 
     # Payments
 

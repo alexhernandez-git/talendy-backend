@@ -59,6 +59,6 @@ class Notification(CModel):
     post = models.ForeignKey("posts.Post", on_delete=models.CASCADE, null=True)
 
     # New review
-    review = models.ForeignKey("users.Rating", on_delete=models.CASCADE, null=True)
+    review = models.ForeignKey("users.Review", on_delete=models.CASCADE, null=True)
 
     actor = models.ForeignKey("users.User", on_delete=models.SET_NULL, null=True)

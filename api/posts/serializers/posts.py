@@ -19,7 +19,7 @@ from api.users.serializers import UserModelSerializer
 from .post_members import PostMemberModelSerializer
 
 # Models
-from api.users.models import User, Rating
+from api.users.models import User, Review
 from api.posts.models import Post, PostImage, PostMember, ContributeRequest, PostSeenBy
 from api.notifications.models import Notification, NotificationUser
 
@@ -245,14 +245,14 @@ class FinalizePostSerializer(serializers.Serializer):
             # Check if there is a review
             if member.draft_rating > 0 or member.draft_comment:
                 # Save the review to the user
-                review = Rating.objects.create(
-                    rating_user=admin,
-                    rated_user=user,
+                review = Review.objects.create(
+                    review_user=admin,
+                    reviewd_user=user,
                     from_post=post,
                     rating=member.draft_rating,
                     comment=member.draft_comment,
                 )
-                user.ratings_count += 1
+                user.reviews_count += 1
                 notification = Notification.objects.create(
                     type=Notification.NEW_REVIEW,
                     review=review,
@@ -262,10 +262,10 @@ class FinalizePostSerializer(serializers.Serializer):
                     user=user
                 )
 
-            # Update the user rating avg
-            user_avg = Rating.objects.filter(
-                rated_user=user
-            ).exclude(rating=None).aggregate(Avg('rating'))['rating__avg']
+            # Update the user review avg
+            user_avg = Review.objects.filter(
+                reviewd_user=user
+            ).exclude(review=None).aggregate(Avg('review'))['review__avg']
 
             user.reputation = user_avg
             notification = Notification.objects.create(

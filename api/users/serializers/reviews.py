@@ -14,25 +14,25 @@ from api.users.serializers import UserModelSerializer
 from api.posts.serializers import PostModelSerializer
 
 # Models
-from api.users.models import Rating, User
+from api.users.models import Review, User
 
 
-class RatingModelSerializer(serializers.ModelSerializer):
+class ReviewModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
 
-    rating_user = UserModelSerializer(read_only=True)
+    review_user = UserModelSerializer(read_only=True)
     from_post = PostModelSerializer(read_only=True)
 
     class Meta:
         """Meta class."""
 
-        model = Rating
+        model = Review
         fields = (
             "id",
             "rating",
             "comment",
             "from_post",
-            "rating_user"
+            "review_user"
         )
 
         read_only_fields = ("id",)

@@ -8,10 +8,10 @@ from api.donations.models import DonationItem
 from django.utils import timezone
 
 
-class Rating(CModel):
+class Review(CModel):
 
-    rating_user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="rating_user")
-    rated_user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="rated_user")
+    review_user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="review_user")
+    reviewd_user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="reviewd_user")
     from_post = models.ForeignKey("posts.Post", on_delete=models.CASCADE)
 
     rating = models.FloatField(

@@ -87,7 +87,7 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
             'contributed_active_posts_count',
             'contributed_solved_posts_count',
             'reputation',
-            'ratings_count'
+            'reviews_count'
 
         )
 
@@ -135,7 +135,7 @@ class UserModelSerializer(serializers.ModelSerializer):
             'contributed_active_posts_count',
             'contributed_solved_posts_count',
             'reputation',
-            'ratings_count'
+            'reviews_count'
 
         )
 
@@ -378,7 +378,7 @@ class UserLoginSerializer(serializers.Serializer):
         return data
 
     def create(self, data):
-        """Generate or retrieve new token."""
+        """Genereview or retrieve new token."""
 
         token, created = Token.objects.get_or_create(user=self.context['user'])
         return self.context['user'], token.key

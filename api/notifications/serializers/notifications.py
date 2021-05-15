@@ -10,7 +10,7 @@ from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
 
 # Serializers
-from api.users.serializers import UserModelSerializer, ConnectionModelSerializer, RatingModelSerializer
+from api.users.serializers import UserModelSerializer, ConnectionModelSerializer, ReviewModelSerializer
 from api.chats.serializers import MessageModelSerializer
 from api.posts.serializers import ContributeRequestModelSerializer, PostModelSerializer, PostMessageModelSerializer
 
@@ -79,7 +79,7 @@ class NotificationModelSerializer(serializers.ModelSerializer):
 
     def get_review(self, obj):
         if obj.review:
-            return RatingModelSerializer(obj.review, many=False).data
+            return ReviewModelSerializer(obj.review, many=False).data
         return False
 
 
