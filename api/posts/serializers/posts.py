@@ -222,19 +222,19 @@ class FinalizePostSerializer(serializers.Serializer):
         post.solution = post.draft_solution
 
         # Substract admin created_active_posts_count
-        admin.created_active_posts_count = post.created_active_posts_count - 1
+        admin.created_active_posts_count = admin.created_active_posts_count - 1
 
         # Add admin created_solved_posts_count
-        admin.created_solved_posts_count = post.created_solved_posts_count + 1
+        admin.created_solved_posts_count = admin.created_solved_posts_count + 1
 
         # Update the post finalized to members
         members = PostMember.objects.filter(post=post)
         for member in members:
             user = member.user
             # Substract user contributed_active_posts_count
-            user.contributed_active_posts_count = post.contributed_active_posts_count - 1
+            user.contributed_active_posts_count = user.contributed_active_posts_count - 1
             # Add user contributed_solved_posts_count
-            user.contributed_solved_posts_count = post.contributed_solved_posts_count + 1
+            user.contributed_solved_posts_count = user.contributed_solved_posts_count + 1
 
             # Give the karma offered
             user.karma_amount = user.karma_amount + post.karma_offered
@@ -249,16 +249,15 @@ class FinalizePostSerializer(serializers.Serializer):
                     comment=member.draft_comment,
                 )
             # Update the user rating avg
-            user_avg = round(
-                Rating.objects.filter(
-                    rated_user=user
-                ).exclude(rating=None).aggregate(Avg('rating'))['rating__avg'],
-                1
-            )
+            user_avg = Rating.objects.filter(
+                rated_user=user
+            ).exclude(rating=None).aggregate(Avg('rating'))['rating__avg']
+
             user.reputation = user_avg
 
             user.save()
 
         admin.save()
+        post.status = Post.SOLVED
         post.save()
         return instance
