@@ -87,7 +87,9 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
             'created_solved_posts_count',
             'contributed_posts_count',
             'contributed_active_posts_count',
-            'contributed_solved_posts_count'
+            'contributed_solved_posts_count',
+            'reputation',
+            'ratings_count'
 
         )
 

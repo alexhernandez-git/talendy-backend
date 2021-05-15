@@ -105,6 +105,8 @@ class User(CModel, AbstractUser):
         blank=True, null=True
     )
 
+    ratings_count = models.IntegerField(default=0)
+
     # Payments
 
     stripe_customer_id = models.CharField(

@@ -11,6 +11,7 @@ from django.shortcuts import get_object_or_404
 
 # Serializers
 from api.users.serializers import UserModelSerializer
+from api.posts.serializers import PostModelSerializer
 
 # Models
 from api.users.models import Rating, User
@@ -19,7 +20,8 @@ from api.users.models import Rating, User
 class RatingModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
 
-    followed_user = UserModelSerializer(read_only=True)
+    rating_user = UserModelSerializer(read_only=True)
+    from_post = PostModelSerializer(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -27,7 +29,10 @@ class RatingModelSerializer(serializers.ModelSerializer):
         model = Rating
         fields = (
             "id",
-            "followed_user",
+            "rating",
+            "comment",
+            "from_post",
+            "rating_user"
         )
 
         read_only_fields = ("id",)

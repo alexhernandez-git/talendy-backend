@@ -226,22 +226,22 @@ class FinalizePostSerializer(serializers.Serializer):
         post.solution = post.draft_solution
 
         # Substract admin created_active_posts_count
-        admin.created_active_posts_count = admin.created_active_posts_count - 1
+        admin.created_active_posts_count -= 1
 
         # Add admin created_solved_posts_count
-        admin.created_solved_posts_count = admin.created_solved_posts_count + 1
+        admin.created_solved_posts_count += 1
 
         # Update the post finalized to members
         members = PostMember.objects.filter(post=post)
         for member in members:
             user = member.user
             # Substract user contributed_active_posts_count
-            user.contributed_active_posts_count = user.contributed_active_posts_count - 1
+            user.contributed_active_posts_count -= 1
             # Add user contributed_solved_posts_count
-            user.contributed_solved_posts_count = user.contributed_solved_posts_count + 1
+            user.contributed_solved_posts_count += 1
 
             # Give the karma offered
-            user.karma_amount = user.karma_amount + post.karma_offered
+            user.karma_amount += post.karma_offered
             # Check if there is a review
             if member.draft_rating > 0 or member.draft_comment:
                 # Save the review to the user
@@ -252,6 +252,7 @@ class FinalizePostSerializer(serializers.Serializer):
                     rating=member.draft_rating,
                     comment=member.draft_comment,
                 )
+                user.ratings_count += 1
                 notification = Notification.objects.create(
                     type=Notification.NEW_REVIEW,
                     review=review,

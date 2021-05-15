@@ -10,7 +10,7 @@ from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
 
 # Serializers
-from api.users.serializers import UserModelSerializer, ConnectionModelSerializer
+from api.users.serializers import UserModelSerializer, ConnectionModelSerializer, RatingModelSerializer
 from api.chats.serializers import MessageModelSerializer
 from api.posts.serializers import ContributeRequestModelSerializer, PostModelSerializer, PostMessageModelSerializer
 
@@ -29,6 +29,7 @@ class NotificationModelSerializer(serializers.ModelSerializer):
     post = serializers.SerializerMethodField(read_only=True)
     member_joined = serializers.SerializerMethodField(read_only=True)
     post_messages = serializers.SerializerMethodField(read_only=True)
+    review = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -44,6 +45,7 @@ class NotificationModelSerializer(serializers.ModelSerializer):
             "member_joined",
             "post_messages",
             "contribute_request",
+            "review",
             "modified",
         )
 
@@ -73,6 +75,11 @@ class NotificationModelSerializer(serializers.ModelSerializer):
     def get_member_joined(self, obj):
         if obj.member_joined:
             return UserModelSerializer(obj.member_joined, many=False).data
+        return False
+
+    def get_review(self, obj):
+        if obj.review:
+            return RatingModelSerializer(obj.review, many=False).data
         return False
 
 
