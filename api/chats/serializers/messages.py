@@ -48,6 +48,7 @@ class CreateMessageSerializer(serializers.Serializer):
         chat = self.context["chat"]
 
         message = Message.objects.create(chat=chat, text=validated_data["text"], sent_by=user)
+
         chat.last_message = message
         chat.save()
         return message

@@ -121,6 +121,6 @@ def announce_update_on_post_messages_model(sender, instance, created, **kwargs):
 @receiver(post_save, sender=NotificationUser)
 def announce_update_on_notificaitons_model(sender, instance, created, **kwargs):
     user = instance.user
-
-    user.pending_notifications = True
-    user.save()
+    if instance.notification.type != Notification.MESSAGES:
+        user.pending_notifications = True
+        user.save()

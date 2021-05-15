@@ -15,7 +15,7 @@ from rest_framework.validators import UniqueValidator
 
 # Models
 from api.users.models import User, UserLoginActivity, Earning, Connection, Follow
-from api.notifications.models import Notification
+from api.notifications.models import Notification, NotificationUser
 from api.donations.models import DonationItem
 from djmoney.models.fields import Money
 
@@ -47,6 +47,7 @@ env = environ.Env()
 
 class DetailedUserModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
+    pending_messages = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -94,6 +95,10 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
         read_only_fields = (
             'id',
         )
+
+    def get_pending_messages(self, obj):
+        return NotificationUser.objects.filter(
+            user=obj, is_read=False, notification__type__in=[Notification.MESSAGES]).exists()
 
 
 class UserModelSerializer(serializers.ModelSerializer):
