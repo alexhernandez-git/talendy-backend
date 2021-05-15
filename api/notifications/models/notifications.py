@@ -18,6 +18,8 @@ class Notification(CModel):
     JOINED_MEMBERSHIP = 'JM'
     CONTRIBUTE_REQUEST_ACCEPTED = 'CA'
     POST_MESSAGES = 'PM'
+    POST_FINALIZED = 'PF'
+    NEW_REVIEW = 'NR'
     TYPE_CHOICES = [
         (MESSAGES, 'Messages'),
         (NEW_INVITATION, 'New invitation'),
@@ -26,6 +28,8 @@ class Notification(CModel):
         (JOINED_MEMBERSHIP, 'Joined membership'),
         (CONTRIBUTE_REQUEST_ACCEPTED, 'Contribute request accepted'),
         (POST_MESSAGES, 'Post messages'),
+        (POST_FINALIZED, 'Post finalized'),
+        (NEW_REVIEW, 'New review'),
     ]
     type = models.CharField(
         max_length=2,
@@ -53,5 +57,8 @@ class Notification(CModel):
     )
 
     post = models.ForeignKey("posts.Post", on_delete=models.CASCADE, null=True)
+
+    # New review
+    review = models.ForeignKey("users.Rating", on_delete=models.CASCADE, null=True)
 
     actor = models.ForeignKey("users.User", on_delete=models.SET_NULL, null=True)

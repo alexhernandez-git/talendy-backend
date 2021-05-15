@@ -10,6 +10,10 @@ from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
 
+# Channels
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
 # Serializers
 from api.users.serializers import UserModelSerializer
 from .post_members import PostMemberModelSerializer
@@ -241,20 +245,45 @@ class FinalizePostSerializer(serializers.Serializer):
             # Check if there is a review
             if member.draft_rating > 0 or member.draft_comment:
                 # Save the review to the user
-                Rating.objects.create(
+                review = Rating.objects.create(
                     rating_user=admin,
                     rated_user=user,
                     from_post=post,
                     rating=member.draft_rating,
                     comment=member.draft_comment,
                 )
+                notification = Notification.objects.create(
+                    type=Notification.NEW_REVIEW,
+                    review=review,
+                )
+                user_notification = NotificationUser.objects.create(
+                    notification=notification,
+                    user=user
+                )
+
             # Update the user rating avg
             user_avg = Rating.objects.filter(
                 rated_user=user
             ).exclude(rating=None).aggregate(Avg('rating'))['rating__avg']
 
             user.reputation = user_avg
+            notification = Notification.objects.create(
+                type=Notification.POST_FINALIZED,
+                post=post,
+            )
+            user_notification = NotificationUser.objects.create(
+                notification=notification,
+                user=user
+            )
 
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "user-%s" % user.id, {
+                    "type": "send.notification",
+                    "event": "NEW_CONTRIBUTE_REQUEST",
+                    "notification__pk": str(user_notification.pk),
+                }
+            )
             user.save()
 
         admin.save()
