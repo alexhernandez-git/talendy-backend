@@ -8,13 +8,14 @@ from django.conf import settings
 from django.contrib.auth import password_validation, authenticate
 from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
+from django.db.models import Avg
 
 # Serializers
 from api.users.serializers import UserModelSerializer
 from .post_members import PostMemberModelSerializer
 
 # Models
-from api.users.models import User
+from api.users.models import User, Rating
 from api.posts.models import Post, PostImage, PostMember, ContributeRequest, PostSeenBy
 from api.notifications.models import Notification, NotificationUser
 
@@ -208,4 +209,56 @@ class UpdatePostSolutionSerializer(serializers.Serializer):
         instance.draft_solution = validated_data['solution']
         instance.save()
 
+        return instance
+
+
+class FinalizePostSerializer(serializers.Serializer):
+
+    def update(self, instance, validated_data):
+        post = instance
+        admin = post.user
+
+        # Save the draft_solution to post
+        post.solution = post.draft_solution
+
+        # Substract admin created_active_posts_count
+        admin.created_active_posts_count = post.created_active_posts_count - 1
+
+        # Add admin created_solved_posts_count
+        admin.created_solved_posts_count = post.created_solved_posts_count + 1
+
+        # Update the post finalized to members
+        members = PostMember.objects.filter(post=post)
+        for member in members:
+            user = member.user
+            # Substract user contributed_active_posts_count
+            user.contributed_active_posts_count = post.contributed_active_posts_count - 1
+            # Add user contributed_solved_posts_count
+            user.contributed_solved_posts_count = post.contributed_solved_posts_count + 1
+
+            # Give the karma offered
+            user.karma_amount = user.karma_amount + post.karma_offered
+            # Check if there is a review
+            if member.draft_rating > 0 or member.draft_comment:
+                # Save the review to the user
+                Rating.objects.create(
+                    rating_user=admin,
+                    rated_user=user,
+                    from_post=post,
+                    rating=member.draft_rating,
+                    comment=member.draft_comment,
+                )
+            # Update the user rating avg
+            user_avg = round(
+                Rating.objects.filter(
+                    rated_user=user
+                ).exclude(rating=None).aggregate(Avg('rating'))['rating__avg'],
+                1
+            )
+            user.reputation = user_avg
+
+            user.save()
+
+        admin.save()
+        post.save()
         return instance

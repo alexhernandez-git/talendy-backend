@@ -20,8 +20,8 @@ class PostMember(CModel):
         default=BASIC
     )
     # Rate
-    rate = models.FloatField(
+    draft_rating = models.FloatField(
         null=True, blank=True
     )
     # Comment
-    comment = models.TextField(null=True, blank=True)
+    draft_comment = models.TextField(null=True, blank=True)

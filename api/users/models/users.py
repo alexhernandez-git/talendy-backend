@@ -101,6 +101,10 @@ class User(CModel, AbstractUser):
 
     karma_amount = models.IntegerField(default=1000)
 
+    reputation = models.FloatField(
+        blank=True, null=True
+    )
+
     # Payments
 
     stripe_customer_id = models.CharField(

@@ -1,4 +1,4 @@
-"""Notifications serializers."""
+"""Users serializers."""
 
 # Django REST Framework
 from rest_framework import serializers
@@ -11,29 +11,23 @@ from django.shortcuts import get_object_or_404
 
 # Serializers
 from api.users.serializers import UserModelSerializer
-from api.chats.serializers import MessageModelSerializer
 
 # Models
-from api.users.models import User
-from api.posts.models import PostMember
+from api.users.models import Rating, User
 
 
-class PostMemberModelSerializer(serializers.ModelSerializer):
+class RatingModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
 
-    user = UserModelSerializer(read_only=True)
+    followed_user = UserModelSerializer(read_only=True)
 
     class Meta:
         """Meta class."""
 
-        model = PostMember
+        model = Rating
         fields = (
             "id",
-            "role",
-            "user",
-            "created",
-            "draft_rating",
-            "draft_comment"
+            "followed_user",
         )
 
         read_only_fields = ("id",)

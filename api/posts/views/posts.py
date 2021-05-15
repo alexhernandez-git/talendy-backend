@@ -23,7 +23,8 @@ from api.posts.serializers import (
     ClearPostChatNotificationSerializer,
     RetrieveContributeRoomModelSerializer,
     UpdatePostSharedNotesSerializer,
-    UpdatePostSolutionSerializer
+    UpdatePostSolutionSerializer,
+    FinalizePostSerializer
 )
 
 # Filters
@@ -62,7 +63,7 @@ class PostViewSet(
         """Assign permissions based on action."""
         if self.action in ['create']:
             permissions = [IsAuthenticated]
-        elif self.action in ['update', 'update_solution']:
+        elif self.action in ['update', 'update_solution', 'finalize']:
             permissions = [IsPostOwner, IsAuthenticated]
         else:
             permissions = []
@@ -323,6 +324,22 @@ class PostViewSet(
         partial = request.method == 'PATCH'
 
         serializer = UpdatePostSolutionSerializer(
+            post,
+            data=request.data,
+            context={"request": request},
+            partial=partial)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['patch'])
+    def finalize(self, request, *args, **kwargs):
+        post = self.get_object()
+
+        partial = request.method == 'PATCH'
+
+        serializer = FinalizePostSerializer(
             post,
             data=request.data,
             context={"request": request},

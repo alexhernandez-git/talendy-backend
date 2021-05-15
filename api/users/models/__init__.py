@@ -4,3 +4,4 @@ from .follows import Follow
 from .earnings import Earning
 from .connections import Connection
 from .follows import Follow
+from .ratings import Rating
