@@ -265,7 +265,7 @@ class FinalizePostSerializer(serializers.Serializer):
             # Update the user review avg
             user_avg = Review.objects.filter(
                 reviewd_user=user
-            ).exclude(review=None).aggregate(Avg('review'))['review__avg']
+            ).exclude(rating=None).aggregate(Avg('rating'))['rating__avg']
 
             user.reputation = user_avg
             notification = Notification.objects.create(
