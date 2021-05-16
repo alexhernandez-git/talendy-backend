@@ -148,26 +148,26 @@ def check_if_pending_clearance_has_ended():
     """Check if pending clearance has ended."""
     today = timezone.now()
 
-    # earnings = Earning.objects.filter(
-    #     type__in=[Earning.TIP_REVENUE],
-    #     available_for_withdrawn_date__lt=today, setted_to_available_for_withdrawn=False)
+    earnings = Earning.objects.filter(
+        type__in=[Earning.DONATION_REVENUE],
+        available_for_withdrawn_date__lt=today, setted_to_available_for_withdrawn=False)
 
-    # for earning in earnings:
-    #     print(earning.amount)
-    #     user = earning.user
-    #     if user:
-    #         pending_clearance_substracted = user.pending_clearance - earning.amount
-    #         available_for_withdrawn_add = earning.amount
-    #         if pending_clearance_substracted < Money(amount=0, currency="USD"):
-    #             available_for_withdrawn_add = earning.amount + pending_clearance_substracted
-    #             pending_clearance_substracted = 0
+    for earning in earnings:
+        print(earning.amount)
+        user = earning.user
+        if user:
+            pending_clearance_substracted = user.pending_clearance - earning.amount
+            available_for_withdrawn_add = earning.amount
+            if pending_clearance_substracted < Money(amount=0, currency="USD"):
+                available_for_withdrawn_add = earning.amount + pending_clearance_substracted
+                pending_clearance_substracted = 0
 
-    #         user.pending_clearance = pending_clearance_substracted
+            user.pending_clearance = pending_clearance_substracted
 
-    #         user.available_for_withdrawal += available_for_withdrawn_add
+            user.available_for_withdrawal += available_for_withdrawn_add
 
-    #         user.save()
+            user.save()
 
-    #         earning.setted_to_available_for_withdrawn = True
-    #         earning.save()
-    #         return available_for_withdrawn_add.amount
+            earning.setted_to_available_for_withdrawn = True
+            earning.save()
+            return available_for_withdrawn_add.amount
