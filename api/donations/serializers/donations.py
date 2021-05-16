@@ -11,8 +11,8 @@ from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
 
 # Models
-from api.donations.models import Donation, DonationOption
-from api.users.models import User
+from api.donations.models import Donation, DonationOption, DonationPayment
+from api.users.models import User, Earning
 
 # Serializers
 from api.users.serializers import UserModelSerializer
@@ -23,6 +23,8 @@ from .donation_options import DonationOptionModelSerializer
 import string
 import random
 from api.utils import helpers
+from datetime import timedelta
+from django.utils import timezone
 
 
 class DonationModelSerializer(serializers.ModelSerializer):
@@ -59,8 +61,10 @@ class CreateDonationSerializer(serializers.Serializer):
         payment_method_id = data['payment_method_id']
         to_user = get_object_or_404(User, id=data['to_user'])
         user = None
+        is_anonymous = True
         if self.context['request'].user.id:
             user = self.context['request'].user
+            is_anonymous = False
         donation_option = None
         if 'donation_option' in data and data['donation_option']:
             donation_option = get_object_or_404(DonationOption, id=data['to_user'])
@@ -72,13 +76,15 @@ class CreateDonationSerializer(serializers.Serializer):
         if not donation_option and not other_amount:
             raise serializers.ValidationError(
                 "You need at least one of the two amount options")
-
+        is_other_amount = False
+        if other_amount:
+            is_other_amount = True
         # If there is not, create stripe customer account and save the stripe customer id
 
         rand_string = ''.join(
             random.choices(string.ascii_uppercase + string.digits, k=10))
 
-        if user:
+        if not is_anonymous and user:
             if user.stripe_customer_id:
                 stripe_customer_id = user
             else:
@@ -105,8 +111,8 @@ class CreateDonationSerializer(serializers.Serializer):
             stripe_customer_id = new_customer['id']
 
         # If is other amount create the new stripe product and price
-        if other_amount:
-            if user:
+        if is_other_amount:
+            if not is_anonymous and user:
 
                 product = stripe.Product.create(name=other_amount + '_donation_by_' + user.username)
             else:
@@ -134,7 +140,8 @@ class CreateDonationSerializer(serializers.Serializer):
             default_payment_method=payment_method_id
 
         )
-        if user:
+        if not is_anonymous and user:
+
             user.default_payment_method = payment_method_id
             user.save()
 
@@ -142,7 +149,7 @@ class CreateDonationSerializer(serializers.Serializer):
         invoice_paid = stripe.Invoice.pay(invoice['id'])
 
         # Convert the amount paid to USD
-        if other_amount:
+        if is_other_amount:
 
             gross_amount, rate_date = helpers.convert_currency('USD', user.currency, other_amount)
         else:
@@ -155,7 +162,12 @@ class CreateDonationSerializer(serializers.Serializer):
         # Pass to data the donation option or other amount, the user,
         # the  product, the price, the invoice paid and the to user
         return {
+            'is_anonymous': is_anonymous,
             'user': user,
+            'to_user': to_user,
+            'is_other_amount': is_other_amount,
+            'other_amount': other_amount,
+            'donation_option': donation_option,
             'price': price,
             'product': product,
             'invoice_paid': invoice_paid,
@@ -165,14 +177,70 @@ class CreateDonationSerializer(serializers.Serializer):
             'rate_date': rate_date
 
         }
-        import pdb
-        pdb.set_trace()
-        pass
 
     def create(self, validated_data):
+
         # Get the validated data
+        is_anonymous = validated_data["is_anonymous"]
+        to_user = validated_data["to_user"]
+        user = validated_data["user"]
+        is_other_amount = validated_data["is_other_amount"]
+        other_amount = validated_data["other_amount"]
+        donation_option = validated_data["donation_option"]
+        price = validated_data["price"]
+        product = validated_data["product"]
+        invoice_paid = validated_data["invoice_paid"]
+        gross_amount = validated_data["gross_amount"]
+        net_amount = validated_data["net_amount"]
+        service_fee = validated_data["service_fee"]
+        rate_date = validated_data["rate_date"]
 
         # Create the donation payment
+        invoice_id = invoice_paid['id']
+        currency = invoice_paid['currency']
+        charge_id = invoice_paid['charge']
+        amount_paid = invoice_paid['amount_paid']
+        status = invoice_paid['status']
+        invoice_pdf = invoice_paid['invoice_pdf']
+
+        donation_payment = DonationPayment.objects.create(
+            invoice_id=invoice_id,
+            invoice_pdf=invoice_pdf,
+            charge_id=charge_id,
+            amount_paid=float(amount_paid) / 100,
+            currency=currency,
+            status=status,
+        )
 
         # Create the donation
-        pass
+        donation = Donation.objects.create(
+            is_other_amount=is_other_amount,
+            donation_option=donation_option,
+            donation_payment=donation_payment,
+            is_anonymous=is_anonymous,
+            from_user=user,
+            to_user=to_user,
+            gross_amount=gross_amount,
+            net_amount=net_amount,
+            service_fee=service_fee,
+            rate_date=rate_date,
+        )
+
+        # Create the to user earning
+        Earning.objects.create(
+            user=to_user,
+            amount=net_amount,
+            available_for_withdrawn_date=timezone.now() + timedelta(days=14)
+        )
+
+        # Add donations_received_count to to_user
+        to_user.donations_received_count += 1
+        to_user.net_income = to_user.net_income + net_amount
+
+        to_user.pending_clearance += net_amount
+        to_user.save()
+
+        if not is_anonymous and user:
+            user.donations_made_count += 1
+            user.save()
+        return donation
