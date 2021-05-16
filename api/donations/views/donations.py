@@ -28,7 +28,7 @@ from api.users.permissions import IsAccountOwner
 from api.donations.models import Donation
 
 # Serializers
-from api.donations.serializers import DonationModelSerializer
+from api.donations.serializers import DonationModelSerializer, CreateDonationSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -61,6 +61,12 @@ class DonationViewSet(
         else:
             permissions = []
         return [p() for p in permissions]
+
+    def get_serializer_class(self):
+        """Return serializer based on action."""
+        if self.action == "create":
+            return CreateDonationSerializer
+        return DonationModelSerializer
 
     def get_serializer_context(self):
         """

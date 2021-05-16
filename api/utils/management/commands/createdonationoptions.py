@@ -13,7 +13,7 @@ class Command(BaseCommand):
             price_label="5€",
             stripe_price_id="price_1IrnYGKRJ23zrNRsSZ0ezsWw",
             stripe_product_id="prod_JUn8byhA0haIKH",
-            paid_karma=1000
+            paid_karma=500
         )
         DonationOption.objects.create(
             type=DonationOption.LEVEL2,
@@ -22,7 +22,7 @@ class Command(BaseCommand):
             price_label="15€",
             stripe_price_id="price_1IrnkCKRJ23zrNRszmldmUX9",
             stripe_product_id="prod_JUnKRfca5ab5lx",
-            paid_karma=2000
+            paid_karma=1500
         )
         DonationOption.objects.create(
             type=DonationOption.LEVEL3,
@@ -31,7 +31,7 @@ class Command(BaseCommand):
             price_label="25€",
             stripe_price_id="price_1IrnkqKRJ23zrNRsX5QnPyCN",
             stripe_product_id="prod_JUnLbFyZ6xUFd1",
-            paid_karma=3000
+            paid_karma=2500
 
         )
         DonationOption.objects.create(
@@ -41,7 +41,7 @@ class Command(BaseCommand):
             price_label="50€",
             stripe_price_id="price_1Irnm5KRJ23zrNRsNQSweupX",
             stripe_product_id="prod_JUnMctjnGkwAZr",
-            paid_karma=6000
+            paid_karma=5000
 
         )
         # USD
@@ -52,7 +52,7 @@ class Command(BaseCommand):
             price_label="$5",
             stripe_price_id="price_1IrnYGKRJ23zrNRsnQON44y9",
             stripe_product_id="prod_JUn8byhA0haIKH",
-            paid_karma=1000
+            paid_karma=500
 
         )
         DonationOption.objects.create(
@@ -62,7 +62,7 @@ class Command(BaseCommand):
             price_label="$15",
             stripe_price_id="price_1IrnkCKRJ23zrNRsetaOCpQt",
             stripe_product_id="prod_JUnKRfca5ab5lx",
-            paid_karma=2000
+            paid_karma=1500
 
         )
         DonationOption.objects.create(
@@ -72,7 +72,7 @@ class Command(BaseCommand):
             price_label="$25",
             stripe_price_id="price_1IrnkqKRJ23zrNRsQG1e7EaH",
             stripe_product_id="prod_JEDl98Ujc9Gwd8",
-            paid_karma=3000
+            paid_karma=2500
 
         )
         DonationOption.objects.create(
@@ -82,7 +82,7 @@ class Command(BaseCommand):
             price_label="$50",
             stripe_price_id="price_1Irnm5KRJ23zrNRsYumgpcZT",
             stripe_product_id="prod_JUnMctjnGkwAZr",
-            paid_karma=6000
+            paid_karma=5000
 
         )
         # GBP
@@ -93,37 +93,37 @@ class Command(BaseCommand):
             price_label="£5",
             stripe_price_id="price_1IrnYGKRJ23zrNRsNS4DmLGk",
             stripe_product_id="prod_JUn8byhA0haIKH",
-            paid_karma=1000
+            paid_karma=500
 
         )
         DonationOption.objects.create(
             type=DonationOption.LEVEL2,
-            unit_amount=10,
+            unit_amount=15,
             currency="GBP",
-            price_label="£10",
+            price_label="£15",
             stripe_price_id="price_1IrnkCKRJ23zrNRsL1amf913",
             stripe_product_id="prod_JUnKRfca5ab5lx",
-            paid_karma=2000
+            paid_karma=1500
 
         )
         DonationOption.objects.create(
             type=DonationOption.LEVEL3,
-            unit_amount=15,
+            unit_amount=25,
             currency="GBP",
-            price_label="£15",
+            price_label="£25",
             stripe_price_id="price_1IrnkqKRJ23zrNRsgaOXPjc0",
             stripe_product_id="prod_JUnLbFyZ6xUFd1",
-            paid_karma=3000
+            paid_karma=2500
 
         )
         DonationOption.objects.create(
             type=DonationOption.LEVEL4,
-            unit_amount=30,
+            unit_amount=50,
             currency="GBP",
-            price_label="£30",
+            price_label="£50",
             stripe_price_id="price_1Irnm5KRJ23zrNRsUKywuxUA",
             stripe_product_id="prod_JUnMctjnGkwAZr",
-            paid_karma=6000
+            paid_karma=5000
 
         )
         # # AUD

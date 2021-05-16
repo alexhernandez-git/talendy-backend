@@ -43,11 +43,11 @@ class DonationModelSerializer(serializers.ModelSerializer):
             "donation_option",
             "donation_payment",
             "from_user",
-            "usd_amount",
+            "net_amount",
             "created"
         )
 
-        read_only_fields = ("id", "usd_amount")
+        read_only_fields = ("id", "net_amount")
 
 
 class CreateDonationSerializer(serializers.Serializer):
@@ -240,6 +240,7 @@ class CreateDonationSerializer(serializers.Serializer):
         to_user.save()
 
         if not is_anonymous and user:
+            user.is_currency_permanent = True
             user.donations_made_count += 1
             user.save()
         return donation
