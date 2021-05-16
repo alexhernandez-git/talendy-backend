@@ -24,7 +24,7 @@ class DonationOptionViewSet(
     Handle sign up, login and account verification.
     """
 
-    queryset = DonationOption.objects.all()
+    queryset = DonationOption.objects.all().order_by('unit_amount')
     lookup_field = "id"
     serializer_class = DonationOptionModelSerializer
     pagination_class = None
