@@ -112,6 +112,7 @@ class User(CModel, AbstractUser):
     stripe_customer_id = models.CharField(
         max_length=100, blank=True, null=True)
 
+    is_currency_permanent = models.BooleanField(default=False)
     currency = models.CharField(max_length=3, blank=True, null=True)
     default_payment_method = models.CharField(max_length=100, blank=True, null=True)
 
@@ -126,6 +127,8 @@ class User(CModel, AbstractUser):
     )
 
     # Donation Earnings
+    donations_made_count = models.IntegerField(default=0)
+    donations_received_count = models.IntegerField(default=0)
 
     net_income = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)
     withdrawn = MoneyField(max_digits=14, decimal_places=2, default_currency='USD', default=0)

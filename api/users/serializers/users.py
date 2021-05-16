@@ -87,7 +87,8 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
             'contributed_active_posts_count',
             'contributed_solved_posts_count',
             'reputation',
-            'reviews_count'
+            'reviews_count',
+            'is_currency_permanent'
 
         )
 

@@ -243,7 +243,7 @@ class FinalizePostSerializer(serializers.Serializer):
             # Give the karma offered
             user.karma_amount += post.karma_offered
             # Check if there is a review
-            if member.draft_rating > 0 or member.draft_comment:
+            if (member.draft_rating and member.draft_rating > 0) or member.draft_comment:
                 # Save the review to the user
                 review = Review.objects.create(
                     review_user=admin,

@@ -41,6 +41,7 @@ from api.utils import helpers
 
 class DonationViewSet(
     mixins.ListModelMixin,
+    mixins.CreateModelMixin,
     viewsets.GenericViewSet
 ):
     """User view set.
@@ -54,13 +55,19 @@ class DonationViewSet(
 
     def get_permissions(self):
         """Assign permissions based on action."""
-
-        permissions = [IsAuthenticated]
+        if self.action in ['list', 'retrieve']:
+            permissions = [IsAuthenticated]
+        else:
+            permissions = []
         return [p() for p in permissions]
 
     def get_queryset(self):
         """Restrict list to public-only."""
-        user = self.request.user
+        if self.action in ['list', 'retrieve']:
+            user = self.request.user
 
-        queryset = Donation.objects.filter(user=user)
+            queryset = Donation.objects.filter(to_user=user)
+        else:
+            queryset = Donation.objects.all()
+
         return queryset
