@@ -154,6 +154,17 @@ class CreateDonationSerializer(serializers.Serializer):
         net_amount = gross_amount - service_fee
         # Pass to data the donation option or other amount, the user,
         # the  product, the price, the invoice paid and the to user
+        return {
+            'user': user,
+            'price': price,
+            'product': product,
+            'invoice_paid': invoice_paid,
+            'gross_amount': gross_amount,
+            'net_amount': net_amount,
+            'service_fee': service_fee,
+            'rate_date': rate_date
+
+        }
         import pdb
         pdb.set_trace()
         pass
