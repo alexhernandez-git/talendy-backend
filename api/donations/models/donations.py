@@ -16,4 +16,7 @@ class Donation(CModel):
     from_user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="from_user_donaiton", null=True)
     to_user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="to_user_donation")
 
-    usd_amount = MoneyField(max_digits=14, decimal_places=2, default_currency='USD')
+    gross_amount = MoneyField(max_digits=14, decimal_places=2, default_currency='USD')
+    net_amount = MoneyField(max_digits=14, decimal_places=2, default_currency='USD')
+    service_fee = MoneyField(max_digits=14, decimal_places=2, default_currency='USD')
+    rate_date = models.CharField(max_length=20, null=True, blank=True)

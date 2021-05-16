@@ -281,41 +281,41 @@ def get_chat(sent_by, sent_to):
     return False
 
 
-def get_currency_review(currency, review_date='latest'):
+def get_currency_rate(currency, rate_date='latest'):
     r = None
     status = None
     try:
-        r = requests.get("https://api.exchangereviewsapi.io/"+review_date+"?base=USD")
+        r = requests.get("https://api.exchangeratesapi.io/"+rate_date+"?base=USD")
         status = r.status_code
     except:
         pass
     if status == 200:
         data = r.json()
-        currency_review = data['reviews'][currency.upper()]
+        currency_rate = data['rates'][currency.upper()]
         currency_conversion_date = data['date']
-        if not currency_review:
-            raise serializers.ValidationError("Currency review not allowed")
+        if not currency_rate:
+            raise serializers.ValidationError("Currency rate not allowed")
     else:
         raise serializers.ValidationError("Rate conversion issue, try it later")
-    return currency_review, currency_conversion_date
+    return currency_rate, currency_conversion_date
 
 
-def convert_currency(currency, base, price, review_date='latest'):
+def convert_currency(currency, base, price, rate_date='latest'):
     r = None
     status = None
     try:
-        r = requests.get("https://api.exchangereviewsapi.io/"+review_date+"?base="+base.upper())
+        r = requests.get("https://api.exchangeratesapi.io/"+rate_date+"?base="+base.upper())
         status = r.status_code
     except:
         pass
 
     if status == 200:
         data = r.json()
-        currency_review = data['reviews'][currency.upper()]
+        currency_rate = data['rates'][currency.upper()]
         currency_conversion_date = data['date']
-        if not currency_review:
-            raise serializers.ValidationError("Currency review not allowed")
-        converted_currency = float(price) * currency_review
+        if not currency_rate:
+            raise serializers.ValidationError("Currency rate not allowed")
+        converted_currency = float(price) * currency_rate
     else:
         raise serializers.ValidationError("Rate conversion issue, try it later")
     return converted_currency, currency_conversion_date
