@@ -175,7 +175,6 @@ class CreateDonationSerializer(serializers.Serializer):
             'net_amount': net_amount,
             'service_fee': service_fee,
             'rate_date': rate_date
-
         }
 
     def create(self, validated_data):

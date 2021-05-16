@@ -43,7 +43,7 @@ services:
   stripecli:
     image: stripe/stripe-cli:latest
     network_mode: host
-    command: listen --api-key sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4 --events invoice.payment_succeeded  --forward-to http://localhost:80/api/users/stripe_webhooks_invoice_payment_succeeded/
+    command: listen --api-key sk_test_51HCopMKRJ23zrNRsBClyDiNSIItLH6jxRjczuqwvtXRnTRTKIPAPMaukgGr3HA9PjvCPwC8ZJ5mjoR7mq18od40S00IgdsI8TG --events invoice.payment_succeeded  --forward-to http://localhost:80/api/users/stripe_webhooks_invoice_payment_succeeded/
 
   channels:
     <<: *django

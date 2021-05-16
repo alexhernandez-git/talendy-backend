@@ -3,7 +3,7 @@
 # Django
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
-
+from config.settings.base import env
 
 # Django REST Framework
 from api.users.models import User
@@ -37,6 +37,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 import os
 from api.utils import helpers
+import stripe
 
 
 class DonationViewSet(
@@ -60,6 +61,30 @@ class DonationViewSet(
         else:
             permissions = []
         return [p() for p in permissions]
+
+    def get_serializer_context(self):
+        """
+        Extra context provided to the serializer class.
+        """
+        if self.action in ['create']:
+            if 'STRIPE_API_KEY' in env:
+                stripe.api_key = env('STRIPE_API_KEY')
+            else:
+                stripe.api_key = 'sk_test_51HCopMKRJ23zrNRsBClyDiNSIItLH6jxRjczuqwvtXRnTRTKIPAPMaukgGr3HA9PjvCPwC8ZJ5mjoR7mq18od40S00IgdsI8TG'
+
+            context = {
+                "request": self.request,
+                "format": self.format_kwarg,
+                "view": self,
+                "stripe": stripe
+            }
+        else:
+            context = {
+                "request": self.request,
+                "format": self.format_kwarg,
+                "view": self,
+            }
+        return context
 
     def get_queryset(self):
         """Restrict list to public-only."""
