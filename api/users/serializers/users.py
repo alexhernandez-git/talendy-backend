@@ -16,7 +16,7 @@ from rest_framework.validators import UniqueValidator
 # Models
 from api.users.models import User, UserLoginActivity, Earning, Connection, Follow
 from api.notifications.models import Notification, NotificationUser
-from api.donations.models import DonationItem
+from api.donations.models import DonationOption
 from djmoney.models.fields import Money
 
 

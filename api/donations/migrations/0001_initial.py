@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='DonationItem',
+            name='DonationOption',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('created', models.DateTimeField(auto_now_add=True, help_text='Date time on which the object was created.', verbose_name='created at')),
@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
                 ('paid', models.BooleanField(default=True)),
                 ('status', models.CharField(blank=True, max_length=100, null=True)),
                 ('invoice_pdf', models.CharField(blank=True, max_length=150, null=True)),
-                ('donation_item', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='donation_item_donation', to='donations.DonationItem')),
+                ('donation_item', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='donation_item_donation', to='donations.DonationOption')),
             ],
             options={
                 'ordering': ['-created', '-modified'],

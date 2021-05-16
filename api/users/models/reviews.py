@@ -2,7 +2,7 @@ from api.utils.models import CModel
 from django.db import models
 
 # Models
-from api.donations.models import DonationItem
+from api.donations.models import DonationOption
 
 # Utils
 from django.utils import timezone

@@ -1,21 +1,21 @@
-"""DonationItems views."""
+"""DonationOptions views."""
 
 # Django REST Framework
 
 from rest_framework import viewsets, mixins
 
 # Models
-from api.donations.models import DonationItem
+from api.donations.models import DonationOption
 
 # Serializers
-from api.donations.serializers import DonationItemModelSerializer
+from api.donations.serializers import DonationOptionModelSerializer
 
 
 import os
 from api.utils import helpers
 
 
-class DonationItemViewSet(
+class DonationOptionViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -24,7 +24,7 @@ class DonationItemViewSet(
     Handle sign up, login and account verification.
     """
 
-    queryset = DonationItem.objects.all()
+    queryset = DonationOption.objects.all()
     lookup_field = "id"
-    serializer_class = DonationItemModelSerializer
+    serializer_class = DonationOptionModelSerializer
     pagination_class = None

@@ -12,7 +12,7 @@ from django.db.models import Sum
 from rest_framework import serializers
 
 # Models
-from api.donations.models import DonationItem
+from api.donations.models import DonationOption
 from api.users.models import User, Earning
 
 from api.chats.models import Chat
@@ -155,7 +155,7 @@ def get_currency_api(current_login_ip):
 
         try:
             currency = ccy.countryccy(country_code)
-            if DonationItem.objects.filter(type=DonationItem.BASIC, currency=currency).exists():
+            if DonationOption.objects.filter(type=DonationOption.BASIC, currency=currency).exists():
                 return currency
         except Exception as e:
             print(e)
@@ -195,7 +195,7 @@ def get_currency_and_country_anonymous(request):
 
                 try:
                     country_currency = ccy.countryccy(country_code)
-                    if DonationItem.objects.filter(type=DonationItem.BASIC, currency=country_currency).exists():
+                    if DonationOption.objects.filter(currency=country_currency).exists():
                         currency = country_currency
                 except Exception as e:
                     print(e)
@@ -237,7 +237,7 @@ def get_currency_and_country(request):
 
                 try:
                     country_currency = ccy.countryccy(country_code)
-                    if DonationItem.objects.filter(type=DonationItem.BASIC, currency=country_currency).exists():
+                    if DonationOption.objects.filter(currency=country_currency).exists():
                         currency = country_currency
                 except Exception as e:
                     print(e)
@@ -256,12 +256,12 @@ def get_plan(currency):
     plan = None
 
     try:
-        plans_queryset = DonationItem.objects.filter(currency=currency, type=DonationItem.BASIC)
+        plans_queryset = DonationOption.objects.filter(currency=currency)
         if plans_queryset.exists():
             plan = plans_queryset.first()
 
-    except DonationItem.DoesNotExist:
-        plans_queryset = DonationItem.objects.filter(currency="USD", type=DonationItem.BASIC)
+    except DonationOption.DoesNotExist:
+        plans_queryset = DonationOption.objects.filter(currency="USD")
         if plans_queryset.exists():
             plan = plans_queryset.first()
 
