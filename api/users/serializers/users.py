@@ -880,7 +880,7 @@ class CreateDonationSerializer(serializers.Serializer):
             'default_payment_method': payment_method_id,
         }
 
-    def create(self, instance, validated_data):
+    def update(self, instance, validated_data):
 
         # Get the validated data
         is_anonymous = validated_data["is_anonymous"]
@@ -919,7 +919,7 @@ class CreateDonationSerializer(serializers.Serializer):
         )
 
         # Create the donation
-        donation = Donation.objects.create(
+        Donation.objects.create(
             is_other_amount=is_other_amount,
             donation_option=donation_option,
             donation_payment=donation_payment,
@@ -950,4 +950,4 @@ class CreateDonationSerializer(serializers.Serializer):
             user.is_currency_permanent = True
             user.donations_made_count += 1
             user.save()
-        return user
+        return to_user, user

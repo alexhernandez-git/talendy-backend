@@ -160,7 +160,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             partial=partial
         )
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        to_user, user = serializer.save()
         data = None
         if user:
             data = DetailedUserModelSerializer(user).data
