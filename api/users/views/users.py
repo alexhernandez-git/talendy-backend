@@ -161,10 +161,12 @@ class UserViewSet(mixins.RetrieveModelMixin,
         )
         serializer.is_valid(raise_exception=True)
         to_user, user = serializer.save()
-        data = None
+        data = {
+            "to_user": UserModelSerializer(to_user).data
+        }
         if user:
-            data = DetailedUserModelSerializer(user).data
-            data['payment_methods'] = helpers.get_payment_methods(stripe, user.stripe_customer_id)
+            data['user'] = DetailedUserModelSerializer(user).data
+            data['user']['payment_methods'] = helpers.get_payment_methods(stripe, user.stripe_customer_id)
         return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'])

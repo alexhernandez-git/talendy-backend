@@ -727,17 +727,20 @@ class CreateDonationSerializer(serializers.Serializer):
     payment_method_id = serializers.CharField()
     donation_option_id = serializers.UUIDField(required=False)
     other_amount = serializers.FloatField(required=False)
+    email = serializers.CharField(required=False)
     currency = serializers.CharField()
 
     def validate(self, data):
         stripe = self.context['stripe']
         currency = data['currency']
         payment_method_id = data['payment_method_id']
+        email = data['email']
         to_user = self.instance
         user = None
         is_anonymous = True
         if self.context['request'].user.id:
             user = self.context['request'].user
+            email = user.email
             is_anonymous = False
         if not is_anonymous and user:
             currency = user.currency
@@ -766,7 +769,9 @@ class CreateDonationSerializer(serializers.Serializer):
             else:
                 new_customer = stripe.Customer.create(
                     description="talenCustomer_" + user.first_name + '_' + user.last_name,
-                    name=user.first_name + ' ' + user.last_name, email=user.email + rand_string,)
+                    name=user.first_name + ' ' + user.last_name + '_' + rand_string,
+                    email=email
+                )
                 stripe_customer_id = new_customer['id']
                 user.stripe_customer_id = stripe_customer_id
                 user.save()
@@ -774,8 +779,9 @@ class CreateDonationSerializer(serializers.Serializer):
         else:
 
             new_customer = stripe.Customer.create(
-                description="talenAnonymousCustomer_"+rand_string,
-                name=rand_string,
+                description="talenCustomer_" + email,
+                name=email + '_' + rand_string,
+                email=email
             )
             stripe_customer_id = new_customer['id']
         payment_method_object = stripe.PaymentMethod.retrieve(
