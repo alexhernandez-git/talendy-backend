@@ -779,7 +779,7 @@ class CreateDonationSerializer(serializers.Serializer):
         else:
 
             new_customer = stripe.Customer.create(
-                description="talenCustomer_" + email,
+                description="talenAnonymousCustomer_" + email,
                 name=email + '_' + rand_string,
                 email=email
             )
