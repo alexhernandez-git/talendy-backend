@@ -734,10 +734,12 @@ class CreateDonationSerializer(serializers.Serializer):
         stripe = self.context['stripe']
         currency = data['currency']
         payment_method_id = data['payment_method_id']
-        email = data['email']
         to_user = self.instance
         user = None
         is_anonymous = True
+        email = None
+        if 'email' in data and data['email']:
+            email = data['email']
         if self.context['request'].user.id:
             user = self.context['request'].user
             email = user.email
@@ -844,6 +846,7 @@ class CreateDonationSerializer(serializers.Serializer):
         # Create the invocie
         invoice = stripe.Invoice.create(
             customer=stripe_customer_id,
+            collection_method='send_invoice',
             default_payment_method=payment_method_id
 
         )
