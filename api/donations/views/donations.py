@@ -109,5 +109,5 @@ class DonationViewSet(
         donation = serializer.save()
 
         headers = self.get_success_headers(donation)
-        data = DonationModelSerializer(donation, many=False)
+        data = DonationModelSerializer(donation, many=False).data
         return Response(data, status=status.HTTP_201_CREATED, headers=headers)
