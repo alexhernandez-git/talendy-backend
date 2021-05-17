@@ -285,7 +285,7 @@ def get_currency_rate(currency, rate_date='latest'):
     r = None
     status = None
     try:
-        r = requests.get("https://api.exchangeratesapi.io/"+rate_date+"?base=USD")
+        r = requests.get("https://api.exchangerate.host/"+rate_date+"?base=USD")
         status = r.status_code
     except:
         pass
@@ -304,13 +304,14 @@ def convert_currency(currency, base, price, rate_date='latest'):
     r = None
     status = None
     try:
-        r = requests.get("https://api.exchangeratesapi.io/"+rate_date+"?base="+base.upper())
+        r = requests.get("https://api.exchangerate.host/"+rate_date+"?base="+base.upper())
         status = r.status_code
     except:
         pass
 
     if status == 200:
         data = r.json()
+
         currency_rate = data['rates'][currency.upper()]
         currency_conversion_date = data['date']
         if not currency_rate:

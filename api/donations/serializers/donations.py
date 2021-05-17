@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib.auth import password_validation, authenticate
 from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
+from djmoney.models.fields import Money
 
 # Models
 from api.donations.models import Donation, DonationOption, DonationPayment
@@ -59,7 +60,7 @@ class CreateDonationSerializer(serializers.Serializer):
 
     def validate(self, data):
         stripe = self.context['stripe']
-        currency = self.context['currency']
+        currency = data['currency']
         payment_method_id = data['payment_method_id']
         to_user = get_object_or_404(User, id=data['to_user_id'])
         user = None
@@ -71,7 +72,7 @@ class CreateDonationSerializer(serializers.Serializer):
             currency = user.currency
         donation_option = None
         if 'donation_option_id' in data and data['donation_option_id']:
-            donation_option = get_object_or_404(DonationOption, id=data['to_user'])
+            donation_option = get_object_or_404(DonationOption, id=data['donation_option_id'])
         other_amount = None
         if 'other_amount' in data and data['other_amount']:
             other_amount = data['other_amount']
@@ -86,7 +87,7 @@ class CreateDonationSerializer(serializers.Serializer):
         # If there is not, create stripe customer account and save the stripe customer id
 
         rand_string = ''.join(
-            random.choices(string.ascii_uppercase + string.digits, k=10))
+            random.choices(string.ascii_uppercase + string.digits, k=15))
 
         if not is_anonymous and user:
             if user.stripe_customer_id:
@@ -99,13 +100,6 @@ class CreateDonationSerializer(serializers.Serializer):
                 user.stripe_customer_id = stripe_customer_id
                 user.save()
 
-            # Add to default paymet method this payment id
-            stripe.Customer.modify(
-                stripe_customer_id,
-                invoice_settings={
-                    "default_payment_method": payment_method_id
-                }
-            )
         else:
 
             new_customer = stripe.Customer.create(
@@ -113,7 +107,37 @@ class CreateDonationSerializer(serializers.Serializer):
                 name=rand_string,
             )
             stripe_customer_id = new_customer['id']
+        payment_method_object = stripe.PaymentMethod.retrieve(
+            payment_method_id,
+        )
+        # Add to default paymet method this payment id
+        payment_methods = helpers.get_payment_methods(stripe, stripe_customer_id)
+        if payment_methods:
+            for payment_method in payment_methods:
+                # Check if payment method not already added
 
+                if payment_method.card.fingerprint != payment_method_object.card.fingerprint:
+                    stripe.PaymentMethod.attach(
+                        payment_method_id,
+                        customer=stripe_customer_id,
+                    )
+                    stripe.Customer.modify(
+                        stripe_customer_id,
+                        invoice_settings={
+                            "default_payment_method": payment_method_id
+                        }
+                    )
+        else:
+            stripe.PaymentMethod.attach(
+                payment_method_id,
+                customer=stripe_customer_id,
+            )
+            stripe.Customer.modify(
+                stripe_customer_id,
+                invoice_settings={
+                    "default_payment_method": payment_method_id
+                }
+            )
         # If is other amount create the new stripe product and price
         if is_other_amount:
             if not is_anonymous and user:
@@ -214,6 +238,8 @@ class CreateDonationSerializer(serializers.Serializer):
             amount_paid=float(amount_paid) / 100,
             currency=currency,
             status=status,
+            stripe_price_id=price['id'],
+            stripe_product_id=product['id']
         )
 
         # Create the donation
@@ -239,9 +265,9 @@ class CreateDonationSerializer(serializers.Serializer):
 
         # Add donations_received_count to to_user
         to_user.donations_received_count += 1
-        to_user.net_income = to_user.net_income + net_amount
+        to_user.net_income = to_user.net_income + Money(amount=net_amount, currency="USD")
 
-        to_user.pending_clearance += net_amount
+        to_user.pending_clearance += Money(amount=net_amount, currency="USD")
         to_user.save()
 
         if not is_anonymous and user:

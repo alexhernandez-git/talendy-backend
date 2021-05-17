@@ -102,3 +102,12 @@ class DonationViewSet(
             queryset = Donation.objects.all()
 
         return queryset
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        donation = serializer.save()
+
+        headers = self.get_success_headers(donation)
+        data = DonationModelSerializer(donation, many=False)
+        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
