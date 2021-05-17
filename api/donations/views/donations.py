@@ -28,7 +28,8 @@ from api.users.permissions import IsAccountOwner
 from api.donations.models import Donation
 
 # Serializers
-from api.donations.serializers import DonationModelSerializer, CreateDonationSerializer
+from api.donations.serializers import DonationModelSerializer
+from api.users.serializers import DetailedUserModelSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -64,32 +65,19 @@ class DonationViewSet(
 
     def get_serializer_class(self):
         """Return serializer based on action."""
-        if self.action == "create":
-            return CreateDonationSerializer
         return DonationModelSerializer
 
     def get_serializer_context(self):
         """
         Extra context provided to the serializer class.
         """
-        if self.action in ['create']:
-            if 'STRIPE_API_KEY' in env:
-                stripe.api_key = env('STRIPE_API_KEY')
-            else:
-                stripe.api_key = 'sk_test_51HCopMKRJ23zrNRsBClyDiNSIItLH6jxRjczuqwvtXRnTRTKIPAPMaukgGr3HA9PjvCPwC8ZJ5mjoR7mq18od40S00IgdsI8TG'
 
-            context = {
-                "request": self.request,
-                "format": self.format_kwarg,
-                "view": self,
-                "stripe": stripe
-            }
-        else:
-            context = {
-                "request": self.request,
-                "format": self.format_kwarg,
-                "view": self,
-            }
+        context = {
+            "request": self.request,
+            "format": self.format_kwarg,
+            "view": self,
+        }
+
         return context
 
     def get_queryset(self):
@@ -102,12 +90,3 @@ class DonationViewSet(
             queryset = Donation.objects.all()
 
         return queryset
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        donation = serializer.save()
-
-        headers = self.get_success_headers(donation)
-        data = DonationModelSerializer(donation, many=False).data
-        return Response(data, status=status.HTTP_201_CREATED, headers=headers)

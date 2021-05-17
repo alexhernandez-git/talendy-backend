@@ -1,5 +1,6 @@
 """Users views."""
 # Django
+from api.users.serializers.users import CreateDonationSerializer
 from operator import sub
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -141,6 +142,30 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
         instance.account_deactivated = True
         instance.save()
+
+    @action(detail=True, methods=['patch'])
+    def make_donation(self, request, *args, **kwargs):
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
+        else:
+            stripe.api_key = 'sk_test_51HCopMKRJ23zrNRsBClyDiNSIItLH6jxRjczuqwvtXRnTRTKIPAPMaukgGr3HA9PjvCPwC8ZJ5mjoR7mq18od40S00IgdsI8TG'
+
+        user = self.get_object()
+
+        partial = request.method == 'PATCH'
+        serializer = CreateDonationSerializer(
+            user,
+            data=request.data,
+            context={"request": request, "stripe": stripe},
+            partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        data = None
+        if user:
+            data = DetailedUserModelSerializer(user).data
+            data['payment_methods'] = helpers.get_payment_methods(stripe, user.stripe_customer_id)
+        return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'])
     def list_users_with_most_karma(self, request, *args, **kwargs):
