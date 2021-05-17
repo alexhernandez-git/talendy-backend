@@ -727,6 +727,7 @@ class CreateDonationSerializer(serializers.Serializer):
     payment_method_id = serializers.CharField()
     donation_option_id = serializers.UUIDField(required=False)
     other_amount = serializers.FloatField(required=False)
+    other_amount_karma = serializers.FloatField(required=False)
     email = serializers.CharField(required=False)
     currency = serializers.CharField()
 
@@ -752,6 +753,11 @@ class CreateDonationSerializer(serializers.Serializer):
         other_amount = None
         if 'other_amount' in data and data['other_amount']:
             other_amount = data['other_amount']
+        paid_karma = None
+        if donation_option:
+            paid_karma = donation_option.paid_karma
+        elif 'other_amount_karma' in data and data['other_amount_karma']:
+            paid_karma = data['other_amount_karma']
 
         # Check if there is almost one of the donation_option and other amount
         if not donation_option and not other_amount:
@@ -886,6 +892,7 @@ class CreateDonationSerializer(serializers.Serializer):
             'rate_date': rate_date,
             'stripe_customer_id': stripe_customer_id,
             'default_payment_method': payment_method_id,
+            'paid_karma': paid_karma
         }
 
     def update(self, instance, validated_data):
@@ -906,6 +913,7 @@ class CreateDonationSerializer(serializers.Serializer):
         rate_date = validated_data["rate_date"]
         stripe_customer_id = validated_data["stripe_customer_id"]
         default_payment_method = validated_data["default_payment_method"]
+        paid_karma = validated_data["paid_karma"]
 
         # Create the donation payment
         invoice_id = invoice_paid['id']
@@ -955,6 +963,7 @@ class CreateDonationSerializer(serializers.Serializer):
         to_user.save()
 
         if not is_anonymous and user:
+            user.karma_amount += paid_karma
             user.is_currency_permanent = True
             user.donations_made_count += 1
             user.save()
