@@ -594,6 +594,37 @@ class ChangePasswordSerializer(serializers.Serializer):
         return data
 
 
+class ConfirmUserSerializer(serializers.Serializer):
+    """User login serializer.
+
+    Handle the login request
+    """
+    password = serializers.CharField(min_length=8, max_length=64)
+
+    def validate(self, data):
+        """Check credentials."""
+        # Validation with email or password
+        regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+        # for custom mails use: '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$'
+        user = self.context['request'].user
+        password = data['password']
+        email = user.email
+        if email and password:
+            if re.search(regex, email):
+                user_request = get_object_or_404(
+                    User,
+                    email=email
+                )
+                email = user_request.username
+            # Check if user set email
+
+        user = authenticate(username=email, password=password)
+        if not user:
+            raise serializers.ValidationError('Password is not correct')
+
+        return user
+
+
 class InviteUserSerializer(serializers.Serializer):
     """Acount verification serializer."""
 
@@ -766,7 +797,6 @@ class CreateDonationSerializer(serializers.Serializer):
         is_other_amount = False
         if other_amount:
             is_other_amount = True
-        # If there is not, create stripe customer account and save the stripe customer id
 
         rand_string = ''.join(
             random.choices(string.ascii_uppercase + string.digits, k=15))

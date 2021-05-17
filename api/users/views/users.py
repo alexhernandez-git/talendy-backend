@@ -1,6 +1,6 @@
 """Users views."""
 # Django
-from api.users.serializers.users import CreateDonationSerializer
+from api.users.serializers.users import ConfirmUserSerializer, CreateDonationSerializer
 from operator import sub
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -101,7 +101,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             'retrieve',
                 'list']:
             permissions = [AllowAny]
-        elif self.action in ['update', 'delete', 'partial_update', 'change_password', 'change_email', 'stripe_connect', 'paypal_connect', 'destroy']:
+        elif self.action in ['update', 'delete', 'partial_update', 'change_password', 'change_email', 'stripe_connect', 'paypal_connect', 'destroy', 'confirm_user']:
             permissions = [IsAccountOwner, IsAuthenticated]
         elif self.action in ['list_users_not_followed']:
             permissions = [IsAuthenticated]
@@ -190,6 +190,17 @@ class UserViewSet(mixins.RetrieveModelMixin,
         data = serializer.data
 
         return Response(data=data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
+    def confirm_user(self, request):
+        """Check if email passed is correct."""
+        serializer = ConfirmUserSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+
+        serializer.is_valid(raise_exception=True)
+        return Response(status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
     def is_email_available(self, request):
