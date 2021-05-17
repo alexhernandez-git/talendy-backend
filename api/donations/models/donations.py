@@ -15,6 +15,7 @@ class Donation(CModel):
     is_anonymous = models.BooleanField(default=False)
     from_user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="from_user_donaiton", null=True)
     to_user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="to_user_donation")
+    message = models.TextField(null=True, blank=True)
 
     gross_amount = MoneyField(max_digits=14, decimal_places=2, default_currency='USD')
     net_amount = MoneyField(max_digits=14, decimal_places=2, default_currency='USD')

@@ -52,21 +52,25 @@ class DonationModelSerializer(serializers.ModelSerializer):
 
 class CreateDonationSerializer(serializers.Serializer):
     payment_method_id = serializers.CharField()
-    donation_option = serializers.UUIDField(required=False)
+    donation_option_id = serializers.UUIDField(required=False)
     other_amount = serializers.FloatField(required=False)
-    to_user = serializers.UUIDField()
+    to_user_id = serializers.UUIDField()
+    currency = serializers.CharField()
 
     def validate(self, data):
         stripe = self.context['stripe']
+        currency = self.context['currency']
         payment_method_id = data['payment_method_id']
-        to_user = get_object_or_404(User, id=data['to_user'])
+        to_user = get_object_or_404(User, id=data['to_user_id'])
         user = None
         is_anonymous = True
         if self.context['request'].user.id:
             user = self.context['request'].user
             is_anonymous = False
+        if not is_anonymous and user:
+            currency = user.currency
         donation_option = None
-        if 'donation_option' in data and data['donation_option']:
+        if 'donation_option_id' in data and data['donation_option_id']:
             donation_option = get_object_or_404(DonationOption, id=data['to_user'])
         other_amount = None
         if 'other_amount' in data and data['other_amount']:
@@ -115,11 +119,12 @@ class CreateDonationSerializer(serializers.Serializer):
             if not is_anonymous and user:
 
                 product = stripe.Product.create(name=other_amount + '_donation_by_' + user.username)
+
             else:
                 product = stripe.Product.create(name=other_amount + '_donation_' + rand_string)
             price = stripe.Price.create(
                 unit_amount=int(other_amount * 100),
-                currency=user.currency,
+                currency=currency,
                 product=product['id']
             )
 
