@@ -822,10 +822,10 @@ class CreateDonationSerializer(serializers.Serializer):
         if is_other_amount:
             if not is_anonymous and user:
 
-                product = stripe.Product.create(name=other_amount + '_donation_by_' + user.username)
+                product = stripe.Product.create(name=str(other_amount) + '_donation_by_' + user.username)
 
             else:
-                product = stripe.Product.create(name=other_amount + '_donation_' + rand_string)
+                product = stripe.Product.create(name=str(other_amount) + '_donation_' + rand_string)
             price = stripe.Price.create(
                 unit_amount=int(other_amount * 100),
                 currency=currency,
@@ -846,7 +846,6 @@ class CreateDonationSerializer(serializers.Serializer):
         # Create the invocie
         invoice = stripe.Invoice.create(
             customer=stripe_customer_id,
-            collection_method='send_invoice',
             default_payment_method=payment_method_id
 
         )
