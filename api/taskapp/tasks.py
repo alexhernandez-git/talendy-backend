@@ -144,7 +144,7 @@ def send_have_contribute_room_messages_from_email(sent_to, sent_by, post):
 
 
 @task(name='send_connection_accepted', max_retries=3)
-def send_connection_accepted(sent_to, user):
+def send_connection_accepted(user, sent_to):
     """Check if the free trial has ended and turn off"""
 
     subject = '@{} is your new connection'.format(
@@ -152,7 +152,7 @@ def send_connection_accepted(sent_to, user):
 
     from_email = 'Talendy <no-reply@talendy.com>'
     content = render_to_string(
-        'emails/users/new_room_messages.html',
+        'emails/users/connection_accepted.html',
         {'user': user}
     )
     msg = EmailMultiAlternatives(subject, content, from_email, [sent_to.email])
