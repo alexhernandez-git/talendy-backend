@@ -86,7 +86,10 @@ class ConnectInvitationSerialzer(serializers.Serializer):
                 "notification__pk": str(user_notification.pk),
             }
         )
-        send_invitation_email(requester, addressee)
+
+        if addressee.email_notifications_allowed:
+            send_invitation_email(requester, addressee)
+
         return connection
 
 

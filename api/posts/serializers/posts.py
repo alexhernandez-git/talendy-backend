@@ -1,6 +1,7 @@
 """Notifications serializers."""
 
 # Django REST Framework
+from api.taskapp.tasks import send_post_to_followers
 from rest_framework import serializers
 
 # Django
@@ -19,7 +20,7 @@ from api.users.serializers import UserModelSerializer
 from .post_members import PostMemberModelSerializer
 
 # Models
-from api.users.models import User, Review
+from api.users.models import User, Review, Follow
 from api.posts.models import Post, PostImage, PostMember, ContributeRequest, PostSeenBy
 from api.notifications.models import Notification, NotificationUser
 
@@ -116,6 +117,12 @@ class PostModelSerializer(serializers.ModelSerializer):
                 size=image.size
             )
         PostMember.objects.create(post=post, user=user, role=PostMember.ADMIN)
+
+        users_following = Follow.objects.filter(followed_user=user)
+        for user_following in users_following:
+            if user_following.from_user.email_notifications_allowed:
+                send_post_to_followers(user, user_following.from_user, post)
+
         return post
 
     def update(self, instance, validated_data):

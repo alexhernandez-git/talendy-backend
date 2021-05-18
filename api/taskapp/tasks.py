@@ -92,11 +92,11 @@ def send_invitation_email(user, to_user):
     msg.send()
 
 
-@task(name='send_opportunity_to_followers', max_retries=3)
-def send_opportunity_to_followers(user, to_user, post):
+@task(name='send_post_to_followers', max_retries=3)
+def send_post_to_followers(user, to_user, post):
     """Send account verification link to given user."""
 
-    subject = '@{} has asked for help'.format(
+    subject = '@{} has just created new post'.format(
         user.username)
     from_email = 'Talendy <no-reply@talendy.com>'
 
