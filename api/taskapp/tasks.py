@@ -142,6 +142,57 @@ def send_have_contribute_room_messages_from_email(sent_to, sent_by, post):
     msg.attach_alternative(content, "text/html")
     msg.send()
 
+
+@task(name='send_connection_accepted', max_retries=3)
+def send_connection_accepted(sent_to, user):
+    """Check if the free trial has ended and turn off"""
+
+    subject = '@{} is your new connection'.format(
+        user.username)
+
+    from_email = 'Talendy <no-reply@talendy.com>'
+    content = render_to_string(
+        'emails/users/new_room_messages.html',
+        {'user': user}
+    )
+    msg = EmailMultiAlternatives(subject, content, from_email, [sent_to.email])
+    msg.attach_alternative(content, "text/html")
+    msg.send()
+
+
+@task(name='send_contribute_request', max_retries=3)
+def send_contribute_request(sent_to, user):
+    """Check if the free trial has ended and turn off"""
+
+    subject = 'New contribute request from @{}'.format(
+        user.username)
+
+    from_email = 'Talendy <no-reply@talendy.com>'
+    content = render_to_string(
+        'emails/users/contribute_request.html',
+        {'user': user}
+    )
+    msg = EmailMultiAlternatives(subject, content, from_email, [sent_to.email])
+    msg.attach_alternative(content, "text/html")
+    msg.send()
+
+
+@task(name='send_contribute_request_accepted', max_retries=3)
+def send_contribute_request_accepted(sent_to, user):
+    """Check if the free trial has ended and turn off"""
+
+    subject = 'New contribute room messages from @{}'.format(
+        user.username)
+
+    from_email = 'Talendy <no-reply@talendy.com>'
+    content = render_to_string(
+        'emails/users/contribute_request.html',
+        {'user': user}
+    )
+    msg = EmailMultiAlternatives(subject, content, from_email, [sent_to.email])
+    msg.attach_alternative(content, "text/html")
+    msg.send()
+
 # MESSAGES = 'ME'
 # NEW_INVITATION = 'NI'
 # NEW_CONNECTION = 'NC'
