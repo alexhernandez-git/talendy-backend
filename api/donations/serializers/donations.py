@@ -47,6 +47,7 @@ class DonationModelSerializer(serializers.ModelSerializer):
             "net_amount",
             "is_anonymous",
             "message",
+            "email",
             "created"
         )
 
