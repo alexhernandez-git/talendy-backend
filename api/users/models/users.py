@@ -122,6 +122,8 @@ class User(CModel, AbstractUser):
 
     # Notifications
 
+    email_notifications_allowed = models.BooleanField(default=True)
+
     notifications = models.ManyToManyField(
         "notifications.Notification", through="notifications.NotificationUser", related_name="user_notifications"
     )
