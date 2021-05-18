@@ -1,6 +1,7 @@
 """Users serializers."""
 
 # Django REST Framework
+from api.taskapp.tasks import send_invitation_email
 from rest_framework import serializers
 
 # Django
@@ -85,6 +86,7 @@ class ConnectInvitationSerialzer(serializers.Serializer):
                 "notification__pk": str(user_notification.pk),
             }
         )
+        send_invitation_email(requester, addressee)
         return connection
 
 

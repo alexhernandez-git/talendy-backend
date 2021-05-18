@@ -76,7 +76,7 @@ def send_reset_password_email(user_email):
 
 
 @task(name='send_invitation_email', max_retries=3)
-def send_invitation_email(user, email):
+def send_invitation_email(user, to_user):
     """Send account verification link to given user."""
 
     subject = 'Welcome! @{} has invited you '.format(
@@ -87,13 +87,13 @@ def send_invitation_email(user, email):
         {'user': user}
 
     )
-    msg = EmailMultiAlternatives(subject, content, from_email, [email])
+    msg = EmailMultiAlternatives(subject, content, from_email, [to_user.email])
     msg.attach_alternative(content, "text/html")
     msg.send()
 
 
 @task(name='send_opportunity_to_followers', max_retries=3)
-def send_opportunity_to_followers(user, followers_emails, opportunity):
+def send_opportunity_to_followers(user, to_user, post):
     """Send account verification link to given user."""
 
     subject = '@{} has asked for help'.format(
@@ -101,10 +101,10 @@ def send_opportunity_to_followers(user, followers_emails, opportunity):
     from_email = 'Talendy <no-reply@talendy.com>'
 
     content = render_to_string(
-        'emails/users/new_opportunity.html',
-        {'user': user, 'opportunity': opportunity}
+        'emails/users/new_post.html',
+        {'user': user, 'post': post}
     )
-    msg = EmailMultiAlternatives(subject, content, from_email, followers_emails)
+    msg = EmailMultiAlternatives(subject, content, from_email, [to_user.email])
     msg.attach_alternative(content, "text/html")
     msg.send()
 
