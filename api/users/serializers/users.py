@@ -1005,28 +1005,28 @@ class CreateDonationSerializer(serializers.Serializer):
 
         to_user.pending_clearance += Money(amount=net_amount, currency="USD")
         to_user.save()
+        # Notificate the invitation to the addressee
+        notification = Notification.objects.create(
+            type=Notification.NEW_DONATION,
+            donation=donation,
+        )
+        user_notification = NotificationUser.objects.create(
+            notification=notification,
+            user=to_user
+        )
 
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "user-%s" % to_user.id, {
+                "type": "send.notification",
+                "event": "NEW_DONATION",
+                "notification__pk": str(user_notification.pk),
+            }
+        )
         if not is_anonymous and user:
             user.karma_amount += paid_karma
             user.is_currency_permanent = True
             user.donations_made_count += 1
             user.save()
-            # Notificate the invitation to the addressee
-            notification = Notification.objects.create(
-                type=Notification.NEW_DONATION,
-                donation=donation,
-            )
-            user_notification = NotificationUser.objects.create(
-                notification=notification,
-                user=to_user
-            )
 
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                "user-%s" % to_user.id, {
-                    "type": "send.notification",
-                    "event": "NEW_DONATION",
-                    "notification__pk": str(user_notification.pk),
-                }
-            )
         return to_user, user

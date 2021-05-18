@@ -13,6 +13,7 @@ from django.shortcuts import get_object_or_404
 from api.users.serializers import UserModelSerializer, ConnectionModelSerializer, ReviewModelSerializer
 from api.chats.serializers import MessageModelSerializer
 from api.posts.serializers import ContributeRequestModelSerializer, PostModelSerializer, PostMessageModelSerializer
+from api.donations.serializers import DonationModelSerializer
 
 # Models
 from api.users.models import User
@@ -30,6 +31,7 @@ class NotificationModelSerializer(serializers.ModelSerializer):
     member_joined = serializers.SerializerMethodField(read_only=True)
     post_messages = serializers.SerializerMethodField(read_only=True)
     review = serializers.SerializerMethodField(read_only=True)
+    donation = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -46,6 +48,7 @@ class NotificationModelSerializer(serializers.ModelSerializer):
             "post_messages",
             "contribute_request",
             "review",
+            "donation",
             "modified",
         )
 
@@ -80,6 +83,11 @@ class NotificationModelSerializer(serializers.ModelSerializer):
     def get_review(self, obj):
         if obj.review:
             return ReviewModelSerializer(obj.review, many=False).data
+        return False
+
+    def get_donation(self, obj):
+        if obj.donation:
+            return DonationModelSerializer(obj.donation, many=False).data
         return False
 
 
