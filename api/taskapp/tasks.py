@@ -76,16 +76,16 @@ def send_reset_password_email(user_email):
 
 
 @task(name='send_invitation_email', max_retries=3)
-def send_invitation_email(user, email, message, type):
+def send_invitation_email(user, email):
     """Send account verification link to given user."""
 
-    verification_token = helpers.get_invitation_token(user, email)
     subject = 'Welcome! @{} has invited you '.format(
         user.username)
     from_email = 'Talendy <no-reply@talendy.com>'
     content = render_to_string(
-        'emails/users/user_invitation.html',
-        {'token': verification_token, 'user': user, 'message': message, 'type': type}
+        'emails/users/connect_invitation.html',
+        {'user': user}
+
     )
     msg = EmailMultiAlternatives(subject, content, from_email, [email])
     msg.attach_alternative(content, "text/html")
@@ -127,7 +127,7 @@ def send_have_messages_from_email(sent_to, sent_by):
 
 
 @task(name='send_have_contribute_room_messages_from_email', max_retries=3)
-def send_have_contribute_room_messages_from_email(sent_to, sent_by):
+def send_have_contribute_room_messages_from_email(sent_to, sent_by, post):
     """Check if the free trial has ended and turn off"""
 
     subject = 'New contribute room messages from @{}'.format(
@@ -135,12 +135,23 @@ def send_have_contribute_room_messages_from_email(sent_to, sent_by):
 
     from_email = 'Talendy <no-reply@talendy.com>'
     content = render_to_string(
-        'emails/users/new_messages.html',
-        {'user': sent_by}
+        'emails/users/new_room_messages.html',
+        {'user': sent_by, 'post': post}
     )
     msg = EmailMultiAlternatives(subject, content, from_email, [sent_to.email])
     msg.attach_alternative(content, "text/html")
     msg.send()
+
+# MESSAGES = 'ME'
+# NEW_INVITATION = 'NI'
+# NEW_CONNECTION = 'NC'
+# NEW_CONTRIBUTE_REQUEST = 'CR'
+# JOINED_MEMBERSHIP = 'JM'
+# CONTRIBUTE_REQUEST_ACCEPTED = 'CA'
+# POST_MESSAGES = 'PM'
+# POST_FINALIZED = 'PF'
+# NEW_REVIEW = 'NR'
+# NEW_DONATION = 'ND'
 
 
 @task(name='check_if_pending_clearance_has_ended', max_retries=3)
