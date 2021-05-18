@@ -7,6 +7,9 @@ from django.core.validators import RegexValidator, validate_email
 from django.shortcuts import get_object_or_404
 from django.db.models import Sum, Q
 
+# Channels
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 # Django REST Framework
 from rest_framework import serializers
@@ -974,7 +977,7 @@ class CreateDonationSerializer(serializers.Serializer):
         )
 
         # Create the donation
-        Donation.objects.create(
+        donation = Donation.objects.create(
             is_other_amount=is_other_amount,
             donation_option=donation_option,
             donation_payment=donation_payment,
@@ -1008,4 +1011,22 @@ class CreateDonationSerializer(serializers.Serializer):
             user.is_currency_permanent = True
             user.donations_made_count += 1
             user.save()
+            # Notificate the invitation to the addressee
+            notification = Notification.objects.create(
+                type=Notification.NEW_DONATION,
+                donation=donation,
+            )
+            user_notification = NotificationUser.objects.create(
+                notification=notification,
+                user=to_user
+            )
+
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "user-%s" % to_user.id, {
+                    "type": "send.notification",
+                    "event": "NEW_DONATION",
+                    "notification__pk": str(user_notification.pk),
+                }
+            )
         return to_user, user

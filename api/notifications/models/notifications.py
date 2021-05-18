@@ -20,6 +20,7 @@ class Notification(CModel):
     POST_MESSAGES = 'PM'
     POST_FINALIZED = 'PF'
     NEW_REVIEW = 'NR'
+    NEW_DONATION = 'ND'
     TYPE_CHOICES = [
         (MESSAGES, 'Messages'),
         (NEW_INVITATION, 'New invitation'),
@@ -30,6 +31,7 @@ class Notification(CModel):
         (POST_MESSAGES, 'Post messages'),
         (POST_FINALIZED, 'Post finalized'),
         (NEW_REVIEW, 'New review'),
+        (NEW_DONATION, 'New donation'),
     ]
     type = models.CharField(
         max_length=2,
@@ -58,7 +60,10 @@ class Notification(CModel):
 
     post = models.ForeignKey("posts.Post", on_delete=models.CASCADE, null=True)
 
-    # New review
+    # NEW_REVIEW
     review = models.ForeignKey("users.Review", on_delete=models.CASCADE, null=True)
+
+    # NEW_DONATION
+    donation = models.ForeignKey("donations.Donation", on_delete=models.CASCADE, null=True)
 
     actor = models.ForeignKey("users.User", on_delete=models.SET_NULL, null=True)
