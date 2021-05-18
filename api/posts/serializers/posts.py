@@ -1,7 +1,7 @@
 """Notifications serializers."""
 
 # Django REST Framework
-from api.taskapp.tasks import send_post_to_followers
+from api.taskapp.tasks import send_post_finalized, send_post_to_followers
 from rest_framework import serializers
 
 # Django
@@ -292,6 +292,8 @@ class FinalizePostSerializer(serializers.Serializer):
                     "notification__pk": str(user_notification.pk),
                 }
             )
+            if user.email_notifications_allowed:
+                send_post_finalized(admin, user, post)
             user.save()
 
         admin.save()

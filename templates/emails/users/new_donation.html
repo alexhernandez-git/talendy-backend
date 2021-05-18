@@ -467,8 +467,10 @@
                                                 data-start-index="9089"
                                                 data-end-index="9208"
                                               >
-                                                You recieved a donation from
-                                                {{user.username}}
+                                                You recieved a donation from {%
+                                                if is_anonymous %} anonymous
+                                                user {% else %}
+                                                {{user.username}} {% endif %}
                                               </td>
                                             </tr>
                                           </tbody>

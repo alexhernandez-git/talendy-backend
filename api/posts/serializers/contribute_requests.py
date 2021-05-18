@@ -23,6 +23,9 @@ from api.users.models import User
 from api.posts.models import ContributeRequest, Post
 from api.notifications.models import Notification, NotificationUser
 
+# Celery
+from api.taskapp.tasks import send_contribute_request, send_contribute_request_accepted
+
 
 class ContributeRequestModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
@@ -88,6 +91,9 @@ class RequestContributeSerializer(serializers.Serializer):
                 "contribute_request__pk": str(contribute_request.pk),
             }
         )
+        if post.user.email_notifications_allowed:
+            send_contribute_request(user, post.user)
+
         return contribute_request
 
 
@@ -161,5 +167,6 @@ class AcceptContributeRequestSerializer(serializers.Serializer):
                 "notification__pk": str(user_notification.pk),
             }
         )
-
+        if requester_user.email_notifications_allowed:
+            send_contribute_request_accepted(post.user, requester_user)
         return instance

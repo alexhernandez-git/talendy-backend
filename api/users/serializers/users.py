@@ -29,6 +29,7 @@ from api.donations.models import Donation, DonationOption, DonationPayment
 from api.taskapp.tasks import (
     send_confirmation_email,
     send_change_email_email,
+    send_new_donation,
     send_reset_password_email,
     send_invitation_email
 )
@@ -1023,6 +1024,8 @@ class CreateDonationSerializer(serializers.Serializer):
                 "notification__pk": str(user_notification.pk),
             }
         )
+        if to_user.email_notifications_allowed:
+            send_new_donation(user, to_user, is_anonymous)
         if not is_anonymous and user:
             user.karma_amount += paid_karma
             user.is_currency_permanent = True

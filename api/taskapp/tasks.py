@@ -161,7 +161,7 @@ def send_connection_accepted(user, sent_to):
 
 
 @task(name='send_contribute_request', max_retries=3)
-def send_contribute_request(sent_to, user):
+def send_contribute_request(user, sent_to):
     """Check if the free trial has ended and turn off"""
 
     subject = 'New contribute request from @{}'.format(
@@ -178,7 +178,7 @@ def send_contribute_request(sent_to, user):
 
 
 @task(name='send_contribute_request_accepted', max_retries=3)
-def send_contribute_request_accepted(sent_to, user):
+def send_contribute_request_accepted(user, sent_to):
     """Check if the free trial has ended and turn off"""
 
     subject = 'New contribute room messages from @{}'.format(
@@ -195,7 +195,7 @@ def send_contribute_request_accepted(sent_to, user):
 
 
 @task(name='send_post_finalized', max_retries=3)
-def send_post_finalized(sent_to, user, post):
+def send_post_finalized(user, sent_to, post):
     """Check if the free trial has ended and turn off"""
 
     subject = '@{} has finalized the post'.format(
@@ -212,16 +212,18 @@ def send_post_finalized(sent_to, user, post):
 
 
 @task(name='send_new_donation', max_retries=3)
-def send_new_donation(sent_to, user):
+def send_new_donation(user, sent_to, is_anonymous):
     """Check if the free trial has ended and turn off"""
 
-    subject = 'You recieved new donation from@{}'.format(
-        user.username)
-
+    if is_anonymous:
+        subject = 'You recieved new donation from anonymous user'
+    else:
+        subject = 'You recieved new donation from @{}'.format(
+            user.username)
     from_email = 'Talendy <no-reply@talendy.com>'
     content = render_to_string(
         'emails/users/new_donation.html',
-        {'user': user}
+        {'user': user, 'is_anonymous': is_anonymous}
     )
     msg = EmailMultiAlternatives(subject, content, from_email, [sent_to.email])
     msg.attach_alternative(content, "text/html")
