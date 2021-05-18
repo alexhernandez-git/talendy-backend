@@ -212,7 +212,7 @@ def send_post_finalized(sent_to, user, post):
 
 
 @task(name='send_new_donation', max_retries=3)
-def send_new_donation(sent_to, user, post):
+def send_new_donation(sent_to, user):
     """Check if the free trial has ended and turn off"""
 
     subject = 'You recieved new donation from@{}'.format(
