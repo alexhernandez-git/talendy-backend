@@ -193,6 +193,40 @@ def send_contribute_request_accepted(sent_to, user):
     msg.attach_alternative(content, "text/html")
     msg.send()
 
+
+@task(name='send_post_finalized', max_retries=3)
+def send_post_finalized(sent_to, user, post):
+    """Check if the free trial has ended and turn off"""
+
+    subject = '@{} has finalized the post'.format(
+        user.username)
+
+    from_email = 'Talendy <no-reply@talendy.com>'
+    content = render_to_string(
+        'emails/users/post_finalized.html',
+        {'user': user, 'post': post}
+    )
+    msg = EmailMultiAlternatives(subject, content, from_email, [sent_to.email])
+    msg.attach_alternative(content, "text/html")
+    msg.send()
+
+
+@task(name='send_new_donation', max_retries=3)
+def send_new_donation(sent_to, user, post):
+    """Check if the free trial has ended and turn off"""
+
+    subject = 'You recieved new donation from@{}'.format(
+        user.username)
+
+    from_email = 'Talendy <no-reply@talendy.com>'
+    content = render_to_string(
+        'emails/users/new_donation.html',
+        {'user': user}
+    )
+    msg = EmailMultiAlternatives(subject, content, from_email, [sent_to.email])
+    msg.attach_alternative(content, "text/html")
+    msg.send()
+
 # MESSAGES = 'ME'
 # NEW_INVITATION = 'NI'
 # NEW_CONNECTION = 'NC'
