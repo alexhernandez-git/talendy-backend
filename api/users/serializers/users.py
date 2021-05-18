@@ -762,10 +762,12 @@ class CreateDonationSerializer(serializers.Serializer):
     other_amount_karma = serializers.FloatField(required=False)
     email = serializers.CharField(required=False)
     currency = serializers.CharField()
+    message = serializers.CharField()
 
     def validate(self, data):
         stripe = self.context['stripe']
         currency = data['currency']
+        message = data['message']
         payment_method_id = data['payment_method_id']
         to_user = self.instance
         user = None
@@ -923,7 +925,8 @@ class CreateDonationSerializer(serializers.Serializer):
             'rate_date': rate_date,
             'stripe_customer_id': stripe_customer_id,
             'default_payment_method': payment_method_id,
-            'paid_karma': paid_karma
+            'paid_karma': paid_karma,
+            'message': message,
         }
 
     def update(self, instance, validated_data):
@@ -945,6 +948,7 @@ class CreateDonationSerializer(serializers.Serializer):
         stripe_customer_id = validated_data["stripe_customer_id"]
         default_payment_method = validated_data["default_payment_method"]
         paid_karma = validated_data["paid_karma"]
+        message = validated_data["message"]
 
         # Create the donation payment
         invoice_id = invoice_paid['id']
@@ -977,6 +981,7 @@ class CreateDonationSerializer(serializers.Serializer):
             net_amount=net_amount,
             service_fee=service_fee,
             rate_date=rate_date,
+            message=message
         )
 
         # Create the to user earning

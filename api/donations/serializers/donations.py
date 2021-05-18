@@ -45,6 +45,8 @@ class DonationModelSerializer(serializers.ModelSerializer):
             "donation_payment",
             "from_user",
             "net_amount",
+            "is_anonymous",
+            "message",
             "created"
         )
 
