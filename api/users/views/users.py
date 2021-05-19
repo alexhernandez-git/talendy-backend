@@ -126,7 +126,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
     def get_queryset(self):
         if self.action == 'list_users_with_most_karma':
 
-            return User.objects.filter(account_deactivated=False, is_staff=False).order_by('karma_amount')
+            return User.objects.filter(account_deactivated=False, is_staff=False)
         elif self.action == "list_users_not_followed":
             user = self.request.user
             users = Follow.objects.filter(from_user=user).values_list('follow_user__pk')

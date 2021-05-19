@@ -157,3 +157,9 @@ class User(CModel, AbstractUser):
         except:
             pass
         super(User, self).save(**kwargs)
+
+    class Meta:
+        """Meta option."""
+
+        get_latest_by = 'created'
+        ordering = ['-karma_amount', '-created', '-modified']
