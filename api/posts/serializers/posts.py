@@ -21,7 +21,7 @@ from .post_members import PostMemberModelSerializer
 
 # Models
 from api.users.models import User, Review, Follow
-from api.posts.models import Post, PostImage, PostMember, ContributeRequest, PostSeenBy
+from api.posts.models import Post, PostImage, PostMember, CollaborateRequest, PostSeenBy
 from api.notifications.models import Notification, NotificationUser
 
 # Utils
@@ -50,7 +50,7 @@ class PostModelSerializer(serializers.ModelSerializer):
     user = UserModelSerializer(read_only=True)
     images = serializers.SerializerMethodField(read_only=True)
     members = serializers.SerializerMethodField(read_only=True)
-    is_contribute_requested = serializers.SerializerMethodField(read_only=True)
+    is_collaborate_requested = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -70,7 +70,7 @@ class PostModelSerializer(serializers.ModelSerializer):
             "karma_offered",
             "created",
             "solution",
-            "is_contribute_requested",
+            "is_collaborate_requested",
         )
 
         read_only_fields = ("id", "created")
@@ -82,12 +82,12 @@ class PostModelSerializer(serializers.ModelSerializer):
         members = PostMember.objects.filter(post=obj.id)
         return PostMemberModelSerializer(members, many=True).data
 
-    def get_is_contribute_requested(self, obj):
+    def get_is_collaborate_requested(self, obj):
         if 'request' in self.context:
             request = self.context['request']
             if request.user.id:
                 user = request.user
-                return ContributeRequest.objects.filter(post=obj.id, user=user).exists()
+                return CollaborateRequest.objects.filter(post=obj.id, user=user).exists()
         return False
 
     def validate(self, data):
@@ -141,7 +141,7 @@ class PostModelSerializer(serializers.ModelSerializer):
         return super(PostModelSerializer, self).update(instance, validated_data)
 
 
-class RetrieveContributeRoomModelSerializer(serializers.ModelSerializer):
+class RetrieveCollaborateRoomModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
     user = UserModelSerializer(read_only=True)
     images = serializers.SerializerMethodField(read_only=True)
@@ -242,10 +242,10 @@ class FinalizePostSerializer(serializers.Serializer):
         members = PostMember.objects.filter(post=post).exclude(user=admin)
         for member in members:
             user = member.user
-            # Substract user contributed_active_posts_count
-            user.contributed_active_posts_count -= 1
-            # Add user contributed_solved_posts_count
-            user.contributed_solved_posts_count += 1
+            # Substract user collaborated_active_posts_count
+            user.collaborated_active_posts_count -= 1
+            # Add user collaborated_solved_posts_count
+            user.collaborated_solved_posts_count += 1
 
             # Give the karma offered
             user.karma_amount += post.karma_offered

@@ -19,53 +19,33 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name='notificationuser',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
-        ),
+            model_name='notificationuser', name='user', field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),),
         migrations.AddField(
-            model_name='notification',
-            name='actor',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL),
-        ),
+            model_name='notification', name='actor', field=models.ForeignKey(
+                null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL),),
         migrations.AddField(
-            model_name='notification',
-            name='chat',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='chats.Chat'),
-        ),
+            model_name='notification', name='chat', field=models.ForeignKey(
+                null=True, on_delete=django.db.models.deletion.CASCADE, to='chats.Chat'),),
         migrations.AddField(
-            model_name='notification',
-            name='connection',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='users.Connection'),
-        ),
+            model_name='notification', name='connection', field=models.ForeignKey(
+                null=True, on_delete=django.db.models.deletion.CASCADE, to='users.Connection'),),
         migrations.AddField(
-            model_name='notification',
-            name='contribute_request',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='posts.ContributeRequest'),
-        ),
+            model_name='notification', name='collaborate_request', field=models.ForeignKey(
+                null=True, on_delete=django.db.models.deletion.CASCADE, to='posts.CollaborateRequest'),),
         migrations.AddField(
-            model_name='notification',
-            name='member_joined',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='member_joined', to=settings.AUTH_USER_MODEL),
-        ),
+            model_name='notification', name='member_joined', field=models.ForeignKey(
+                null=True, on_delete=django.db.models.deletion.CASCADE, related_name='member_joined',
+                to=settings.AUTH_USER_MODEL),),
         migrations.AddField(
-            model_name='notification',
-            name='messages',
-            field=models.ManyToManyField(blank=True, related_name='notifications_messages', to='chats.Message'),
-        ),
+            model_name='notification', name='messages', field=models.ManyToManyField(
+                blank=True, related_name='notifications_messages', to='chats.Message'),),
         migrations.AddField(
-            model_name='notification',
-            name='post',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='posts.Post'),
-        ),
+            model_name='notification', name='post', field=models.ForeignKey(
+                null=True, on_delete=django.db.models.deletion.CASCADE, to='posts.Post'),),
         migrations.AddField(
-            model_name='notification',
-            name='post_messages',
-            field=models.ManyToManyField(blank=True, related_name='notifications_post_messages', to='posts.PostMessage'),
-        ),
+            model_name='notification', name='post_messages', field=models.ManyToManyField(
+                blank=True, related_name='notifications_post_messages', to='posts.PostMessage'),),
         migrations.AddField(
-            model_name='notification',
-            name='review',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='users.Review'),
-        ),
-    ]
+            model_name='notification', name='review', field=models.ForeignKey(
+                null=True, on_delete=django.db.models.deletion.CASCADE, to='users.Review'),), ]

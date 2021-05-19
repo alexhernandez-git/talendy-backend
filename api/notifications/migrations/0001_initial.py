@@ -15,31 +15,39 @@ class Migration(migrations.Migration):
     operations = [
         migrations.CreateModel(
             name='Notification',
-            fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created', models.DateTimeField(auto_now_add=True, help_text='Date time on which the object was created.', verbose_name='created at')),
-                ('modified', models.DateTimeField(auto_now=True, help_text='Date time on which the object was last modified.', verbose_name='modified at')),
-                ('type', models.CharField(choices=[('ME', 'Messages'), ('NI', 'New invitation'), ('NC', 'New connection'), ('CR', 'New contribute request'), ('JM', 'Joined membership'), ('CA', 'Contribute request accepted'), ('PM', 'Post messages'), ('PF', 'Post finalized'), ('NR', 'New review')], max_length=2)),
-            ],
-            options={
-                'ordering': ['-created', '-modified'],
-                'get_latest_by': 'created',
-                'abstract': False,
-            },
-        ),
+            fields=[('id', models.UUIDField(
+                default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ('created', models.DateTimeField(
+                    auto_now_add=True, help_text='Date time on which the object was created.',
+                    verbose_name='created at')),
+                ('modified', models.DateTimeField(
+                    auto_now=True, help_text='Date time on which the object was last modified.',
+                    verbose_name='modified at')),
+                ('type', models.CharField(
+                    choices=[('ME', 'Messages'),
+                             ('NI', 'New invitation'),
+                             ('NC', 'New connection'),
+                             ('CR', 'New collaborate request'),
+                             ('JM', 'Joined membership'),
+                             ('CA', 'Collaborate request accepted'),
+                             ('PM', 'Post messages'),
+                             ('PF', 'Post finalized'),
+                             ('NR', 'New review')],
+                    max_length=2)), ],
+            options={'ordering': ['-created', '-modified'],
+                     'get_latest_by': 'created', 'abstract': False, },),
         migrations.CreateModel(
             name='NotificationUser',
-            fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created', models.DateTimeField(auto_now_add=True, help_text='Date time on which the object was created.', verbose_name='created at')),
-                ('modified', models.DateTimeField(auto_now=True, help_text='Date time on which the object was last modified.', verbose_name='modified at')),
+            fields=[('id', models.UUIDField(
+                default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ('created', models.DateTimeField(
+                    auto_now_add=True, help_text='Date time on which the object was created.',
+                    verbose_name='created at')),
+                ('modified', models.DateTimeField(
+                    auto_now=True, help_text='Date time on which the object was last modified.',
+                    verbose_name='modified at')),
                 ('is_read', models.BooleanField(default=False)),
-                ('notification', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='notifications.Notification')),
-            ],
-            options={
-                'ordering': ['-created', '-modified'],
-                'get_latest_by': 'created',
-                'abstract': False,
-            },
-        ),
-    ]
+                ('notification', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='notifications.Notification')), ],
+            options={'ordering': ['-created', '-modified'],
+                     'get_latest_by': 'created', 'abstract': False, },), ]

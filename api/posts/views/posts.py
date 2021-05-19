@@ -21,7 +21,7 @@ from api.posts.serializers import (
     PostModelSerializer,
     CreatePostSeenBySerializer,
     ClearPostChatNotificationSerializer,
-    RetrieveContributeRoomModelSerializer,
+    RetrieveCollaborateRoomModelSerializer,
     UpdatePostSharedNotesSerializer,
     UpdatePostSolutionSerializer,
     FinalizePostSerializer
@@ -72,8 +72,8 @@ class PostViewSet(
     def get_serializer_class(self):
         """Return serializer based on action."""
 
-        if self.action == "retrieve_contribute_room":
-            return RetrieveContributeRoomModelSerializer
+        if self.action == "retrieve_collaborate_room":
+            return RetrieveCollaborateRoomModelSerializer
         return PostModelSerializer
 
     def get_queryset(self):
@@ -107,15 +107,15 @@ class PostViewSet(
             user = self.request.user
             queryset = Post.objects.filter(user=user, status=Post.SOLVED)
 
-        elif self.action == "list_contributed_posts":
+        elif self.action == "list_collaborated_posts":
             user = self.request.user
             queryset = Post.objects.filter(members=user).exclude(user=user)
 
-        elif self.action == "list_contributed_active_posts":
+        elif self.action == "list_collaborated_active_posts":
             user = self.request.user
             queryset = Post.objects.filter(members=user, status=Post.ACTIVE).exclude(user=user)
 
-        elif self.action == "list_contributed_solved_posts":
+        elif self.action == "list_collaborated_solved_posts":
             user = self.request.user
             queryset = Post.objects.filter(members=user, status=Post.SOLVED).exclude(user=user)
 
@@ -127,7 +127,7 @@ class PostViewSet(
             user = get_object_or_404(User, id=self.kwargs['id'])
             queryset = Post.objects.filter(user=user)
 
-        elif self.action == "list_user_contributed":
+        elif self.action == "list_user_collaborated":
             user = get_object_or_404(User, id=self.kwargs['id'])
             queryset = Post.objects.filter(members=user).exclude(user=user)
 
@@ -189,7 +189,7 @@ class PostViewSet(
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
-    def list_contributed_posts(self, request, *args, **kwargs):
+    def list_collaborated_posts(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -200,7 +200,7 @@ class PostViewSet(
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
-    def list_contributed_active_posts(self, request, *args, **kwargs):
+    def list_collaborated_active_posts(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -211,7 +211,7 @@ class PostViewSet(
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
-    def list_contributed_solved_posts(self, request, *args, **kwargs):
+    def list_collaborated_solved_posts(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -244,7 +244,7 @@ class PostViewSet(
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
-    def list_user_contributed(self, request, *args, **kwargs):
+    def list_user_collaborated(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -255,7 +255,7 @@ class PostViewSet(
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'])
-    def retrieve_contribute_room(self, request, *args, **kwargs):
+    def retrieve_collaborate_room(self, request, *args, **kwargs):
         instance = self.get_object()
         # Create seen by
         createSeenSerializer = CreatePostSeenBySerializer(
@@ -373,11 +373,11 @@ class PostViewSet(
         for member in instance.members.all().exclude(id=user.id):
 
             member.posts_count -= 1
-            member.contributed_posts_count -= 1
+            member.collaborated_posts_count -= 1
             if instance.status == Post.ACTIVE:
-                member.contributed_active_posts_count -= 1
+                member.collaborated_active_posts_count -= 1
             elif instance.status == Post.SOLVED:
-                member.contributed_solved_posts_count -= 1
+                member.collaborated_solved_posts_count -= 1
 
             member.save()
 

@@ -20,14 +20,14 @@ from api.posts.serializers import PostModelSerializer
 
 # Models
 from api.users.models import User
-from api.posts.models import ContributeRequest, Post
+from api.posts.models import CollaborateRequest, Post
 from api.notifications.models import Notification, NotificationUser
 
 # Celery
-from api.taskapp.tasks import send_contribute_request, send_contribute_request_accepted
+from api.taskapp.tasks import send_collaborate_request, send_collaborate_request_accepted
 
 
-class ContributeRequestModelSerializer(serializers.ModelSerializer):
+class CollaborateRequestModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
 
     user = UserModelSerializer(read_only=True)
@@ -36,7 +36,7 @@ class ContributeRequestModelSerializer(serializers.ModelSerializer):
     class Meta:
         """Meta class."""
 
-        model = ContributeRequest
+        model = CollaborateRequest
         fields = (
             "id",
             "user",
@@ -48,7 +48,7 @@ class ContributeRequestModelSerializer(serializers.ModelSerializer):
         read_only_fields = ("id",)
 
 
-class RequestContributeSerializer(serializers.Serializer):
+class RequestCollaborateSerializer(serializers.Serializer):
     post = serializers.UUIDField()
     reason = serializers.CharField(max_length=300)
 
@@ -60,8 +60,8 @@ class RequestContributeSerializer(serializers.Serializer):
         # Check if is not already follow
         if Post.objects.filter(id=post.id, members=user).exists():
             raise serializers.ValidationError("You already are a member of this post")
-        if ContributeRequest.objects.filter(user=user, post=post).exists():
-            raise serializers.ValidationError("This contribute request has already been issued")
+        if CollaborateRequest.objects.filter(user=user, post=post).exists():
+            raise serializers.ValidationError("This collaborate request has already been issued")
         if post.members_count == 10:
             raise serializers.ValidationError("This post can't be more than 10 members")
 
@@ -71,11 +71,11 @@ class RequestContributeSerializer(serializers.Serializer):
         user = validated_data["user"]
         post = validated_data["post"]
         reason = validated_data["reason"]
-        contribute_request = ContributeRequest.objects.create(user=user, post=post, reason=reason)
+        collaborate_request = CollaborateRequest.objects.create(user=user, post=post, reason=reason)
         # Notificate the invitation to the addressee
         notification = Notification.objects.create(
-            type=Notification.NEW_CONTRIBUTE_REQUEST,
-            contribute_request=contribute_request,
+            type=Notification.NEW_COLLABORATE_REQUEST,
+            collaborate_request=collaborate_request,
         )
         user_notification = NotificationUser.objects.create(
             notification=notification,
@@ -86,32 +86,32 @@ class RequestContributeSerializer(serializers.Serializer):
         async_to_sync(channel_layer.group_send)(
             "user-%s" % post.user.id, {
                 "type": "send.notification",
-                "event": "NEW_CONTRIBUTE_REQUEST",
+                "event": "NEW_COLLABORATE_REQUEST",
                 "notification__pk": str(user_notification.pk),
-                "contribute_request__pk": str(contribute_request.pk),
+                "collaborate_request__pk": str(collaborate_request.pk),
             }
         )
         if post.user.email_notifications_allowed:
-            send_contribute_request(user, post.user)
+            send_collaborate_request(user, post.user)
 
-        return contribute_request
+        return collaborate_request
 
 
-class AcceptContributeRequestSerializer(serializers.Serializer):
+class AcceptCollaborateRequestSerializer(serializers.Serializer):
     """User model serializer."""
 
     def validate(self, data):
-        contribute_request = self.instance
-        post = contribute_request.post
+        collaborate_request = self.instance
+        post = collaborate_request.post
         if post.members_count == 10:
             raise serializers.ValidationError("This post can't be more than 10 members")
 
         return data
 
     def update(self, instance, validated_data):
-        contribute_request = instance
-        post = contribute_request.post
-        requester_user = contribute_request.user
+        collaborate_request = instance
+        post = collaborate_request.post
+        requester_user = collaborate_request.user
 
         # Add the member
         post.members.add(requester_user)
@@ -119,12 +119,12 @@ class AcceptContributeRequestSerializer(serializers.Serializer):
         post.save()
 
         requester_user.posts_count += 1
-        requester_user.contributed_posts_count += 1
-        requester_user.contributed_active_posts_count += 1
+        requester_user.collaborated_posts_count += 1
+        requester_user.collaborated_active_posts_count += 1
         requester_user.save()
 
-        # Remove the contribute request
-        ContributeRequest.objects.filter(id=contribute_request.id).delete()
+        # Remove the collaborate request
+        CollaborateRequest.objects.filter(id=collaborate_request.id).delete()
 
         # Notificate the user is joining to the post
 
@@ -149,7 +149,7 @@ class AcceptContributeRequestSerializer(serializers.Serializer):
         )
 
         notification = Notification.objects.create(
-            type=Notification.CONTRIBUTE_REQUEST_ACCEPTED,
+            type=Notification.COLLABORATE_REQUEST_ACCEPTED,
             post=post,
             member_joined=requester_user
         )
@@ -163,10 +163,10 @@ class AcceptContributeRequestSerializer(serializers.Serializer):
         async_to_sync(channel_layer.group_send)(
             "user-%s" % requester_user.id, {
                 "type": "send.notification",
-                "event": "CONTRIBUTE_REQUEST_ACCEPTED",
+                "event": "COLLABORATE_REQUEST_ACCEPTED",
                 "notification__pk": str(user_notification.pk),
             }
         )
         if requester_user.email_notifications_allowed:
-            send_contribute_request_accepted(post.user, requester_user)
+            send_collaborate_request_accepted(post.user, requester_user)
         return instance

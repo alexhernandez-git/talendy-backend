@@ -89,11 +89,11 @@ class User(CModel, AbstractUser):
 
     created_solved_posts_count = models.IntegerField(default=0)
 
-    contributed_posts_count = models.IntegerField(default=0)
+    collaborated_posts_count = models.IntegerField(default=0)
 
-    contributed_active_posts_count = models.IntegerField(default=0)
+    collaborated_active_posts_count = models.IntegerField(default=0)
 
-    contributed_solved_posts_count = models.IntegerField(default=0)
+    collaborated_solved_posts_count = models.IntegerField(default=0)
 
     pending_notifications = models.BooleanField(default=False)
 

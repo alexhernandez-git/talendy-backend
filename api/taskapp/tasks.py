@@ -126,11 +126,11 @@ def send_have_messages_from_email(sent_to, sent_by):
     msg.send()
 
 
-@task(name='send_have_contribute_room_messages_from_email', max_retries=3)
-def send_have_contribute_room_messages_from_email(sent_to, sent_by, post):
+@task(name='send_have_collaborate_room_messages_from_email', max_retries=3)
+def send_have_collaborate_room_messages_from_email(sent_to, sent_by, post):
     """Check if the free trial has ended and turn off"""
 
-    subject = 'New contribute room messages from @{}'.format(
+    subject = 'New collaborate room messages from @{}'.format(
         sent_by.username)
 
     from_email = 'Talendy <no-reply@talendy.com>'
@@ -160,16 +160,16 @@ def send_connection_accepted(user, sent_to):
     msg.send()
 
 
-@task(name='send_contribute_request', max_retries=3)
-def send_contribute_request(user, sent_to):
+@task(name='send_collaborate_request', max_retries=3)
+def send_collaborate_request(user, sent_to):
     """Check if the free trial has ended and turn off"""
 
-    subject = 'New contribute request from @{}'.format(
+    subject = 'New collaborate request from @{}'.format(
         user.username)
 
     from_email = 'Talendy <no-reply@talendy.com>'
     content = render_to_string(
-        'emails/users/contribute_request.html',
+        'emails/users/collaborate_request.html',
         {'user': user}
     )
     msg = EmailMultiAlternatives(subject, content, from_email, [sent_to.email])
@@ -177,16 +177,16 @@ def send_contribute_request(user, sent_to):
     msg.send()
 
 
-@task(name='send_contribute_request_accepted', max_retries=3)
-def send_contribute_request_accepted(user, sent_to):
+@task(name='send_collaborate_request_accepted', max_retries=3)
+def send_collaborate_request_accepted(user, sent_to):
     """Check if the free trial has ended and turn off"""
 
-    subject = 'New contribute room messages from @{}'.format(
+    subject = 'New collaborate room messages from @{}'.format(
         user.username)
 
     from_email = 'Talendy <no-reply@talendy.com>'
     content = render_to_string(
-        'emails/users/contribute_request.html',
+        'emails/users/collaborate_request.html',
         {'user': user}
     )
     msg = EmailMultiAlternatives(subject, content, from_email, [sent_to.email])
@@ -232,9 +232,9 @@ def send_new_donation(user, sent_to, is_anonymous):
 # MESSAGES = 'ME'
 # NEW_INVITATION = 'NI'
 # NEW_CONNECTION = 'NC'
-# NEW_CONTRIBUTE_REQUEST = 'CR'
+# NEW_COLLABORATE_REQUEST = 'CR'
 # JOINED_MEMBERSHIP = 'JM'
-# CONTRIBUTE_REQUEST_ACCEPTED = 'CA'
+# COLLABORATE_REQUEST_ACCEPTED = 'CA'
 # POST_MESSAGES = 'PM'
 # POST_FINALIZED = 'PF'
 # NEW_REVIEW = 'NR'

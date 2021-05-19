@@ -13,13 +13,18 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name='notification',
-            name='donation',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='donations.Donation'),
-        ),
+            model_name='notification', name='donation', field=models.ForeignKey(
+                null=True, on_delete=django.db.models.deletion.CASCADE, to='donations.Donation'),),
         migrations.AlterField(
-            model_name='notification',
-            name='type',
-            field=models.CharField(choices=[('ME', 'Messages'), ('NI', 'New invitation'), ('NC', 'New connection'), ('CR', 'New contribute request'), ('JM', 'Joined membership'), ('CA', 'Contribute request accepted'), ('PM', 'Post messages'), ('PF', 'Post finalized'), ('NR', 'New review'), ('ND', 'New donation')], max_length=2),
-        ),
-    ]
+            model_name='notification', name='type', field=models.CharField(
+                choices=[('ME', 'Messages'),
+                         ('NI', 'New invitation'),
+                         ('NC', 'New connection'),
+                         ('CR', 'New collaborate request'),
+                         ('JM', 'Joined membership'),
+                         ('CA', 'Collaborate request accepted'),
+                         ('PM', 'Post messages'),
+                         ('PF', 'Post finalized'),
+                         ('NR', 'New review'),
+                         ('ND', 'New donation')],
+                max_length=2),), ]

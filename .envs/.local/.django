@@ -1,7 +1,7 @@
 # Django
 DJANGO_SECRET_KEY=c8jdhs)2-=c46n)i-9h8-8f#ko8x*dt@=e4eh65*5(@n#d&gw%
 DEBUG=True
-CORS_ORIGIN_WHITELIST=localhost:3000,chats:5400,django:8000,contributerooms:5500
+CORS_ORIGIN_WHITELIST=localhost:3000,chats:5400,django:8000,collaboraterooms:5500
 
 
 # Redis

@@ -17,73 +17,46 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name='postseenby',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='seen_by_post_user', to=settings.AUTH_USER_MODEL),
-        ),
+            model_name='postseenby', name='user', field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, related_name='seen_by_post_user',
+                to=settings.AUTH_USER_MODEL),),
         migrations.AddField(
-            model_name='postmessagefile',
-            name='message',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='posts.PostMessage'),
-        ),
+            model_name='postmessagefile', name='message', field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to='posts.PostMessage'),),
         migrations.AddField(
-            model_name='postmessagefile',
-            name='post',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='posts.Post'),
-        ),
+            model_name='postmessagefile', name='post', field=models.ForeignKey(
+                blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='posts.Post'),),
         migrations.AddField(
-            model_name='postmessage',
-            name='post',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='posts.Post'),
-        ),
+            model_name='postmessage', name='post', field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to='posts.Post'),),
         migrations.AddField(
-            model_name='postmessage',
-            name='sent_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL),
-        ),
+            model_name='postmessage', name='sent_by', field=models.ForeignKey(
+                blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL),),
         migrations.AddField(
-            model_name='postmember',
-            name='post',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='posts.Post'),
-        ),
+            model_name='postmember', name='post', field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to='posts.Post'),),
         migrations.AddField(
-            model_name='postmember',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
-        ),
+            model_name='postmember', name='user', field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),),
         migrations.AddField(
-            model_name='postimage',
-            name='post',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='posts.Post'),
-        ),
+            model_name='postimage', name='post', field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to='posts.Post'),),
         migrations.AddField(
-            model_name='post',
-            name='community',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='communities.Community'),
-        ),
+            model_name='post', name='community', field=models.ForeignKey(
+                blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='communities.Community'),),
         migrations.AddField(
-            model_name='post',
-            name='last_message',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='post_last_message', to='posts.PostMessage'),
-        ),
+            model_name='post', name='last_message', field=models.ForeignKey(
+                null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='post_last_message',
+                to='posts.PostMessage'),),
         migrations.AddField(
-            model_name='post',
-            name='members',
-            field=models.ManyToManyField(related_name='post_members', through='posts.PostMember', to=settings.AUTH_USER_MODEL),
-        ),
+            model_name='post', name='members', field=models.ManyToManyField(
+                related_name='post_members', through='posts.PostMember', to=settings.AUTH_USER_MODEL),),
         migrations.AddField(
-            model_name='post',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
-        ),
+            model_name='post', name='user', field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),),
         migrations.AddField(
-            model_name='contributerequest',
-            name='post',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='posts.Post'),
-        ),
+            model_name='collaboraterequest', name='post', field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to='posts.Post'),),
         migrations.AddField(
-            model_name='contributerequest',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
-        ),
-    ]
+            model_name='collaboraterequest', name='user', field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),), ]

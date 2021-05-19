@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404
 # Serializers
 from api.users.serializers import UserModelSerializer, ConnectionModelSerializer, ReviewModelSerializer
 from api.chats.serializers import MessageModelSerializer
-from api.posts.serializers import ContributeRequestModelSerializer, PostModelSerializer, PostMessageModelSerializer
+from api.posts.serializers import CollaborateRequestModelSerializer, PostModelSerializer, PostMessageModelSerializer
 from api.donations.serializers import DonationModelSerializer
 
 # Models
@@ -26,7 +26,7 @@ class NotificationModelSerializer(serializers.ModelSerializer):
     actor = UserModelSerializer(read_only=True)
     messages = serializers.SerializerMethodField(read_only=True)
     connection = serializers.SerializerMethodField(read_only=True)
-    contribute_request = serializers.SerializerMethodField(read_only=True)
+    collaborate_request = serializers.SerializerMethodField(read_only=True)
     post = serializers.SerializerMethodField(read_only=True)
     member_joined = serializers.SerializerMethodField(read_only=True)
     post_messages = serializers.SerializerMethodField(read_only=True)
@@ -46,7 +46,7 @@ class NotificationModelSerializer(serializers.ModelSerializer):
             "post",
             "member_joined",
             "post_messages",
-            "contribute_request",
+            "collaborate_request",
             "review",
             "donation",
             "modified",
@@ -65,9 +65,9 @@ class NotificationModelSerializer(serializers.ModelSerializer):
             return ConnectionModelSerializer(obj.connection, many=False).data
         return False
 
-    def get_contribute_request(self, obj):
-        if obj.contribute_request:
-            return ContributeRequestModelSerializer(obj.contribute_request, many=False).data
+    def get_collaborate_request(self, obj):
+        if obj.collaborate_request:
+            return CollaborateRequestModelSerializer(obj.collaborate_request, many=False).data
         return False
 
     def get_post(self, obj):

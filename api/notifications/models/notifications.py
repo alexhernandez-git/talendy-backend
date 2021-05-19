@@ -14,9 +14,9 @@ class Notification(CModel):
     MESSAGES = 'ME'
     NEW_INVITATION = 'NI'
     NEW_CONNECTION = 'NC'
-    NEW_CONTRIBUTE_REQUEST = 'CR'
+    NEW_COLLABORATE_REQUEST = 'CR'
     JOINED_MEMBERSHIP = 'JM'
-    CONTRIBUTE_REQUEST_ACCEPTED = 'CA'
+    COLLABORATE_REQUEST_ACCEPTED = 'CA'
     POST_MESSAGES = 'PM'
     POST_FINALIZED = 'PF'
     NEW_REVIEW = 'NR'
@@ -25,9 +25,9 @@ class Notification(CModel):
         (MESSAGES, 'Messages'),
         (NEW_INVITATION, 'New invitation'),
         (NEW_CONNECTION, 'New connection'),
-        (NEW_CONTRIBUTE_REQUEST, 'New contribute request'),
+        (NEW_COLLABORATE_REQUEST, 'New collaborate request'),
         (JOINED_MEMBERSHIP, 'Joined membership'),
-        (CONTRIBUTE_REQUEST_ACCEPTED, 'Contribute request accepted'),
+        (COLLABORATE_REQUEST_ACCEPTED, 'Collaborate request accepted'),
         (POST_MESSAGES, 'Post messages'),
         (POST_FINALIZED, 'Post finalized'),
         (NEW_REVIEW, 'New review'),
@@ -47,8 +47,8 @@ class Notification(CModel):
     # CONNECTIONS
     connection = models.ForeignKey("users.Connection", on_delete=models.CASCADE, null=True)
 
-    # CONTRIBUTE_REQUESTS
-    contribute_request = models.ForeignKey("posts.ContributeRequest", on_delete=models.CASCADE, null=True)
+    # COLLABORATE_REQUESTS
+    collaborate_request = models.ForeignKey("posts.CollaborateRequest", on_delete=models.CASCADE, null=True)
 
     # JOINED_MEMBERSHIP
     member_joined = models.ForeignKey("users.User", on_delete=models.CASCADE, null=True, related_name="member_joined")

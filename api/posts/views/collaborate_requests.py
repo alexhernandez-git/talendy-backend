@@ -25,13 +25,13 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from api.users.permissions import IsAccountOwner
 
 # Models
-from api.posts.models import ContributeRequest
+from api.posts.models import CollaborateRequest
 
 # Serializers
 from api.posts.serializers import (
-    ContributeRequestModelSerializer,
-    RequestContributeSerializer,
-    AcceptContributeRequestSerializer,
+    CollaborateRequestModelSerializer,
+    RequestCollaborateSerializer,
+    AcceptCollaborateRequestSerializer,
 )
 
 # Filters
@@ -43,7 +43,7 @@ import os
 from api.utils import helpers
 
 
-class ContributeRequestViewSet(
+class CollaborateRequestViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
@@ -55,9 +55,9 @@ class ContributeRequestViewSet(
     Handle sign up, login and account verification.
     """
 
-    queryset = ContributeRequest.objects.all()
+    queryset = CollaborateRequest.objects.all()
     lookup_field = "id"
-    serializer_class = ContributeRequestModelSerializer
+    serializer_class = CollaborateRequestModelSerializer
 
     def get_permissions(self):
         """Assign permissions based on action."""
@@ -68,14 +68,14 @@ class ContributeRequestViewSet(
     def get_serializer_class(self):
         """Return serializer based on action."""
         if self.action == "create":
-            return RequestContributeSerializer
+            return RequestCollaborateSerializer
 
-        return ContributeRequestModelSerializer
+        return CollaborateRequestModelSerializer
 
     def get_queryset(self):
         """Restrict list to public-only."""
         user = self.request.user
-        queryset = ContributeRequest.objects.filter(post__user=user)
+        queryset = CollaborateRequest.objects.filter(post__user=user)
 
         return queryset
 
@@ -83,19 +83,19 @@ class ContributeRequestViewSet(
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        contribute_request = serializer.save()
-        contribute_request_data = ContributeRequestModelSerializer(contribute_request, many=False).data
+        collaborate_request = serializer.save()
+        collaborate_request_data = CollaborateRequestModelSerializer(collaborate_request, many=False).data
         headers = self.get_success_headers(serializer.data)
-        return Response(contribute_request_data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(collaborate_request_data, status=status.HTTP_201_CREATED, headers=headers)
 
     @action(detail=True, methods=['patch'])
     def accept(self, request, *args, **kwargs):
 
-        contribute_request = get_object_or_404(ContributeRequest, id=kwargs['id'])
+        collaborate_request = get_object_or_404(CollaborateRequest, id=kwargs['id'])
 
         partial = request.method == 'PATCH'
-        serializer = AcceptContributeRequestSerializer(
-            contribute_request,
+        serializer = AcceptCollaborateRequestSerializer(
+            collaborate_request,
             data=request.data,
             context={"request": request},
             partial=partial
