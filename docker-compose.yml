@@ -66,10 +66,10 @@ services:
       - "5555:5555"
     command: /start-flower
 
-  collaboraterooms:
+  collaborationrooms:
     build:
       context: .
-      dockerfile: ./compose/dev/collaborate-rooms/Dockerfile
+      dockerfile: ./compose/dev/collaboration-rooms/Dockerfile
 
     ports:
       - "5500:5500"

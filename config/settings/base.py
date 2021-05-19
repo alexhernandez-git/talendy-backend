@@ -41,6 +41,7 @@ if DEBUG:
     CORS_ALLOWED_ORIGINS.append("http://chats:5400")
     CORS_ALLOWED_ORIGINS.append("http://collaboraterooms:5500")
     CORS_ALLOWED_ORIGINS.append("http://django:8000")
+    CORS_ALLOWED_ORIGINS.append("http://django")
 
 CORS_ORIGIN_WHITELIST = env.tuple('CORS_ORIGIN_WHITELIST', default=('localhost:3000',))
 

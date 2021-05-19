@@ -11,15 +11,16 @@ services:
       dockerfile: ./compose/staging/Dockerfile
     depends_on:
       - postgres
+      - redis
     volumes:
       - .:/app
     env_file:
       - ./.envs/.staging/.django
       - ./.envs/.staging/.postgres
+    expose:
+      - 8000
     command: /start
-    depends_on:
-      - redis
-      
+
   nginx:
     image: nginx:1.19-alpine
     volumes:
@@ -39,7 +40,7 @@ services:
       - ./.envs/.staging/.postgres
   redis:
     image: redis:6-alpine
-    
+
   stripecli:
     image: stripe/stripe-cli:latest
     network_mode: host
@@ -68,3 +69,21 @@ services:
     ports:
       - "5555:5555"
     command: /start-flower
+
+  collaborationrooms:
+    build:
+      context: .
+      dockerfile: ./compose/dev/collaboration-rooms/Dockerfile
+
+    ports:
+      - "5500:5500"
+    command: yarn start
+
+  chats:
+    build:
+      context: .
+      dockerfile: ./compose/dev/chats/Dockerfile
+
+    ports:
+      - "5400:5400"
+    command: yarn start
