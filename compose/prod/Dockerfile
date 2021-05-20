@@ -22,7 +22,7 @@ RUN pip install --upgrade pip
 RUN pip install --upgrade wheel
 RUN pip install -r requirements.txt
 
-COPY ./compose/prod/entrypoint /entrypoint
+COPY ./compose/entrypoint /entrypoint
 RUN sed -i 's/\r//' /entrypoint
 RUN chmod +x /entrypoint
 

@@ -14,6 +14,8 @@ services:
       - ./.envs/.prod/.django
       - ./.envs/.prod/.postgres
     command: /start
+    expose:
+      - 8000
     depends_on:
       - redis
 
@@ -39,15 +41,13 @@ services:
       - ./compose/certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
-  # In prod are using aws RDS
-
-  # postgres:
-  #   image: postgres:12-alpine
-  #   volumes:
-  #     - prod_postgres_data:/var/lib/postgresql/data
-  #     - prod_postgres_data_backups:/backups
-  #   env_file:
-  #     - ./.envs/.prod/.postgres
+  postgres:
+    image: postgres:12-alpine
+    volumes:
+      - prod_postgres_data:/var/lib/postgresql/data
+      - prod_postgres_data_backups:/backups
+    env_file:
+      - ./.envs/.prod/.postgres
   redis:
     image: redis:6-alpine
 
@@ -77,3 +77,21 @@ services:
     ports:
       - "5555:5555"
     command: /start-flower
+
+  collaborationrooms:
+    build:
+      context: .
+      dockerfile: ./compose/dev/collaboration-rooms/Dockerfile
+
+    ports:
+      - "5500:5500"
+    command: yarn start
+
+  chats:
+    build:
+      context: .
+      dockerfile: ./compose/dev/chats/Dockerfile
+
+    ports:
+      - "5400:5400"
+    command: yarn start
