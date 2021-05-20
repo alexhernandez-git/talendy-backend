@@ -85,6 +85,8 @@ services:
     build:
       context: .
       dockerfile: ./compose/dev/collaboration-rooms/Dockerfile
+    volumes:
+      - ./compose/certbot/conf:/etc/letsencrypt
     env_file:
       - ./.envs/.prod/.node
     ports:
@@ -95,6 +97,8 @@ services:
     build:
       context: .
       dockerfile: ./compose/dev/chats/Dockerfile
+    volumes:
+      - ./compose/certbot/conf:/etc/letsencrypt
     env_file:
       - ./.envs/.prod/.node
     ports:
