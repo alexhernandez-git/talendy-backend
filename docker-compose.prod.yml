@@ -2,6 +2,8 @@ version: "3"
 
 volumes:
   nginx_static_files: {}
+  prod_postgres_data: {}
+  prod_postgres_data_backups: {}
 services:
   django: &django
     build:
@@ -63,17 +65,17 @@ services:
 
   celeryworker:
     <<: *django
-    image: talendy_staging_celeryworker
+    image: talendy_prod_celeryworker
     command: /start-celeryworker
 
   celerybeat:
     <<: *django
-    image: talendy_staging_celerybeat
+    image: talendy_prod_celerybeat
     command: /start-celerybeat
 
   flower:
     <<: *django
-    image: talendy_staging_flower
+    image: talendy_prod_flower
     ports:
       - "5555:5555"
     command: /start-flower
