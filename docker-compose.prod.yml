@@ -19,6 +19,7 @@ services:
     expose:
       - 8000
     depends_on:
+      - postgres
       - redis
 
   nginx:
