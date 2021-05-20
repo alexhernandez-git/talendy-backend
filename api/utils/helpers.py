@@ -155,7 +155,7 @@ def get_currency_api(current_login_ip):
 
         try:
             currency = ccy.countryccy(country_code)
-            if DonationOption.objects.filter(type=DonationOption.BASIC, currency=currency).exists():
+            if DonationOption.objects.filter(currency=currency).exists():
                 return currency
         except Exception as e:
             print(e)
