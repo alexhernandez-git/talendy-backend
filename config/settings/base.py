@@ -43,7 +43,7 @@ if DEBUG:
     CORS_ALLOWED_ORIGINS.append("http://django:8000")
     CORS_ALLOWED_ORIGINS.append("http://django")
 
-CORS_ORIGIN_WHITELIST = env.tuple('CORS_ORIGIN_WHITELIST', default=('localhost:3000',))
+CORS_ORIGIN_WHITELIST = env.list('CORS_ORIGIN_WHITELIST', default=('localhost:3000',))
 
 
 CORS_ALLOW_HEADERS = [
