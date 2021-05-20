@@ -74,7 +74,8 @@ services:
     build:
       context: .
       dockerfile: ./compose/dev/collaboration-rooms/Dockerfile
-
+    env_file:
+      - ./.envs/.staging/.node
     ports:
       - "5500:5500"
     command: yarn start
@@ -83,7 +84,8 @@ services:
     build:
       context: .
       dockerfile: ./compose/dev/chats/Dockerfile
-
+    env_file:
+      - ./.envs/.staging/.node
     ports:
       - "5400:5400"
     command: yarn start

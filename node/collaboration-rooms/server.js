@@ -1,21 +1,40 @@
 const express = require("express");
 const socketio = require("socket.io");
 const http = require("http");
+const https = require("https");
 const cors = require("cors");
 const axios = require("axios");
 const PORT = process.env.PORT || 5500;
+const isHTTPS = process.env.HTTPS || "no";
 const API_HOST = process.env.API_HOST || "http://django:8000";
 const router = require("./router");
 
 const app = express();
-const server = http.createServer(app);
-const io = socketio(server, {
-  cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"],
-  },
-});
-
+let server;
+let io;
+if (isHTTPS === "yes") {
+  const options = {
+    key: fs.readFileSync("/etc/letsencrypt/live/api.talendy.com/privkey.pem"),
+    cert: fs.readFileSync(
+      "/etc/letsencrypt/live/api.talendy.com/fullchain.pem"
+    ),
+  };
+  server = https.createServer(options, app);
+  io = socketio(server, {
+    cors: {
+      origin: ["https://talendy.com", "https://www.talendy.com"],
+      methods: ["GET", "POST"],
+    },
+  });
+} else {
+  server = http.createServer(app);
+  io = socketio(server, {
+    cors: {
+      origin: ["http://localhost:3000"],
+      methods: ["GET", "POST"],
+    },
+  });
+}
 const users = {};
 
 const socketToRoom = {};
