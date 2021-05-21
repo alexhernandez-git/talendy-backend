@@ -181,10 +181,13 @@ class RetrieveCollaborateRoomModelSerializer(serializers.ModelSerializer):
         return PostMemberModelSerializer(members, many=True).data
 
     def get_is_last_message_seen(self, obj):
-        user = self.context["request"].user
-        return NotificationUser.objects.filter(
-            notification__post=obj, notification__type=Notification.POST_MESSAGES, is_read=False,
-            user=user).exists()
+        if "request" in self.context and self.context["request"].user.id:
+
+            user = self.context["request"].user
+            return NotificationUser.objects.filter(
+                notification__post=obj, notification__type=Notification.POST_MESSAGES, is_read=False,
+                user=user).exists()
+        return None
 
 
 class ClearPostChatNotificationSerializer(serializers.Serializer):
@@ -300,3 +303,17 @@ class FinalizePostSerializer(serializers.Serializer):
         post.status = Post.SOLVED
         post.save()
         return instance
+
+
+class StopCollaboratingSerializer(serializers.Serializer):
+
+    def update(self, instance, validated_data):
+        user = self.context['request'].user
+
+        post = instance
+        # Remove member to post
+        post.members.remove(user)
+        post.members_count -= 1
+        post.save()
+
+        return post

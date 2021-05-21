@@ -24,7 +24,8 @@ from api.posts.serializers import (
     RetrieveCollaborateRoomModelSerializer,
     UpdatePostSharedNotesSerializer,
     UpdatePostSolutionSerializer,
-    FinalizePostSerializer
+    FinalizePostSerializer,
+    StopCollaboratingSerializer
 )
 
 # Filters
@@ -332,6 +333,23 @@ class PostViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+    @action(detail=True, methods=['patch'])
+    def stop_collaborating(self, request, *args, **kwargs):
+        post = self.get_object()
+
+        partial = request.method == 'PATCH'
+
+        serializer = StopCollaboratingSerializer(
+            post,
+            data=request.data,
+            context={"request": request},
+            partial=partial)
+
+        serializer.is_valid(raise_exception=True)
+        post = serializer.save()
+        data = RetrieveCollaborateRoomModelSerializer(post).data
+        return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['patch'])
     def finalize(self, request, *args, **kwargs):
