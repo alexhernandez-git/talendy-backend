@@ -48,7 +48,9 @@ services:
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
   postgres:
-    image: postgres:12-alpine
+    build:
+      context: .
+      dockerfile: ./compose/prod/postgres/Dockerfile
     volumes:
       - prod_postgres_data:/var/lib/postgresql/data
       - prod_postgres_data_backups:/backups
