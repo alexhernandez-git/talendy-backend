@@ -14,6 +14,9 @@ ENV PYTHONUNBUFFERED 1
 #   && apk add gettext \
 #   # https://docs.djangoproject.com/en/dev/ref/django-admin/#dbshell
 #   && apk add postgresql-client
+RUN apt-get update -y
+
+RUN apt-get install postgresql-client -y
 
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements.txt .
