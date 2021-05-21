@@ -910,8 +910,8 @@ class CreateDonationSerializer(serializers.Serializer):
             gross_amount, rate_date = helpers.convert_currency(
                 'USD', donation_option.currency, donation_option.unit_amount)
 
-        # Get and substract the service fee (10%)
-        service_fee = (gross_amount * 10) / 100
+        # Get and substract the service fee (20%)
+        service_fee = (gross_amount * 20) / 100
         net_amount = gross_amount - service_fee
         # Pass to data the donation option or other amount, the user,
         # the  product, the price, the invoice paid and the to user
