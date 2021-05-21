@@ -270,9 +270,3 @@ def check_if_pending_clearance_has_ended():
             earning.setted_to_available_for_withdrawn = True
             earning.save()
             return available_for_withdrawn_add.amount
-
-
-@task(name='do_backup', max_retries=3)
-def do_backup():
-    management.call_command('dbbackup')
-    print('Backup completed')

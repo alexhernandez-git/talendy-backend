@@ -95,7 +95,6 @@ INSTALLED_APPS = [
     "corsheaders",
     "djmoney",
     "djmoney.contrib.exchange",
-    "dbbackup",
 ]
 
 MIDDLEWARE = [
@@ -384,19 +383,20 @@ FIXER_URL = 'http://data.fixer.io/api/2013-12-24?symbols=USD,EUR,NOK,SEK,CZK'
 # GeoIP2
 GEOIP_PATH = os.path.join(BASE_DIR, 'geolite2-db')
 
-# DBBACKUP
-if 'AWS_SECRET_ACCESS_KEY' in env and 'DJANGO_AWS_STORAGE_BUCKET_NAME' in env and 'AWS_ACCESS_KEY_ID' in env:
-    AWS_STORAGE_BUCKET_NAME = env("DJANGO_AWS_STORAGE_BUCKET_NAME")
-    # STORAGES
-    AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
-    DBBACKUP_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    DBBACKUP_STORAGE_OPTIONS = {
-        'access_key': AWS_ACCESS_KEY_ID,
-        'secret_key': AWS_SECRET_ACCESS_KEY,
-        'bucket_name': AWS_STORAGE_BUCKET_NAME,
-        'default_acl': 'private',
-    }
-else:
-    DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
-    DBBACKUP_STORAGE_OPTIONS = {'location': '/my/backup/dir/'}
+# # DBBACKUP
+
+# if 'AWS_SECRET_ACCESS_KEY' in env and 'DJANGO_AWS_STORAGE_BUCKET_NAME' in env and 'AWS_ACCESS_KEY_ID' in env:
+#     AWS_STORAGE_BUCKET_NAME = env("DJANGO_AWS_STORAGE_BUCKET_NAME")
+#     # STORAGES
+#     AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
+#     AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
+#     DBBACKUP_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+#     DBBACKUP_STORAGE_OPTIONS = {
+#         'access_key': AWS_ACCESS_KEY_ID,
+#         'secret_key': AWS_SECRET_ACCESS_KEY,
+#         'bucket_name': AWS_STORAGE_BUCKET_NAME,
+#         'default_acl': 'private',
+#     }
+# else:
+#     DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
+#     DBBACKUP_STORAGE_OPTIONS = {'location': '/my/backup/dir/'}

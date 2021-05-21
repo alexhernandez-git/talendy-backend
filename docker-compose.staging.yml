@@ -32,7 +32,9 @@ services:
       - django
 
   postgres:
-    image: postgres:12-alpine
+    build:
+      context: .
+      dockerfile: ./compose/prod/postgres/Dockerfile
     volumes:
       - staging_postgres_data:/var/lib/postgresql/data
       - staging_postgres_data_backups:/backups

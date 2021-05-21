@@ -100,6 +100,3 @@ paypal-payouts-sdk==1.0.0
 
 # Coinbase commerce
 coinbase-commerce==1.0.1
-
-# backups
-django-dbbackup==3.3.0
