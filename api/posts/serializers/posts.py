@@ -321,6 +321,7 @@ class StopCollaboratingSerializer(serializers.Serializer):
         # Validate if you are member if this post
         if not post.members.filter(id=user.id).exists():
             raise serializers.ValidationError("You are not member of this post")
+        return data
 
     def update(self, instance, validated_data):
         user = self.context['request'].user
@@ -336,4 +337,4 @@ class StopCollaboratingSerializer(serializers.Serializer):
         user.collaborated_posts_count -= 1
         user.collaborated_active_posts_count -= 1
         user.save()
-        return post
+        return instance
