@@ -307,6 +307,21 @@ class FinalizePostSerializer(serializers.Serializer):
 
 class StopCollaboratingSerializer(serializers.Serializer):
 
+    def validate(self, data):
+        user = self.context['request'].user
+        post = self.instance
+        # Validate is not owner
+        if post.user.id == user.id:
+            raise serializers.ValidationError("You are the owner")
+
+        # Validate post is not finished
+        if post.status == Post.SOLVED:
+            raise serializers.ValidationError("This post is finished")
+
+        # Validate if you are member if this post
+        if not post.members.filter(id=user.id).exists():
+            raise serializers.ValidationError("You are not member of this post")
+
     def update(self, instance, validated_data):
         user = self.context['request'].user
 
@@ -316,4 +331,9 @@ class StopCollaboratingSerializer(serializers.Serializer):
         post.members_count -= 1
         post.save()
 
+        # Substract the post from user
+        user.posts_count -= 1
+        user.collaborated_posts_count -= 1
+        user.collaborated_active_posts_count -= 1
+        user.save()
         return post
