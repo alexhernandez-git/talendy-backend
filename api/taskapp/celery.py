@@ -27,7 +27,7 @@ app.conf.beat_schedule = {
     },
     'do_backup': {
         'task': 'do_backup',
-        'schedule': timedelta(seconds=30),
+        'schedule': timedelta(days=1),
     },
 }
 
