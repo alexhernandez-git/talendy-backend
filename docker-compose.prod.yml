@@ -24,9 +24,7 @@ services:
       - redis
 
   nginx:
-    build:
-      context: .
-      dockerfile: ./compose/prod/postgres/Dockerfile
+    image: nginx:1.19-alpine
     volumes:
       - ./compose/prod/nginx:/etc/nginx/conf.d
       - ./compose/certbot/conf:/etc/letsencrypt
