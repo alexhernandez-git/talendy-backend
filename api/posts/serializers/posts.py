@@ -120,7 +120,7 @@ class PostModelSerializer(serializers.ModelSerializer):
 
         users_following = Follow.objects.filter(followed_user=user)
         for user_following in users_following:
-            if user_following.from_user.email_notifications_allowed:
+            if not user_following.from_user.is_online and user_following.from_user.email_notifications_allowed:
                 send_post_to_followers(user, user_following.from_user, post)
 
         return post
@@ -292,7 +292,7 @@ class FinalizePostSerializer(serializers.Serializer):
                     "notification__pk": str(user_notification.pk),
                 }
             )
-            if user.email_notifications_allowed:
+            if not user.is_online and user.email_notifications_allowed:
                 send_post_finalized(admin, user, post)
             user.save()
 

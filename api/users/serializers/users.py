@@ -1024,7 +1024,7 @@ class CreateDonationSerializer(serializers.Serializer):
                 "notification__pk": str(user_notification.pk),
             }
         )
-        if to_user.email_notifications_allowed:
+        if not to_user.is_online and to_user.email_notifications_allowed:
             send_new_donation(user, to_user, is_anonymous)
         if not is_anonymous and user:
             user.karma_amount += paid_karma

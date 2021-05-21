@@ -91,7 +91,7 @@ class RequestCollaborateSerializer(serializers.Serializer):
                 "collaborate_request__pk": str(collaborate_request.pk),
             }
         )
-        if post.user.email_notifications_allowed:
+        if not post.user.is_online and post.user.email_notifications_allowed:
             send_collaborate_request(user, post.user)
 
         return collaborate_request
@@ -167,6 +167,6 @@ class AcceptCollaborateRequestSerializer(serializers.Serializer):
                 "notification__pk": str(user_notification.pk),
             }
         )
-        if requester_user.email_notifications_allowed:
+        if not requester_user.is_online and requester_user.email_notifications_allowed:
             send_collaborate_request_accepted(post.user, requester_user)
         return instance

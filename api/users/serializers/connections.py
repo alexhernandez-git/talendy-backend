@@ -87,7 +87,7 @@ class ConnectInvitationSerialzer(serializers.Serializer):
             }
         )
 
-        if addressee.email_notifications_allowed:
+        if not addressee.is_online and addressee.email_notifications_allowed:
             send_invitation_email(requester, addressee)
 
         return connection
@@ -139,7 +139,7 @@ class AcceptConnectionSerializer(serializers.Serializer):
                 "notification__pk": str(user_notification.pk),
             }
         )
-        if requester.email_notifications_allowed:
+        if not requester.is_online and requester.email_notifications_allowed:
             send_connection_accepted(addressee, requester)
         return data
 
