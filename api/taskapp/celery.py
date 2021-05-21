@@ -25,10 +25,10 @@ app.conf.beat_schedule = {
         'task': 'check_if_pending_clearance_has_ended',
         'schedule': timedelta(days=1),
     },
-    'do_backup': {
-        'task': 'do_backup',
-        'schedule': timedelta(seconds=30),
-    },
+    # 'do_backup': {
+    #     'task': 'do_backup',
+    #     'schedule': timedelta(seconds=30),
+    # },
 }
 
 app.conf.timezone = 'UTC'

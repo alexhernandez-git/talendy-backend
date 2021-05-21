@@ -12,6 +12,7 @@ services:
 
     volumes:
       - .:/app
+
     env_file:
       - ./.envs/.prod/.django
       - ./.envs/.prod/.postgres
