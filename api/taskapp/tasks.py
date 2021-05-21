@@ -274,5 +274,5 @@ def check_if_pending_clearance_has_ended():
 
 @task(name='do_backup', max_retries=3)
 def do_backup():
-    management.call_command('dbbackup')
+    management.call_command('dbbackup -z')
     print('Backup completed')

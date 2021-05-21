@@ -397,6 +397,7 @@ if 'AWS_SECRET_ACCESS_KEY' in env and 'DJANGO_AWS_STORAGE_BUCKET_NAME' in env an
         'secret_key': AWS_SECRET_ACCESS_KEY,
         'bucket_name': AWS_STORAGE_BUCKET_NAME,
         'default_acl': 'private',
+        'location': 'backups/'
     }
 else:
     DBBACKUP_STORAGE = 'django.core.files.storage.FileSystemStorage'
