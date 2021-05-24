@@ -25,6 +25,22 @@ from api.utils import helpers
 import re
 
 
+@task(name='send_feedback_email', max_retries=3)
+def send_feedback_email(data):
+    """Send account verification link to given user."""
+
+    subject = 'Feedback from'.format(
+        data['email'])
+    from_email = 'Talendy <no-reply@talendy.com>'
+    content = render_to_string(
+        'emails/users/feedback_email.html',
+        {'data': data}
+    )
+    msg = EmailMultiAlternatives(subject, content, from_email, ["ah30456@gmail.com"])
+    msg.attach_alternative(content, "text/html")
+    msg.send()
+
+
 @task(name='send_confirmation_email', max_retries=3)
 def send_confirmation_email(user):
     """Send account verification link to given user."""
