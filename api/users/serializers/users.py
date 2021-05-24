@@ -17,7 +17,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.validators import UniqueValidator
 
 # Models
-from api.users.models import User, UserLoginActivity, Earning, Connection, Follow
+from api.users.models import User, UserLoginActivity, Earning, Connection, Follow, Blacklist
 from api.notifications.models import Notification, NotificationUser
 from api.donations.models import DonationOption
 from djmoney.models.fields import Money
@@ -299,6 +299,10 @@ class UserSignUpSerializer(serializers.Serializer):
 
         current_login_ip = helpers.get_client_ip(request)
 
+        if Blacklist.objects.filter(IP=current_login_ip).exists():
+            raise serializers.ValidationError(
+                'Not allowed')
+
         if UserLoginActivity.objects.filter(user=user).exists():
             user_login_activity = UserLoginActivity.objects.filter(
                 user=user)[0]
@@ -363,7 +367,9 @@ class UserLoginSerializer(serializers.Serializer):
 
         if user:
             current_login_ip = helpers.get_client_ip(request)
-
+            if Blacklist.objects.filter(IP=current_login_ip).exists():
+                raise serializers.ValidationError(
+                    'Not allowed')
             if UserLoginActivity.objects.filter(user=user).exists():
                 user_login_activity = UserLoginActivity.objects.filter(
                     user=user)[0]

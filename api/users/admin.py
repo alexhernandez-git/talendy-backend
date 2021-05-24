@@ -5,7 +5,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
 # Models
-from api.users.models import User, Earning, Follow, UserLoginActivity, Connection
+from api.users.models import User, Earning, Follow, UserLoginActivity, Connection, Blacklist
 
 
 @admin.register(Follow)
@@ -31,7 +31,7 @@ class CustomUserAdmin(UserAdmin):
                                             ("is_verified", "is_online", "posts_count", "created_posts_count",
                                              "created_active_posts_count", "created_solved_posts_count",
                                              "collaborated_posts_count", "collaborated_active_posts_count",
-                                             "collaborated_solved_posts_count")}),)
+                                             "collaborated_solved_posts_count", "account_deactivated")}),)
 
     list_display = ("email", "first_name", "last_name", "is_staff",
                     "is_client", "is_online")
@@ -53,6 +53,12 @@ class EarningAdmin(admin.ModelAdmin):
 class UserLoginActivityAdmin(admin.ModelAdmin):
     """UserLoginActivity model admin."""
     list_display = ("login_username", "created")
+
+
+@admin.register(Blacklist)
+class BlacklistAdmin(admin.ModelAdmin):
+    """Blacklist model admin."""
+    list_display = ("IP", "created")
 
 
 admin.site.register(User, CustomUserAdmin)
