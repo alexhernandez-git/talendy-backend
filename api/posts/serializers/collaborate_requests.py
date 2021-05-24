@@ -63,8 +63,8 @@ class RequestCollaborateSerializer(serializers.Serializer):
             raise serializers.ValidationError("You already are a member of this post")
         if CollaborateRequest.objects.filter(user=user, post=post).exists():
             raise serializers.ValidationError("This collaborate request has already been issued")
-        if post.members_count == 10:
-            raise serializers.ValidationError("This post can't be more than 10 members")
+        if post.members_count == 5:
+            raise serializers.ValidationError("This post can't be more than 5 members")
 
         return {"user": user, "post": post, "reason": data['reason']}
 
@@ -106,8 +106,8 @@ class AcceptCollaborateRequestSerializer(serializers.Serializer):
     def validate(self, data):
         collaborate_request = self.instance
         post = collaborate_request.post
-        if post.members_count == 10:
-            raise serializers.ValidationError("This post can't be more than 10 members")
+        if post.members_count == 5:
+            raise serializers.ValidationError("This post can't be more than 5 members")
 
         return data
 
