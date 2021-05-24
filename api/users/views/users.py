@@ -139,7 +139,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
     # User destroy
 
     def perform_destroy(self, instance):
-
+        instance.email_notifications_allowed = False
         instance.account_deactivated = True
         instance.save()
 
