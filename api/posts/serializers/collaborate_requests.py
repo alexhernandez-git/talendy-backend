@@ -50,10 +50,11 @@ class CollaborateRequestModelSerializer(serializers.ModelSerializer):
 
 class RequestCollaborateSerializer(serializers.Serializer):
     post = serializers.UUIDField()
-    reason = serializers.CharField(max_length=300)
+    reason = serializers.CharField(max_length=300, required=False, allow_blank=True)
 
     def validate(self, data):
         request = self.context["request"]
+
         user = request.user
         post = Post.objects.get(id=data["post"])
 
@@ -70,7 +71,9 @@ class RequestCollaborateSerializer(serializers.Serializer):
     def create(self, validated_data):
         user = validated_data["user"]
         post = validated_data["post"]
-        reason = validated_data["reason"]
+        reason = ""
+        if "reason" in validated_data and validated_data["reason"]:
+            reason = validated_data["reason"]
         collaborate_request = CollaborateRequest.objects.create(user=user, post=post, reason=reason)
         # Notificate the invitation to the addressee
         notification = Notification.objects.create(
