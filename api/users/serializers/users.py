@@ -6,6 +6,7 @@ from django.contrib.auth import password_validation, authenticate
 from django.core.validators import RegexValidator, validate_email
 from django.shortcuts import get_object_or_404
 from django.db.models import Sum, Q
+from django.contrib.gis.geos import Point
 
 # Channels
 from channels.layers import get_channel_layer
@@ -95,7 +96,8 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
             'reputation',
             'reviews_count',
             'is_currency_permanent',
-            'email_notifications_allowed'
+            'email_notifications_allowed',
+            'geolocation'
 
         )
 
@@ -143,7 +145,8 @@ class UserModelSerializer(serializers.ModelSerializer):
             'collaborated_active_posts_count',
             'collaborated_solved_posts_count',
             'reputation',
-            'reviews_count'
+            'reviews_count',
+            'geolocation'
 
         )
 
@@ -1039,3 +1042,16 @@ class CreateDonationSerializer(serializers.Serializer):
             user.save()
 
         return to_user, user
+
+
+class UpdateGeolocation(serializers.Serializer):
+    """Acount verification serializer."""
+    latitude = serializers.FloatField()
+    longitude = serializers.FloatField()
+
+    def update(self, instance, validated_data):
+        longitude = validated_data["longitude"]
+        latitude = validated_data["latitude"]
+        instance.geolocation = Point(longitude, latitude)
+        instance.save()
+        return instance

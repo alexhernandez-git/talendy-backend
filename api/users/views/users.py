@@ -48,7 +48,8 @@ from api.users.serializers import (
     DetachPaymentMethodSerializer,
     GetUserByJwtSerializer,
     PaypalConnectSerializer,
-    DetailedUserModelSerializer
+    DetailedUserModelSerializer,
+    UpdateGeolocation
 )
 
 # Filters
@@ -102,7 +103,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             'list',
                 'leave_feedback']:
             permissions = [AllowAny]
-        elif self.action in ['update', 'delete', 'partial_update', 'change_password', 'change_email', 'stripe_connect', 'paypal_connect', 'destroy', 'confirm_user']:
+        elif self.action in ['update', 'delete', 'partial_update', 'change_password', 'change_email', 'stripe_connect', 'paypal_connect', 'destroy', 'confirm_user', 'update_geolocation']:
             permissions = [IsAccountOwner, IsAuthenticated]
         elif self.action in ['list_users_not_followed']:
             permissions = [IsAuthenticated]
@@ -143,6 +144,23 @@ class UserViewSet(mixins.RetrieveModelMixin,
         instance.email_notifications_allowed = False
         instance.account_deactivated = True
         instance.save()
+
+    @action(detail=True, methods=['patch'])
+    def update_geolocation(self, request, *args, **kwargs):
+        user = self.get_object()
+
+        partial = request.method == 'PATCH'
+
+        serializer = UpdateGeolocation(
+            user,
+            data=request.data,
+            context={"request": request},
+            partial=partial)
+
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        data = DetailedUserModelSerializer(user).data
+        return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
     def leave_feedback(self, request):
