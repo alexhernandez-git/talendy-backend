@@ -11,8 +11,8 @@ class Command(BaseCommand):
             unit_amount=5,
             currency="EUR",
             price_label="5€",
-            stripe_price_id="price_1IvOfaKRJ23zrNRs9rOCwlw3",
-            stripe_product_id="prod_JYVgBxswJpLPHi",
+            stripe_price_id="price_1IrnYGKRJ23zrNRsSZ0ezsWw",
+            stripe_product_id="prod_JUn8byhA0haIKH",
             paid_karma=500
         )
         DonationOption.objects.create(
@@ -20,8 +20,8 @@ class Command(BaseCommand):
             unit_amount=15,
             currency="EUR",
             price_label="15€",
-            stripe_price_id="price_1IvOfhKRJ23zrNRsMlh0P3Hd",
-            stripe_product_id="prod_JYVh60e62lcpYL",
+            stripe_price_id="price_1IrnkCKRJ23zrNRszmldmUX9",
+            stripe_product_id="prod_JUnKRfca5ab5lx",
             paid_karma=1500
         )
         DonationOption.objects.create(
@@ -29,8 +29,8 @@ class Command(BaseCommand):
             unit_amount=25,
             currency="EUR",
             price_label="25€",
-            stripe_price_id="price_1IvOfnKRJ23zrNRsGrZ6keXD",
-            stripe_product_id="prod_JYVhJTU4IsG0FL",
+            stripe_price_id="price_1IrnkqKRJ23zrNRsX5QnPyCN",
+            stripe_product_id="prod_JUnLbFyZ6xUFd1",
             paid_karma=2500
 
         )
@@ -39,8 +39,8 @@ class Command(BaseCommand):
             unit_amount=50,
             currency="EUR",
             price_label="50€",
-            stripe_price_id="price_1IvOfsKRJ23zrNRs20agfPlZ",
-            stripe_product_id="prod_JYVhF85mAT3yrq",
+            stripe_price_id="price_1Irnm5KRJ23zrNRsNQSweupX",
+            stripe_product_id="prod_JUnMctjnGkwAZr",
             paid_karma=5000
 
         )
@@ -50,8 +50,8 @@ class Command(BaseCommand):
             unit_amount=5,
             currency="USD",
             price_label="$5",
-            stripe_price_id="price_1IvOfaKRJ23zrNRsZY7LNrDT",
-            stripe_product_id="prod_JYVgBxswJpLPHi",
+            stripe_price_id="price_1IrnYGKRJ23zrNRsnQON44y9",
+            stripe_product_id="prod_JUn8byhA0haIKH",
             paid_karma=500
 
         )
@@ -60,8 +60,8 @@ class Command(BaseCommand):
             unit_amount=15,
             currency="USD",
             price_label="$15",
-            stripe_price_id="price_1IvOfhKRJ23zrNRsNf7Gi7V8",
-            stripe_product_id="prod_JYVh60e62lcpYL",
+            stripe_price_id="price_1IrnkCKRJ23zrNRsetaOCpQt",
+            stripe_product_id="prod_JUnKRfca5ab5lx",
             paid_karma=1500
 
         )
@@ -70,8 +70,8 @@ class Command(BaseCommand):
             unit_amount=25,
             currency="USD",
             price_label="$25",
-            stripe_price_id="price_1IvOfnKRJ23zrNRsOz0legKV",
-            stripe_product_id="prod_JYVhJTU4IsG0FL",
+            stripe_price_id="price_1IrnkqKRJ23zrNRsQG1e7EaH",
+            stripe_product_id="prod_JEDl98Ujc9Gwd8",
             paid_karma=2500
 
         )
@@ -80,8 +80,8 @@ class Command(BaseCommand):
             unit_amount=50,
             currency="USD",
             price_label="$50",
-            stripe_price_id="price_1IvOfrKRJ23zrNRsoJBjl2HL",
-            stripe_product_id="prod_JYVhF85mAT3yrq",
+            stripe_price_id="price_1Irnm5KRJ23zrNRsYumgpcZT",
+            stripe_product_id="prod_JUnMctjnGkwAZr",
             paid_karma=5000
 
         )
@@ -91,8 +91,8 @@ class Command(BaseCommand):
             unit_amount=5,
             currency="GBP",
             price_label="£5",
-            stripe_price_id="price_1IvOfaKRJ23zrNRsXKQdul82",
-            stripe_product_id="prod_JYVgBxswJpLPHi",
+            stripe_price_id="price_1IrnYGKRJ23zrNRsNS4DmLGk",
+            stripe_product_id="prod_JUn8byhA0haIKH",
             paid_karma=500
 
         )
@@ -101,8 +101,8 @@ class Command(BaseCommand):
             unit_amount=15,
             currency="GBP",
             price_label="£15",
-            stripe_price_id="price_1IvOfhKRJ23zrNRsz20v7umH",
-            stripe_product_id="prod_JYVh60e62lcpYL",
+            stripe_price_id="price_1IrnkCKRJ23zrNRsL1amf913",
+            stripe_product_id="prod_JUnKRfca5ab5lx",
             paid_karma=1500
 
         )
@@ -111,8 +111,8 @@ class Command(BaseCommand):
             unit_amount=25,
             currency="GBP",
             price_label="£25",
-            stripe_price_id="price_1IvOfnKRJ23zrNRsurzvmwga",
-            stripe_product_id="prod_JYVhJTU4IsG0FL",
+            stripe_price_id="price_1IrnkqKRJ23zrNRsgaOXPjc0",
+            stripe_product_id="prod_JUnLbFyZ6xUFd1",
             paid_karma=2500
 
         )
@@ -121,8 +121,8 @@ class Command(BaseCommand):
             unit_amount=50,
             currency="GBP",
             price_label="£50",
-            stripe_price_id="price_1IvOfrKRJ23zrNRs3u9VVEjl",
-            stripe_product_id="prod_JYVhF85mAT3yrq",
+            stripe_price_id="price_1Irnm5KRJ23zrNRsUKywuxUA",
+            stripe_product_id="prod_JUnMctjnGkwAZr",
             paid_karma=5000
 
         )
