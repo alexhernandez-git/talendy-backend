@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.gis",
     # LOCAL_APPS
     "api.utils.apps.UtilsAppConfig",
     "api.users.apps.UsersAppConfig",
@@ -137,7 +138,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     'default': env.db('DATABASE_URL'),
 }
-
+DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
 

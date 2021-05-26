@@ -1,7 +1,7 @@
 """Django models utilities."""
 
 # Django
-from django.db import models
+from django.contrib.gis.db import models
 
 
 import uuid

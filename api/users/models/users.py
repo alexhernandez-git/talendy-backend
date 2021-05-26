@@ -2,7 +2,7 @@
 
 # Django
 from django.db.models.fields.related import ManyToManyField
-from django.db import models
+from django.contrib.gis.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 
@@ -142,6 +142,8 @@ class User(CModel, AbstractUser):
     account_deactivated = models.BooleanField(default=False)
 
     is_online = models.BooleanField(default=False)
+
+    geolocation = models.PointField(null=True, blank=True,)
 
     def __str__(self):
         """Return username."""

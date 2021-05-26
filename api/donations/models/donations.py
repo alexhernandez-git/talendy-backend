@@ -1,6 +1,6 @@
 from django.db.models.fields import BooleanField
 from api.utils.models import CModel
-from django.db import models
+from django.contrib.gis.db import models
 
 from djmoney.models.fields import MoneyField
 

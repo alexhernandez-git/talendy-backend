@@ -16,7 +16,7 @@ ENV PYTHONUNBUFFERED 1
 #   && apk add postgresql-client
 RUN apt-get update -y
 
-RUN apt-get install postgresql-client -y
+RUN apt-get install postgresql-client binutils libproj-dev gdal-bin libgeos++ proj-bin -y
 # Requirements are installed here to ensure they will be cached.
 COPY ./requirements.txt .
 

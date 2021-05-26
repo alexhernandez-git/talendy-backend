@@ -1,5 +1,5 @@
 from api.utils.models import CModel
-from django.db import models
+from django.contrib.gis.db import models
 
 # Models
 from api.donations.models import DonationOption
