@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from django.db.models import Q
+from django.contrib.gis.db.models.functions import GeometryDistance
 
 # Permissions
 from rest_framework.permissions import IsAuthenticated
@@ -29,8 +30,9 @@ from api.posts.serializers import (
 )
 
 # Filters
-from rest_framework.filters import SearchFilter
+from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from api.posts.filters import PostFilter
 
 
 class PostViewSet(
@@ -49,8 +51,8 @@ class PostViewSet(
     queryset = Post.objects.all()
     lookup_field = "id"
     serializer_class = PostModelSerializer
-    filter_backends = (SearchFilter, DjangoFilterBackend)
-    filterset_fields = ['community', 'status']
+    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
+    filter_class = PostFilter
     search_fields = (
         "title",
         "text",
@@ -82,10 +84,10 @@ class PostViewSet(
         queryset = Post.objects.all()
 
         if self.action == "list":
-            queryset = Post.objects.filter(members_count__lte=10)
+            queryset = Post.objects.filter(members_count__lte=5)
 
         elif self.action == "list_most_karma_posts":
-            queryset = Post.objects.filter(members_count__lte=10).order_by('-karma_offered')
+            queryset = Post.objects.filter(members_count__lte=5).order_by('-karma_offered')
 
         elif self.action == "list_followed_users_posts":
             if self.request.user.id:
@@ -93,9 +95,21 @@ class PostViewSet(
                 user = self.request.user
                 queryset = Post.objects.filter(
                     user__id__in=Follow.objects.filter(from_user=user).values_list(
-                        'followed_user'), members_count__lte=10)
+                        'followed_user'), members_count__lte=5)
             else:
                 queryset = Post.objects.none()
+        elif self.action == "list_nearest_posts":
+            if self.request.user.id and self.request.user.id:
+                user = self.request.user
+                if user.geolocation:
+
+                    queryset = queryset.annotate(distance=GeometryDistance(
+                        "user__geolocation", user.geolocation)).order_by('-distance')
+                else:
+                    queryset = Post.objects.none()
+            else:
+                queryset = Post.objects.none()
+
         elif self.action == "list_my_posts":
             user = self.request.user
             queryset = Post.objects.filter(user=user)
@@ -147,6 +161,17 @@ class PostViewSet(
 
     @action(detail=False, methods=['get'])
     def list_followed_users_posts(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def list_nearest_posts(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
