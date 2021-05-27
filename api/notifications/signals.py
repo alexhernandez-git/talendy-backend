@@ -34,7 +34,7 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
 
         if not user_notification:
             # Insert here the send new message email notification
-            if not sent_to.is_online:
+            if not sent_to.is_online and sent_to.email_notifications_allowed:
                 async_to_sync(send_have_messages_from_email(sent_to, sent_by))
             notification = Notification.objects.create(
                 type=Notification.MESSAGES,
@@ -90,7 +90,8 @@ def announce_update_on_post_messages_model(sender, instance, created, **kwargs):
 
             if not user_notification:
                 # Insert here the send new message email notification
-
+                if not sent_to.is_online and sent_to.email_notifications_allowed:
+                    async_to_sync(send_have_collaborate_room_messages_from_email(sent_to, sent_by))
                 notification = Notification.objects.create(
                     type=Notification.POST_MESSAGES,
                     post=post,
