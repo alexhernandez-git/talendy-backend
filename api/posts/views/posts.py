@@ -104,7 +104,7 @@ class PostViewSet(
                 if user.geolocation:
 
                     queryset = queryset.annotate(distance=GeometryDistance(
-                        "user__geolocation", user.geolocation)).order_by('-distance')
+                        "user__geolocation", user.geolocation)).order_by('distance')
                 else:
                     queryset = Post.objects.none()
             else:
