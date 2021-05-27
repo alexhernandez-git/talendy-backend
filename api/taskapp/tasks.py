@@ -195,16 +195,16 @@ def send_collaborate_request(user, sent_to):
 
 
 @task(name='send_collaborate_request_accepted', max_retries=3)
-def send_collaborate_request_accepted(user, sent_to):
+def send_collaborate_request_accepted(post, sent_to):
     """Check if the free trial has ended and turn off"""
 
-    subject = 'New collaborate room messages from @{}'.format(
-        user.username)
+    subject = 'Collaborate request accepted by @{}'.format(
+        post.user.username)
 
     from_email = 'Talendy <no-reply@talendy.com>'
     content = render_to_string(
-        'emails/users/collaborate_request.html',
-        {'user': user}
+        'emails/users/collaborate_request_accepted.html',
+        {'post': post}
     )
     msg = EmailMultiAlternatives(subject, content, from_email, [sent_to.email])
     msg.attach_alternative(content, "text/html")

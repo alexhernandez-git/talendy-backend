@@ -171,5 +171,5 @@ class AcceptCollaborateRequestSerializer(serializers.Serializer):
             }
         )
         if not requester_user.is_online and requester_user.email_notifications_allowed:
-            send_collaborate_request_accepted(post.user, requester_user)
+            send_collaborate_request_accepted(post, requester_user)
         return instance
