@@ -92,6 +92,22 @@ io.on("connection", (socket) => {
       id: socket.id,
     });
   });
+  // SHARED SCREEN
+
+  socket.on("ss media ready", (roomID) => {
+    console.log("ss media ready");
+    const me = users[roomID].find((user) => user.socketID === socket.id);
+    const myOtherUser = users[roomID].filter(
+      (user) => user.userID === me.userID.split("|")[0]
+    );
+    console.log(myOtherUser);
+    const usersInThisRoom = users[roomID]?.filter(
+      (user) =>
+        user.socketID !== socket.id && user.socketID !== myOtherUser.socketID
+    );
+
+    socket.emit("ss all users", usersInThisRoom);
+  });
 
   // SHARED NOTES
   socket.on("text", (payload) => {
