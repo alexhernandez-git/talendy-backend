@@ -6,6 +6,8 @@ class Post(CModel):
 
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
     members = models.ManyToManyField("users.User", through="posts.PostMember", related_name="post_members")
+    karma_winner = models.ForeignKey("posts.PostMember", on_delete=models.SET_NULL,
+                                     related_name="karma_winner", null=True, blank=True)
     members_count = models.IntegerField(default=0)
     title = models.CharField(max_length=300)
     text = models.TextField(null=True, blank=True)

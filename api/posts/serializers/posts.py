@@ -168,6 +168,7 @@ class RetrieveCollaborateRoomModelSerializer(serializers.ModelSerializer):
             "karma_offered",
             "solution",
             "draft_solution",
+            "karma_winner",
             "created",
         )
 
@@ -226,7 +227,29 @@ class UpdatePostSolutionSerializer(serializers.Serializer):
         return instance
 
 
+class UpdatePostWinnerKarmaSerializer(serializers.Serializer):
+    karma_winner = serializers.UUIDField()
+
+    def validate(self, data):
+        # Validate if the memeber exists
+        karma_winner = get_object_or_404(PostMember, id=data.get('karma_winner'))
+        return {"karma_winner": karma_winner}
+
+    def update(self, instance, validated_data):
+        instance.karma_winner = validated_data.get('karma_winner')
+        instance.save()
+
+        return instance
+
+
 class FinalizePostSerializer(serializers.Serializer):
+
+    def validate(self, data):
+        post = self.instance
+        if post.members.all().count() > 1 and not post.karma_winner:
+            raise serializers.ValidationError("You need a karma winner")
+
+        return data
 
     def update(self, instance, validated_data):
         post = instance
@@ -241,6 +264,12 @@ class FinalizePostSerializer(serializers.Serializer):
         # Add admin created_solved_posts_count
         admin.created_solved_posts_count += 1
 
+        # Give the karma to the winner
+        if post.karma_winner:
+            karma_winner = post.karma_winner.user
+            karma_winner.karma_amount += post.karma_offered
+            karma_winner.save()
+
         # Update the post finalized to members
         members = PostMember.objects.filter(post=post).exclude(user=admin)
         for member in members:
@@ -250,8 +279,6 @@ class FinalizePostSerializer(serializers.Serializer):
             # Add user collaborated_solved_posts_count
             user.collaborated_solved_posts_count += 1
 
-            # Give the karma offered
-            user.karma_amount += post.karma_offered
             # Check if there is a review
             if (member.draft_rating and member.draft_rating > 0) or member.draft_comment:
                 # Save the review to the user

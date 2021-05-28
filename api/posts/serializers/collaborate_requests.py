@@ -20,7 +20,7 @@ from api.posts.serializers import PostModelSerializer
 
 # Models
 from api.users.models import User
-from api.posts.models import CollaborateRequest, Post
+from api.posts.models import CollaborateRequest, Post, PostMember
 from api.notifications.models import Notification, NotificationUser
 
 # Celery
@@ -108,7 +108,8 @@ class AcceptCollaborateRequestSerializer(serializers.Serializer):
         post = collaborate_request.post
         if post.members_count == 5:
             raise serializers.ValidationError("This post can't be more than 5 members")
-
+        if PostMember.objects.filter(user=collaborate_request.user, post=post).exists():
+            raise serializers.ValidationError("You already accepted this user in this post")
         return data
 
     def update(self, instance, validated_data):
@@ -117,8 +118,12 @@ class AcceptCollaborateRequestSerializer(serializers.Serializer):
         requester_user = collaborate_request.user
 
         # Add the member
+
         post.members.add(requester_user)
         post.members_count += 1
+
+        # Make the current karma winner this new user
+        post.karma_winner = PostMember.objects.get(user=requester_user, post=post)
         post.save()
 
         requester_user.posts_count += 1
