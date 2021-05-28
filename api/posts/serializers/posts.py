@@ -218,7 +218,7 @@ class UpdatePostSharedNotesSerializer(serializers.Serializer):
 
 
 class UpdatePostSolutionSerializer(serializers.Serializer):
-    solution = serializers.CharField()
+    solution = serializers.CharField(allow_blank=True)
 
     def update(self, instance, validated_data):
         instance.draft_solution = validated_data['solution']
