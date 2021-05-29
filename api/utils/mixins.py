@@ -25,9 +25,9 @@ class AddListMixin(viewsets.GenericViewSet):
 
         self.post_object = get_object_or_404(Post, id=id)
 
-        id = self.kwargs["kanban_slug_id"]
+        list_id = self.kwargs["list_slug_id"]
 
-        self.kanban_list = get_object_or_404(KanbanList, id=id)
+        self.kanban_list = get_object_or_404(KanbanList, id=list_id)
 
         return super(AddListMixin, self).dispatch(request, *args, **kwargs)
 

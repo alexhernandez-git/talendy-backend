@@ -39,8 +39,10 @@ class KanbanCardModelSerializer(serializers.ModelSerializer):
             "id",
             "title",
         )
+        read_only_fields = ("created",)
 
     def validate(self, data):
+
         user = self.context['request'].user
         list = self.context['list']
 
@@ -79,9 +81,9 @@ class KanbanListModelSerializer(serializers.ModelSerializer):
             "cards",
         )
 
-        read_only_fields = ("id", "created")
+        read_only_fields = ("created",)
 
-    def get_images(self, obj):
+    def get_cards(self, obj):
         return KanbanCardModelSerializer(KanbanCard.objects.filter(list=obj.id), many=True).data
 
     def validate(self, data):
@@ -101,7 +103,8 @@ class KanbanListModelSerializer(serializers.ModelSerializer):
         # Get the kanban list higher order number
         order = 0
         if KanbanList.objects.filter(post=post).order_by("-order").exists():
-            last_kanban_list = KanbanList.objects.filter(post=post).order_by("-order").exists()
+            last_kanban_list = KanbanList.objects.filter(post=post).order_by("-order").first()
+
             order = ++last_kanban_list.order
         list = KanbanList.objects.create(id=id, title=title, post=post, order=order)
 

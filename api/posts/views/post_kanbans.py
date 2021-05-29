@@ -74,6 +74,7 @@ class KanbanListViewSet(
         """
         Extra context provided to the serializer class.
         """
+
         return {
             "request": self.request,
             "format": self.format_kwarg,
@@ -119,6 +120,7 @@ class KanbanCardViewSet(
             "format": self.format_kwarg,
             "view": self,
             "post": self.post_object,
+            "list": self.kanban_list,
         }
 
     def get_queryset(self):
