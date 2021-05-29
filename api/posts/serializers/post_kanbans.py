@@ -44,24 +44,25 @@ class KanbanCardModelSerializer(serializers.ModelSerializer):
     def validate(self, data):
 
         user = self.context['request'].user
-        list = self.context['list']
+        kanban_list = self.context['kanban_list']
 
-        if not list.post.members.filter(user=user).exists():
-            raise serializers.ValidationError("Not enough karma offered")
+        if not kanban_list.post.members.filter(id=user.id).exists():
+            raise serializers.ValidationError("You are not a member of this post")
 
         return data
 
     def create(self, validated_data):
 
-        list = self.context['list']
+        kanban_list = self.context['kanban_list']
         title = validated_data["title"]
         id = validated_data["id"]
         # Get the kanban card higher order number
         order = 0
-        if KanbanCard.objects.filter(list=list).order_by("-order").exists():
-            last_kanban_card = KanbanCard.objects.filter(list=list).order_by("-order").exists()
-            order = ++last_kanban_card.order
-        card = KanbanCard.objects.create(id=id, title=title, list=list, order=order)
+        if KanbanCard.objects.filter(kanban_list=kanban_list).order_by("-order").exists():
+            last_kanban_card = KanbanCard.objects.filter(kanban_list=kanban_list).order_by("-order").exists()
+            order = last_kanban_card.order + 1
+
+        card = KanbanCard.objects.create(id=id, title=title, kanban_list=kanban_list, order=order)
 
         return card
 
@@ -84,14 +85,14 @@ class KanbanListModelSerializer(serializers.ModelSerializer):
         read_only_fields = ("created",)
 
     def get_cards(self, obj):
-        return KanbanCardModelSerializer(KanbanCard.objects.filter(list=obj.id), many=True).data
+        return KanbanCardModelSerializer(KanbanCard.objects.filter(kanban_list=obj.id), many=True).data
 
     def validate(self, data):
         user = self.context['request'].user
         post = self.context['post']
 
-        if not post.members.filter(user=user).exists():
-            raise serializers.ValidationError("Not enough karma offered")
+        if not post.members.filter(id=user.id).exists():
+            raise serializers.ValidationError("You are not a member of this post")
 
         return data
 
@@ -105,7 +106,7 @@ class KanbanListModelSerializer(serializers.ModelSerializer):
         if KanbanList.objects.filter(post=post).order_by("-order").exists():
             last_kanban_list = KanbanList.objects.filter(post=post).order_by("-order").first()
 
-            order = ++last_kanban_list.order
+            order = last_kanban_list.order + 1
         list = KanbanList.objects.create(id=id, title=title, post=post, order=order)
 
         return list

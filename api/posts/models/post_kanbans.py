@@ -11,11 +11,16 @@ class KanbanList(CModel):
     title = models.CharField(max_length=100)
     order = models.IntegerField()
 
+    class Meta:
+        """Meta option."""
+
+        ordering = ['order']
+
 
 class KanbanCard(CModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=True)
 
-    list = models.ForeignKey("posts.KanbanList", on_delete=models.CASCADE)
+    kanban_list = models.ForeignKey("posts.KanbanList", on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     order = models.IntegerField()
 

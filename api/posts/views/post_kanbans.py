@@ -1,6 +1,7 @@
 """Users views."""
 
 # Django
+import pdb
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
@@ -115,12 +116,13 @@ class KanbanCardViewSet(
         """
         Extra context provided to the serializer class.
         """
+
         return {
             "request": self.request,
             "format": self.format_kwarg,
             "view": self,
             "post": self.post_object,
-            "list": self.kanban_list,
+            "kanban_list": self.kanban_list,
         }
 
     def get_queryset(self):
