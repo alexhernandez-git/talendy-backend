@@ -12,6 +12,7 @@ from .views import collaborate_requests as collaborate_request_views
 from .views import post_messages as post_message_views
 from .views import post_seen_by as post_seen_by_views
 from .views import post_members as post_member_views
+from .views import post_kanbans as post_kanban_views
 
 router = DefaultRouter()
 router.register(r'posts', post_views.PostViewSet, basename='posts')
@@ -26,6 +27,11 @@ router.register(
 router.register(
     r"posts/(?P<slug_id>[-a-zA-Z0-9_]+)/members", post_member_views.PostMemberViewSet, basename="post_members"
 )
+router.register(
+    r"posts/(?P<slug_id>[-a-zA-Z0-9_]+)/kanbans", post_kanban_views.KanbanListViewSet, basename="post_kanbans"
+)
+router.register(r"posts/(?P<slug_id>[-a-zA-Z0-9_]+)/kanbans/(?P<list_slug_id>[-a-zA-Z0-9_]+)/cards",
+                post_kanban_views.KanbanCardViewSet, basename="post_kanbans_cards")
 urlpatterns = [
     path('', include(router.urls))
 ]
