@@ -1,6 +1,8 @@
 """Notifications serializers."""
 
 # Django REST Framework
+from api.posts.models.post_kanbans import KanbanList
+from api.posts.serializers.post_kanbans import KanbanListModelSerializer
 from api.taskapp.tasks import send_post_finalized, send_post_to_followers
 from rest_framework import serializers
 
@@ -167,6 +169,7 @@ class RetrieveCollaborateRoomModelSerializer(serializers.ModelSerializer):
     user = UserModelSerializer(read_only=True)
     images = serializers.SerializerMethodField(read_only=True)
     members = serializers.SerializerMethodField(read_only=True)
+    kanban = serializers.SerializerMethodField(read_only=True)
     is_last_message_seen = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -186,6 +189,7 @@ class RetrieveCollaborateRoomModelSerializer(serializers.ModelSerializer):
             "privacity",
             "status",
             "images",
+            "kanban",
             "karma_offered",
             "solution",
             "draft_solution",
@@ -197,6 +201,9 @@ class RetrieveCollaborateRoomModelSerializer(serializers.ModelSerializer):
 
     def get_images(self, obj):
         return PostImageModelSerializer(PostImage.objects.filter(post=obj.id), many=True).data
+
+    def get_kanban(self, obj):
+        return KanbanListModelSerializer(KanbanList.objects.filter(post=obj.id), many=True).data
 
     def get_members(self, obj):
         members = PostMember.objects.filter(post=obj.id)
