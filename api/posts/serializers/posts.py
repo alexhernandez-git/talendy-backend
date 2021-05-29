@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib.auth import password_validation, authenticate
 from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
-from django.db.models import Avg
+from django.db.models import Avg, Sum, Q
 
 # Channels
 from channels.layers import get_channel_layer
@@ -20,7 +20,7 @@ from api.users.serializers import UserModelSerializer
 from .post_members import PostMemberModelSerializer
 
 # Models
-from api.users.models import User, Review, Follow
+from api.users.models import User, Review, Follow, Connection
 from api.posts.models import Post, PostImage, PostMember, CollaborateRequest, PostSeenBy
 from api.notifications.models import Notification, NotificationUser
 
@@ -120,8 +120,29 @@ class PostModelSerializer(serializers.ModelSerializer):
 
         users_following = Follow.objects.filter(followed_user=user)
         for user_following in users_following:
-            if not user_following.from_user.is_online and user_following.from_user.email_notifications_allowed:
-                send_post_to_followers(user, user_following.from_user, post)
+            # Create the notification for the user
+            if post.privacity == Post.CONNECTIONS_ONLY and not Connection.objects.filter(
+                    Q(requester=user, addressee=user_following.from_user) |
+                    Q(requester=user_following.from_user, addressee=user),
+                    accepted=True).exists():
+                break
+            notification = Notification.objects.create(
+                type=Notification.POST_CREATED_BY_A_USER_FOLLOWED,
+                post=post,
+            )
+            user_notification = NotificationUser.objects.create(
+                notification=notification,
+                user=user_following.from_user
+            )
+
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                "user-%s" % user_following.from_user.id, {
+                    "type": "send.notification",
+                    "event": "POST_CREATED_BY_A_USER_FOLLOWED",
+                    "notification__pk": str(user_notification.pk),
+                }
+            )
 
         return post
 

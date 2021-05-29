@@ -85,7 +85,8 @@ class PostViewSet(
         queryset = Post.objects.all()
 
         if self.action == "list":
-            queryset = Post.objects.filter(members_count__lte=5)
+            queryset = Post.objects.filter(
+                members_count__lte=5)
 
         elif self.action == "list_most_karma_posts":
             queryset = Post.objects.filter(members_count__lte=5).order_by('-karma_offered')
@@ -104,8 +105,8 @@ class PostViewSet(
                 user = self.request.user
                 if user.geolocation:
 
-                    queryset = queryset.exclude(user=user.id).annotate(distance=GeometryDistance(
-                        "user__geolocation", user.geolocation)).order_by('distance')
+                    queryset = queryset.filter(members_count__lte=5).exclude(user=user.id).annotate(
+                        distance=GeometryDistance("user__geolocation", user.geolocation)).order_by('distance')
                 else:
                     queryset = Post.objects.none()
             else:

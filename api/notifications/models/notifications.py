@@ -21,6 +21,7 @@ class Notification(CModel):
     POST_FINALIZED = 'PF'
     NEW_REVIEW = 'NR'
     NEW_DONATION = 'ND'
+    POST_CREATED_BY_A_USER_FOLLOWED = 'CF'
     TYPE_CHOICES = [
         (MESSAGES, 'Messages'),
         (NEW_INVITATION, 'New invitation'),
@@ -32,6 +33,7 @@ class Notification(CModel):
         (POST_FINALIZED, 'Post finalized'),
         (NEW_REVIEW, 'New review'),
         (NEW_DONATION, 'New donation'),
+        (POST_CREATED_BY_A_USER_FOLLOWED, 'Post created by a followed')
     ]
     type = models.CharField(
         max_length=2,
