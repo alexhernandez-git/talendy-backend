@@ -26,7 +26,7 @@ from api.users.permissions import IsAccountOwner
 
 # Models
 from api.users.models import User
-from api.posts.models import Post, KanbanList, KanbanListFile
+from api.posts.models import Post, KanbanList, KanbanCard
 
 # Serializers
 from api.users.serializers import UserModelSerializer
@@ -38,7 +38,7 @@ from api.posts.serializers import (
 
 # Utils
 
-from api.utils.mixins import AddPostMixin
+from api.utils.mixins import AddListMixin, AddPostMixin
 import os
 from api.utils import helpers
 from asgiref.sync import sync_to_async
@@ -84,3 +84,43 @@ class KanbanListViewSet(
     def get_queryset(self):
 
         return KanbanList.objects.filter(post=self.post_object)
+
+
+class KanbanCardViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
+    AddListMixin,
+):
+    """Messages view set."""
+
+    queryset = KanbanCard.objects.all()
+    lookup_field = "id"
+    serializer_class = KanbanCardModelSerializer
+
+    def get_permissions(self):
+        """Assign permissions based on action."""
+
+        permissions = [IsAuthenticated]
+        return [p() for p in permissions]
+
+    def get_serializer_class(self):
+        """Return serializer based on action."""
+
+        return KanbanCardModelSerializer
+
+    def get_serializer_context(self):
+        """
+        Extra context provided to the serializer class.
+        """
+        return {
+            "request": self.request,
+            "format": self.format_kwarg,
+            "view": self,
+            "post": self.post_object,
+        }
+
+    def get_queryset(self):
+
+        return KanbanCard.objects.filter(post=self.post_object)
