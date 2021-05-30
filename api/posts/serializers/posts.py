@@ -255,6 +255,26 @@ class UpdatePostSolutionSerializer(serializers.Serializer):
         return instance
 
 
+class UpdateKanbanListOrderSerializer(serializers.Serializer):
+    droppable_index_start = serializers.IntegerField()
+    droppable_index_end = serializers.IntegerField()
+
+    def update(self, instance, validated_data):
+        droppable_index_start = validated_data['droppable_index_start']
+        droppable_index_end = validated_data['droppable_index_end']
+        kanban_lists = KanbanList.objects.filter(post=instance)
+        kanban_list_start = kanban_lists.get(order=droppable_index_start)
+        kanban_list_start.order = droppable_index_end
+
+        kanban_list_end = kanban_lists.get(order=droppable_index_end)
+        kanban_list_end.order = droppable_index_start
+
+        kanban_list_start.save()
+        kanban_list_end.save()
+
+        return instance
+
+
 class UpdatePostWinnerKarmaSerializer(serializers.Serializer):
     karma_winner = serializers.UUIDField()
 
