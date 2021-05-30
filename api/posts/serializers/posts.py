@@ -323,7 +323,7 @@ class UpdateKanbanCardOrderBetweenListsSerializer(serializers.Serializer):
         # Add 1 order starting on droppable_index_end
         for card in kanban_cards_end:
 
-            if card.order > droppable_index_start:
+            if card.order >= droppable_index_end:
                 card.order = card.order + 1
                 card.save()
         kanban_card_start.kanban_list = get_object_or_404(KanbanList, id=list_end_id)
