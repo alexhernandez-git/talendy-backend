@@ -1,7 +1,6 @@
 """Notifications serializers."""
 
 # Django REST Framework
-from api.posts.models.post_kanbans import KanbanList
 from api.posts.serializers.post_kanbans import KanbanListModelSerializer
 from api.taskapp.tasks import send_post_finalized, send_post_to_followers
 from rest_framework import serializers
@@ -23,7 +22,7 @@ from .post_members import PostMemberModelSerializer
 
 # Models
 from api.users.models import User, Review, Follow, Connection
-from api.posts.models import Post, PostImage, PostMember, CollaborateRequest, PostSeenBy
+from api.posts.models import Post, PostImage, PostMember, CollaborateRequest, PostSeenBy, KanbanList, KanbanCard
 from api.notifications.models import Notification, NotificationUser
 
 # Utils
@@ -271,6 +270,28 @@ class UpdateKanbanListOrderSerializer(serializers.Serializer):
 
         kanban_list_start.save()
         kanban_list_end.save()
+
+        return instance
+
+
+class UpdateKanbanCardOrderSerializer(serializers.Serializer):
+    list_id = serializers.UUIDField()
+    droppable_index_start = serializers.IntegerField()
+    droppable_index_end = serializers.IntegerField()
+
+    def update(self, instance, validated_data):
+        list_id = validated_data['list_id']
+        droppable_index_start = validated_data['droppable_index_start']
+        droppable_index_end = validated_data['droppable_index_end']
+        kanban_cards = KanbanCard.objects.filter(kanban_list__id=list_id)
+        kanban_card_start = kanban_cards.get(order=droppable_index_start)
+        kanban_card_start.order = droppable_index_end
+
+        kanban_card_end = kanban_cards.get(order=droppable_index_end)
+        kanban_card_end.order = droppable_index_start
+
+        kanban_card_start.save()
+        kanban_card_end.save()
 
         return instance
 

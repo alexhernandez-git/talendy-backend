@@ -28,7 +28,8 @@ from api.posts.serializers import (
     FinalizePostSerializer,
     StopCollaboratingSerializer,
     UpdatePostWinnerKarmaSerializer,
-    UpdateKanbanListOrderSerializer
+    UpdateKanbanListOrderSerializer,
+    UpdateKanbanCardOrderSerializer
 )
 
 # Filters
@@ -353,6 +354,22 @@ class PostViewSet(
         partial = request.method == 'PATCH'
 
         serializer = UpdateKanbanListOrderSerializer(
+            post,
+            data=request.data,
+            context={"request": request},
+            partial=partial)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['patch'])
+    def update_kanban_card_order(self, request, *args, **kwargs):
+        post = self.get_object()
+
+        partial = request.method == 'PATCH'
+
+        serializer = UpdateKanbanCardOrderSerializer(
             post,
             data=request.data,
             context={"request": request},

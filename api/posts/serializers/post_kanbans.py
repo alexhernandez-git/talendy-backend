@@ -59,7 +59,7 @@ class KanbanCardModelSerializer(serializers.ModelSerializer):
         # Get the kanban card higher order number
         order = 0
         if KanbanCard.objects.filter(kanban_list=kanban_list).order_by("-order").exists():
-            last_kanban_card = KanbanCard.objects.filter(kanban_list=kanban_list).order_by("-order").exists()
+            last_kanban_card = KanbanCard.objects.filter(kanban_list=kanban_list).order_by("-order").first()
             order = last_kanban_card.order + 1
 
         card = KanbanCard.objects.create(id=id, title=title, kanban_list=kanban_list, order=order)
