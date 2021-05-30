@@ -308,17 +308,19 @@ class UpdateKanbanCardOrderBetweenListsSerializer(serializers.Serializer):
         droppable_index_start = validated_data['droppable_index_start']
         droppable_index_end = validated_data['droppable_index_end']
 
-        kanban_cards_start = KanbanList.objects.get(post=instance, kanban_list__id=list_start_id)
+        kanban_cards_start = KanbanCard.objects.filter(kanban_list__id=list_start_id)
 
         kanban_card_start = kanban_cards_start.get(order=droppable_index_start)
-        # Substract 1 order starting on droppable_index_start
+        # Substract 1 order starting on droppable_index_start next
         for card in kanban_cards_start:
 
             if card.order > droppable_index_start:
                 card.order = card.order - 1
                 card.save()
 
-        kanban_cards_end = KanbanList.objects.get(post=instance, kanban_list__id=list_end_id)
+        kanban_cards_end = KanbanCard.objects.filter(kanban_list__id=list_end_id)
+
+        # Add 1 order starting on droppable_index_end
         for card in kanban_cards_end:
 
             if card.order >= droppable_index_start:
