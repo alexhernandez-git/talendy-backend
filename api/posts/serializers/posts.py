@@ -296,6 +296,41 @@ class UpdateKanbanCardOrderSerializer(serializers.Serializer):
         return instance
 
 
+class UpdateKanbanCardOrderBetweenListsSerializer(serializers.Serializer):
+    list_start_id = serializers.UUIDField()
+    list_end_id = serializers.UUIDField()
+    droppable_index_start = serializers.IntegerField()
+    droppable_index_end = serializers.IntegerField()
+
+    def update(self, instance, validated_data):
+        list_start_id = validated_data['list_start_id']
+        list_end_id = validated_data['list_end_id']
+        droppable_index_start = validated_data['droppable_index_start']
+        droppable_index_end = validated_data['droppable_index_end']
+
+        kanban_cards_start = KanbanList.objects.get(post=instance, kanban_list__id=list_start_id)
+
+        kanban_card_start = kanban_cards_start.get(order=droppable_index_start)
+        # Substract 1 order starting on droppable_index_start
+        for card in kanban_cards_start:
+
+            if card.order > droppable_index_start:
+                card.order = card.order - 1
+                card.save()
+
+        kanban_cards_end = KanbanList.objects.get(post=instance, kanban_list__id=list_end_id)
+        for card in kanban_cards_end:
+
+            if card.order >= droppable_index_start:
+                card.order = card.order + 1
+                card.save()
+        kanban_card_start.kanban_list = get_object_or_404(KanbanList, id=list_end_id)
+        kanban_card_start.order = droppable_index_end
+        kanban_card_start.save()
+
+        return instance
+
+
 class UpdatePostWinnerKarmaSerializer(serializers.Serializer):
     karma_winner = serializers.UUIDField()
 
