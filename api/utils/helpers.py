@@ -165,7 +165,7 @@ def get_currency_api(current_login_ip):
         raise serializers.ValidationError("Get currency issue, try it later")
 
 
-def get_location_data():
+def get_location_data(request):
     country_code = None
     currency = None
     country_name = None
@@ -175,11 +175,15 @@ def get_location_data():
     zip = None
     lat = None
     lon = None
-
+    current_login_ip = get_client_ip(request)
+    # Remove this line in production
+    if env.bool("DEBUG", default=True):
+        current_login_ip = "147.161.106.227"
+    # Get country
     r = None
     status = None
     try:
-        r = requests.get('http://ip-api.com/json/')
+        r = requests.get('http://ip-api.com/json/{}'.format(current_login_ip))
         status = r.status_code
     except:
         pass

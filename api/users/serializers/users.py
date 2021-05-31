@@ -287,7 +287,7 @@ class UserSignUpSerializer(serializers.Serializer):
 
         # Create the free trial expiration date
 
-        currency, country, country_name, region, region_name, city, zip, lat, lon = helpers.get_location_data()
+        currency, country, country_name, region, region_name, city, zip, lat, lon = helpers.get_location_data(request)
 
         if not 'currency' in data or not data['currency'] and currency:
             data['currency'] = currency
