@@ -32,7 +32,11 @@ class CustomUserAdmin(UserAdmin):
                                              "created_active_posts_count", "created_solved_posts_count",
                                              "collaborated_posts_count", "collaborated_active_posts_count",
                                              "collaborated_solved_posts_count", "account_deactivated",
-                                             "email_notifications_allowed", "country", "geolocation")}),)
+                                             "email_notifications_allowed", "country", "country_name", "region",
+                                             "region_name",
+                                             "city",
+                                             "zip",
+                                             "geolocation",)}),)
 
     list_display = ("email", "first_name", "last_name", "is_staff",
                     "is_client", "is_online", "country")

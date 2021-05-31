@@ -66,8 +66,19 @@ class User(CModel, AbstractUser):
         default=False,
         help_text='Set to true when the user have verified its email address.'
     )
-
     country = models.CharField(max_length=2, blank=True, null=True)
+
+    country_name = models.CharField(max_length=100, blank=True, null=True)
+
+    region = models.CharField(max_length=2, blank=True, null=True)
+
+    region_name = models.CharField(max_length=100, blank=True, null=True)
+
+    city = models.CharField(max_length=100, blank=True, null=True)
+
+    zip = models.CharField(max_length=100, blank=True, null=True)
+
+    geolocation = models.PointField(null=True, blank=True,)
 
     following = models.ManyToManyField("users.User", through="users.Follow", verbose_name="user_follow")
 
@@ -142,8 +153,6 @@ class User(CModel, AbstractUser):
     account_deactivated = models.BooleanField(default=False)
 
     is_online = models.BooleanField(default=False)
-
-    geolocation = models.PointField(null=True, blank=True,)
 
     def __str__(self):
         """Return username."""

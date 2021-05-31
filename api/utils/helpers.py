@@ -165,45 +165,52 @@ def get_currency_api(current_login_ip):
         raise serializers.ValidationError("Get currency issue, try it later")
 
 
-def get_currency_and_country_anonymous(request):
+def get_location_data():
     country_code = None
     currency = None
-    if not currency:
-        # Get country
+    country_name = None
+    region = None
+    region_name = None
+    city = None
+    zip = None
+    lat = None
+    lon = None
+
+    r = None
+    status = None
+    try:
+        r = requests.get('http://ip-api.com/json/')
+        status = r.status_code
+    except:
+        pass
+
+    if status == 200:
+        data = r.json()
+        country_code = data['countryCode']
+        country_name = data['country']
+        region = data['region']
+        region_name = data['regionName']
+        city = data['city']
+        zip = data['zip']
+        lat = data['lat']
+        lon = data['lon']
         if not country_code:
-            current_login_ip = get_client_ip(request)
-            # Remove this line in production
-            if env.bool("DEBUG", default=True):
-                current_login_ip = "147.161.106.227"
-            # Get country
-            r = None
-            status = None
-            try:
-                r = requests.get('http://ip-api.com/json/{}'.format(current_login_ip))
-                status = r.status_code
-            except:
-                pass
+            country_code = "US"
 
-            if status == 200:
-                data = r.json()
-                country_code = data['countryCode']
-                if not country_code:
-                    country_code = "US"
+    # Get the currency by country
+    if country_code:
 
-            # Get the currency by country
-            if country_code:
+        try:
+            country_currency = ccy.countryccy(country_code)
+            if DonationOption.objects.filter(currency=country_currency).exists():
+                currency = country_currency
+        except Exception as e:
+            print(e)
+            pass
+    else:
+        currency = "USD"
 
-                try:
-                    country_currency = ccy.countryccy(country_code)
-                    if DonationOption.objects.filter(currency=country_currency).exists():
-                        currency = country_currency
-                except Exception as e:
-                    print(e)
-                    pass
-            else:
-                currency = "USD"
-
-    return currency, country_code
+    return currency, country_code, country_name, region, region_name, city, zip, lat, lon
 
 
 def get_currency_and_country(request):
