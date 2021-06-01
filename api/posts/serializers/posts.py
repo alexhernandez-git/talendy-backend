@@ -355,11 +355,6 @@ class UpdatePostWinnerKarmaSerializer(serializers.Serializer):
 class UpdatePostDrawingSerializer(serializers.Serializer):
     drawing = serializers.CharField()
 
-    def validate(self, data):
-        # Validate if the memeber exists
-        print(data['drawing'])
-        return data
-
     def update(self, instance, validated_data):
         drawing = validated_data.get('drawing')
         format, imgstr = drawing.split(';base64,')
