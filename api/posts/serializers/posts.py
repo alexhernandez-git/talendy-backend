@@ -369,6 +369,17 @@ class UpdatePostDrawingSerializer(serializers.Serializer):
         return instance
 
 
+class ClearPostDrawingSerializer(serializers.Serializer):
+
+    def update(self, instance, validated_data):
+
+        # You can save this as file instance.
+        instance.drawing = None
+        instance.save()
+
+        return instance
+
+
 class FinalizePostSerializer(serializers.Serializer):
 
     def validate(self, data):

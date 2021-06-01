@@ -31,7 +31,8 @@ from api.posts.serializers import (
     UpdateKanbanListOrderSerializer,
     UpdateKanbanCardOrderSerializer,
     UpdateKanbanCardOrderBetweenListsSerializer,
-    UpdatePostDrawingSerializer
+    UpdatePostDrawingSerializer,
+    ClearPostDrawingSerializer
 )
 
 # Filters
@@ -73,7 +74,7 @@ class PostViewSet(
             permissions = [IsAuthenticated]
         elif self.action in ['update', 'update_solution', 'update_karma_winner', 'finalize']:
             permissions = [IsPostOwner, IsAuthenticated]
-        elif self.action in ['update_drawing']:
+        elif self.action in ['update_drawing', 'clear_drawing']:
             permissions = [IsAuthenticated, IsPostMember]
         else:
             permissions = []
@@ -358,6 +359,22 @@ class PostViewSet(
         partial = request.method == 'PATCH'
 
         serializer = UpdatePostDrawingSerializer(
+            post,
+            data=request.data,
+            context={"request": request},
+            partial=partial)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['patch'])
+    def clear_drawing(self, request, *args, **kwargs):
+        post = self.get_object()
+
+        partial = request.method == 'PATCH'
+
+        serializer = ClearPostDrawingSerializer(
             post,
             data=request.data,
             context={"request": request},

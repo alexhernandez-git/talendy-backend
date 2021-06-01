@@ -192,8 +192,8 @@ io.on("connection", (socket) => {
 
     axios
       .patch(
-        `${API_HOST}/api/posts/${payload.roomID}/update_drawing/`,
-        { drawing: payload.data },
+        `${API_HOST}/api/posts/${payload.roomID}/clear_drawing/`,
+        {},
         config
       )
       .then((res) => {
@@ -202,7 +202,7 @@ io.on("connection", (socket) => {
       })
       .catch((err) => {
         console.log(err.response);
-        console.log("Post drawing to django failed");
+        console.log("Clear post drawing to django failed");
       });
     socket.in(payload.roomID).emit("clear canvas");
   });
