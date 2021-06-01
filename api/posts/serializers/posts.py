@@ -238,7 +238,7 @@ class ClearPostChatNotificationSerializer(serializers.Serializer):
 
 
 class UpdatePostSharedNotesSerializer(serializers.Serializer):
-    shared_notes = serializers.CharField()
+    shared_notes = serializers.CharField(allow_blank=True)
 
     def update(self, instance, validated_data):
         instance.shared_notes = validated_data['shared_notes']
