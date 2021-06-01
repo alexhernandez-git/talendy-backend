@@ -179,6 +179,8 @@ io.on("connection", (socket) => {
         console.log(err.response);
         console.log("Post drawing to django failed");
       });
+    payload.token = null;
+
     socket.in(payload.roomID).emit("drawing", payload.data);
   });
 
@@ -204,6 +206,8 @@ io.on("connection", (socket) => {
         console.log(err.response);
         console.log("Clear post drawing to django failed");
       });
+    payload.token = null;
+
     socket.in(payload.roomID).emit("clear canvas");
   });
 
@@ -233,6 +237,8 @@ io.on("connection", (socket) => {
       .catch((err) => {
         console.log("Sort list error", err.response);
       });
+    payload.token = null;
+
     socket.in(payload.roomID).emit("list order updated", payload);
   });
 
@@ -261,6 +267,8 @@ io.on("connection", (socket) => {
       .catch((err) => {
         console.log("Sort card error", err.response);
       });
+    payload.token = null;
+
     socket.in(payload.roomID).emit("card order updated", payload);
   });
 
@@ -289,6 +297,8 @@ io.on("connection", (socket) => {
       .catch((err) => {
         console.log("Sort card between lists error", err.response);
       });
+    payload.token = null;
+
     socket.in(payload.roomID).emit("card between lists order updated", payload);
   });
 
@@ -313,6 +323,8 @@ io.on("connection", (socket) => {
       .catch(async (err) => {
         console.log("Create list error", err.response);
       });
+    payload.token = null;
+
     socket.in(payload.roomID).emit("list added", payload);
   });
 
@@ -337,6 +349,8 @@ io.on("connection", (socket) => {
       .catch(async (err) => {
         console.log("Create card error", err.response);
       });
+    payload.token = null;
+
     socket.in(payload.roomID).emit("card added", payload);
   });
 
@@ -361,6 +375,8 @@ io.on("connection", (socket) => {
       .catch(async (err) => {
         console.log("Update list error", err.response);
       });
+    payload.token = null;
+
     socket.in(payload.roomID).emit("list updated", payload);
   });
 
@@ -385,6 +401,8 @@ io.on("connection", (socket) => {
       .catch(async (err) => {
         console.log("Update card error", err.response);
       });
+    payload.token = null;
+
     socket.in(payload.roomID).emit("card updated", payload);
   });
 
@@ -408,6 +426,8 @@ io.on("connection", (socket) => {
       .catch(async (err) => {
         console.log("Delete list error", err.response);
       });
+    payload.token = null;
+
     socket.in(payload.roomID).emit("list deleted", payload);
   });
 
@@ -431,6 +451,8 @@ io.on("connection", (socket) => {
       .catch(async (err) => {
         console.log("Delete card error", err.response);
       });
+    payload.token = null;
+
     socket.in(payload.roomID).emit("card deleted", payload);
   });
 
