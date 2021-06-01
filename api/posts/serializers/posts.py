@@ -303,6 +303,7 @@ class UpdateKanbanCardOrderBetweenListsSerializer(serializers.Serializer):
     droppable_index_end = serializers.IntegerField()
 
     def update(self, instance, validated_data):
+
         list_start_id = validated_data['list_start_id']
         list_end_id = validated_data['list_end_id']
         droppable_index_start = validated_data['droppable_index_start']

@@ -166,6 +166,8 @@ io.on("connection", (socket) => {
   // Kanban board
 
   socket.on("update list order", async (payload) => {
+    console.log("update list order", payload);
+
     const config = {
       headers: {
         "Content-Type": "application/json",
@@ -191,6 +193,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("update card order", async (payload) => {
+    console.log("update card order", payload);
+
     const config = {
       headers: {
         "Content-Type": "application/json",
@@ -217,6 +221,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("update card between lists order", async (payload) => {
+    console.log("update card between lists order", payload);
     const config = {
       headers: {
         "Content-Type": "application/json",
@@ -244,6 +249,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("add list", async (payload) => {
+    console.log("add list", payload);
+
     const config = {
       headers: {
         "Content-Type": "application/json",
@@ -266,6 +273,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("add card", async (payload) => {
+    console.log("add card", payload);
+
     const config = {
       headers: {
         "Content-Type": "application/json",
@@ -288,6 +297,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("update list", async (payload) => {
+    console.log("update list", payload);
+
     const config = {
       headers: {
         "Content-Type": "application/json",
@@ -310,6 +321,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("update card", async (payload) => {
+    console.log("update card", payload);
+
     const config = {
       headers: {
         "Content-Type": "application/json",
@@ -332,27 +345,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("delete list", async (payload) => {
-    const config = {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Token ${payload.token}`,
-      },
-    };
-    await axios
-      .delete(
-        `${API_HOST}/api/posts/${payload.collaborateRoomID}/kanbans/${payload.listID}/cards/${payload.cardID}/`,
-        config
-      )
-      .then(async (res) => {
-        console.log("Delete card success", res.data);
-      })
-      .catch(async (err) => {
-        console.log("Delete card error", err.response);
-      });
-    socket.in(payload.roomID).emit("list deleted", payload);
-  });
+    console.log("delete list", payload);
 
-  socket.on("delete card", async (payload) => {
     const config = {
       headers: {
         "Content-Type": "application/json",
@@ -371,6 +365,29 @@ io.on("connection", (socket) => {
         console.log("Delete list error", err.response);
       });
     socket.in(payload.roomID).emit("card deleted", payload);
+  });
+
+  socket.on("delete card", async (payload) => {
+    console.log("delete card", payload);
+
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${payload.token}`,
+      },
+    };
+    await axios
+      .delete(
+        `${API_HOST}/api/posts/${payload.collaborateRoomID}/kanbans/${payload.listID}/cards/${payload.cardID}/`,
+        config
+      )
+      .then(async (res) => {
+        console.log("Delete card success", res.data);
+      })
+      .catch(async (err) => {
+        console.log("Delete card error", err.response);
+      });
+    socket.in(payload.roomID).emit("list deleted", payload);
   });
 
   socket.on("disconnect", () => {
