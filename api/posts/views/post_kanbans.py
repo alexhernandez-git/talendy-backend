@@ -88,6 +88,21 @@ class KanbanListViewSet(
 
         return KanbanList.objects.filter(post=self.post_object)
 
+    def perform_destroy(self, instance):
+        lists = KanbanList.objects.filter(post=self.post_object)
+
+        # Get the instance position
+        order = instance.order
+
+        # Delete the instance
+        instance.delete()
+
+        # Substract one position in all next lists
+        for list in lists:
+            if list.order > order:
+                list.order = list.order - 1
+                list.save()
+
 
 class KanbanCardViewSet(
     mixins.ListModelMixin,
@@ -130,3 +145,18 @@ class KanbanCardViewSet(
     def get_queryset(self):
 
         return KanbanCard.objects.filter(kanban_list=self.kanban_list)
+
+    def perform_destroy(self, instance):
+        cards = KanbanCard.objects.filter(kanban_list=self.kanban_list)
+
+        # Get the instance position
+        order = instance.order
+
+        # Delete the instance
+        instance.delete()
+
+        # Substract one position in all next lists
+        for card in cards:
+            if card.order > order:
+                card.order = card.order - 1
+                card.save()
