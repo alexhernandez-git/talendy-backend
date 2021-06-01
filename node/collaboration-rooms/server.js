@@ -364,7 +364,7 @@ io.on("connection", (socket) => {
       .catch(async (err) => {
         console.log("Delete list error", err.response);
       });
-    socket.in(payload.roomID).emit("card deleted", payload);
+    socket.in(payload.roomID).emit("list deleted", payload);
   });
 
   socket.on("delete card", async (payload) => {
@@ -387,7 +387,7 @@ io.on("connection", (socket) => {
       .catch(async (err) => {
         console.log("Delete card error", err.response);
       });
-    socket.in(payload.roomID).emit("list deleted", payload);
+    socket.in(payload.roomID).emit("card deleted", payload);
   });
 
   socket.on("disconnect", () => {
