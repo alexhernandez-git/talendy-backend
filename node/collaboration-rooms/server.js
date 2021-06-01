@@ -9,6 +9,7 @@ const PORT = process.env.PORT || 5500;
 const isHTTPS = process.env.HTTPS || "no";
 const API_HOST = process.env.API_HOST || "http://django:8000";
 const router = require("./router");
+const { dataURLtoFile } = require("./helpers");
 
 const app = express();
 let server;
@@ -156,10 +157,53 @@ io.on("connection", (socket) => {
   // Shared whiteboard
   socket.on("drawing", (payload) => {
     console.log("enter on drawing", payload.roomID);
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${payload.token}`,
+      },
+    };
+
+    axios
+      .patch(
+        `${API_HOST}/api/posts/${payload.roomID}/update_drawing/`,
+        { drawing: payload.data },
+
+        config
+      )
+      .then((res) => {
+        console.log(res.data);
+        console.log("Post drawing to django successfully");
+      })
+      .catch((err) => {
+        console.log(err.response);
+        console.log("Post drawing to django failed");
+      });
     socket.in(payload.roomID).emit("drawing", payload.data);
   });
 
   socket.on("clear canvas", (payload) => {
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${payload.token}`,
+      },
+    };
+
+    axios
+      .patch(
+        `${API_HOST}/api/posts/${payload.roomID}/update_drawing/`,
+        { drawing: payload.data },
+        config
+      )
+      .then((res) => {
+        console.log(res.data);
+        console.log("Post drawing to django successfully");
+      })
+      .catch((err) => {
+        console.log(err.response);
+        console.log("Post drawing to django failed");
+      });
     socket.in(payload.roomID).emit("clear canvas");
   });
 
@@ -176,7 +220,7 @@ io.on("connection", (socket) => {
     };
     axios
       .patch(
-        `${API_HOST}/api/posts/${payload.collaborateRoomID}/update_kanban_list_order/`,
+        `${API_HOST}/api/posts/${payload.roomID}/update_kanban_list_order/`,
         {
           droppable_index_start: payload.droppableIndexStart,
           droppable_index_end: payload.droppableIndexEnd,
@@ -203,7 +247,7 @@ io.on("connection", (socket) => {
     };
     axios
       .patch(
-        `${API_HOST}/api/posts/${payload.collaborateRoomID}/update_kanban_card_order/`,
+        `${API_HOST}/api/posts/${payload.roomID}/update_kanban_card_order/`,
         {
           list_id: payload.droppableIdStart,
           droppable_index_start: payload.droppableIndexStart,
@@ -230,7 +274,7 @@ io.on("connection", (socket) => {
     };
     axios
       .patch(
-        `${API_HOST}/api/posts/${payload.collaborateRoomID}/update_kanban_card_between_lists_order/`,
+        `${API_HOST}/api/posts/${payload.roomID}/update_kanban_card_between_lists_order/`,
         {
           list_start_id: payload.droppableIdStart,
           list_end_id: payload.droppableIdEnd,
@@ -259,7 +303,7 @@ io.on("connection", (socket) => {
     };
     await axios
       .post(
-        `${API_HOST}/api/posts/${payload.collaborateRoomID}/kanbans/`,
+        `${API_HOST}/api/posts/${payload.roomID}/kanbans/`,
         payload.newList,
         config
       )
@@ -283,7 +327,7 @@ io.on("connection", (socket) => {
     };
     await axios
       .post(
-        `${API_HOST}/api/posts/${payload.collaborateRoomID}/kanbans/${payload.listID}/cards/`,
+        `${API_HOST}/api/posts/${payload.roomID}/kanbans/${payload.listID}/cards/`,
         payload.newCard,
         config
       )
@@ -307,7 +351,7 @@ io.on("connection", (socket) => {
     };
     await axios
       .patch(
-        `${API_HOST}/api/posts/${payload.collaborateRoomID}/kanbans/${payload.listID}/`,
+        `${API_HOST}/api/posts/${payload.roomID}/kanbans/${payload.listID}/`,
         payload.values,
         config
       )
@@ -331,7 +375,7 @@ io.on("connection", (socket) => {
     };
     await axios
       .patch(
-        `${API_HOST}/api/posts/${payload.collaborateRoomID}/kanbans/${payload.listID}/cards/${payload.cardID}/`,
+        `${API_HOST}/api/posts/${payload.roomID}/kanbans/${payload.listID}/cards/${payload.cardID}/`,
         payload.values,
         config
       )
@@ -355,7 +399,7 @@ io.on("connection", (socket) => {
     };
     await axios
       .delete(
-        `${API_HOST}/api/posts/${payload.collaborateRoomID}/kanbans/${payload.listID}/`,
+        `${API_HOST}/api/posts/${payload.roomID}/kanbans/${payload.listID}/`,
         config
       )
       .then(async (res) => {
@@ -378,7 +422,7 @@ io.on("connection", (socket) => {
     };
     await axios
       .delete(
-        `${API_HOST}/api/posts/${payload.collaborateRoomID}/kanbans/${payload.listID}/cards/${payload.cardID}/`,
+        `${API_HOST}/api/posts/${payload.roomID}/kanbans/${payload.listID}/cards/${payload.cardID}/`,
         config
       )
       .then(async (res) => {

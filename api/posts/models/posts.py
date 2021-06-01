@@ -18,6 +18,9 @@ class Post(CModel):
         "posts.PostMessage", on_delete=models.SET_NULL, null=True, related_name="post_last_message"
     )
     shared_notes = models.TextField(null=True, blank=True)
+    drawing = models.ImageField('posts drawings',
+                                upload_to='posts/drawings/',
+                                max_length=500, null=True, blank=True)
     ANYONE = 'AN'
     CONNECTIONS_ONLY = 'CO'
     PRIVACITY_TYPES = [

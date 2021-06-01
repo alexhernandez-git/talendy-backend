@@ -11,7 +11,7 @@ from django.contrib.gis.db.models.functions import GeometryDistance
 
 # Permissions
 from rest_framework.permissions import IsAuthenticated
-from api.posts.permissions import IsPostOwner
+from api.posts.permissions import IsPostMember, IsPostOwner
 
 # Models
 from api.posts.models import Post
@@ -30,7 +30,8 @@ from api.posts.serializers import (
     UpdatePostWinnerKarmaSerializer,
     UpdateKanbanListOrderSerializer,
     UpdateKanbanCardOrderSerializer,
-    UpdateKanbanCardOrderBetweenListsSerializer
+    UpdateKanbanCardOrderBetweenListsSerializer,
+    UpdatePostDrawingSerializer
 )
 
 # Filters
@@ -72,6 +73,8 @@ class PostViewSet(
             permissions = [IsAuthenticated]
         elif self.action in ['update', 'update_solution', 'update_karma_winner', 'finalize']:
             permissions = [IsPostOwner, IsAuthenticated]
+        elif self.action in ['update_drawing']:
+            permissions = [IsAuthenticated, IsPostMember]
         else:
             permissions = []
         return [p() for p in permissions]
@@ -339,6 +342,22 @@ class PostViewSet(
         partial = request.method == 'PATCH'
 
         serializer = UpdatePostSharedNotesSerializer(
+            post,
+            data=request.data,
+            context={"request": request},
+            partial=partial)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['patch'])
+    def update_drawing(self, request, *args, **kwargs):
+        post = self.get_object()
+
+        partial = request.method == 'PATCH'
+
+        serializer = UpdatePostDrawingSerializer(
             post,
             data=request.data,
             context={"request": request},

@@ -11,6 +11,7 @@ from django.contrib.auth import password_validation, authenticate
 from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg, Sum, Q
+from django.core.files.base import ContentFile
 
 # Channels
 from channels.layers import get_channel_layer
@@ -27,6 +28,7 @@ from api.notifications.models import Notification, NotificationUser
 
 # Utils
 import json
+import base64
 
 
 class PostImageModelSerializer(serializers.ModelSerializer):
@@ -193,6 +195,7 @@ class RetrieveCollaborateRoomModelSerializer(serializers.ModelSerializer):
             "solution",
             "draft_solution",
             "karma_winner",
+            "drawing",
             "created",
         )
 
@@ -344,6 +347,28 @@ class UpdatePostWinnerKarmaSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         instance.karma_winner = validated_data.get('karma_winner')
+        instance.save()
+
+        return instance
+
+
+class UpdatePostDrawingSerializer(serializers.Serializer):
+    drawing = serializers.CharField()
+
+    def validate(self, data):
+        # Validate if the memeber exists
+        print(data['drawing'])
+        return data
+
+    def update(self, instance, validated_data):
+        drawing = validated_data.get('drawing')
+        format, imgstr = drawing.split(';base64,')
+
+        ext = format.split('/')[-1]
+
+        # You can save this as file instance.
+        data = ContentFile(base64.b64decode(imgstr), name=str(instance.id)+"." + ext)
+        instance.drawing = data
         instance.save()
 
         return instance
