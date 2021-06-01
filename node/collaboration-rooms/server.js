@@ -70,6 +70,7 @@ io.on("connection", (socket) => {
 
     console.log("joined members", users[roomID]);
   });
+
   socket.on("media ready", (roomID) => {
     console.log("media ready");
     const usersInThisRoom = users[roomID]?.filter(
@@ -160,6 +161,216 @@ io.on("connection", (socket) => {
 
   socket.on("clear canvas", (payload) => {
     socket.in(payload.roomID).emit("clear canvas");
+  });
+
+  // Kanban board
+
+  socket.on("update list order", async (payload) => {
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${payload.token}`,
+      },
+    };
+    axios
+      .patch(
+        `${API_HOST}/api/posts/${payload.collaborateRoomID}/update_kanban_list_order/`,
+        {
+          droppable_index_start: payload.droppableIndexStart,
+          droppable_index_end: payload.droppableIndexEnd,
+        },
+        config
+      )
+      .then((res) => {
+        console.log("Sort list success", res.data);
+      })
+      .catch((err) => {
+        console.log("Sort list error", err.response);
+      });
+    socket.in(payload.roomID).emit("list order updated", payload);
+  });
+
+  socket.on("update card order", async (payload) => {
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${payload.token}`,
+      },
+    };
+    axios
+      .patch(
+        `${API_HOST}/api/posts/${payload.collaborateRoomID}/update_kanban_card_order/`,
+        {
+          list_id: payload.droppableIdStart,
+          droppable_index_start: payload.droppableIndexStart,
+          droppable_index_end: payload.droppableIndexEnd,
+        },
+        config
+      )
+      .then((res) => {
+        console.log("Sort card success", res.data);
+      })
+      .catch((err) => {
+        console.log("Sort card error", err.response);
+      });
+    socket.in(payload.roomID).emit("card order updated", payload);
+  });
+
+  socket.on("update card between lists order", async (payload) => {
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${payload.token}`,
+      },
+    };
+    axios
+      .patch(
+        `${API_HOST}/api/posts/${payload.collaborateRoomID}/update_kanban_card_between_lists_order/`,
+        {
+          list_start_id: payload.droppableIdStart,
+          list_end_id: payload.droppableIdEnd,
+          droppable_index_start: payload.droppableIndexStart,
+          droppable_index_end: payload.droppableIndexEnd,
+        },
+        config
+      )
+      .then((res) => {
+        console.log("Sort card between lists success", res.data);
+      })
+      .catch((err) => {
+        console.log("Sort card between lists error", err.response);
+      });
+    socket.in(payload.roomID).emit("card between lists order updated", payload);
+  });
+
+  socket.on("add list", async (payload) => {
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${payload.token}`,
+      },
+    };
+    await axios
+      .post(
+        `${API_HOST}/api/posts/${payload.collaborateRoomID}/kanbans/`,
+        payload.newList,
+        config
+      )
+      .then(async (res) => {
+        console.log("Create list success", res.data);
+      })
+      .catch(async (err) => {
+        console.log("Create list error", err.response);
+      });
+    socket.in(payload.roomID).emit("list added", payload);
+  });
+
+  socket.on("add card", async (payload) => {
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${payload.token}`,
+      },
+    };
+    await axios
+      .post(
+        `${API_HOST}/api/posts/${payload.collaborateRoomID}/kanbans/${payload.listID}/cards/`,
+        payload.newCard,
+        config
+      )
+      .then(async (res) => {
+        console.log("Create card success", res.data);
+      })
+      .catch(async (err) => {
+        console.log("Create card error", err.response);
+      });
+    socket.in(payload.roomID).emit("card added", payload);
+  });
+
+  socket.on("update list", async (payload) => {
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${payload.token}`,
+      },
+    };
+    await axios
+      .patch(
+        `${API_HOST}/api/posts/${payload.collaborateRoomID}/kanbans/${payload.listID}/`,
+        payload.values,
+        config
+      )
+      .then(async (res) => {
+        console.log("Update list success", res.data);
+      })
+      .catch(async (err) => {
+        console.log("Update list error", err.response);
+      });
+    socket.in(payload.roomID).emit("list updated", payload);
+  });
+
+  socket.on("update card", async (payload) => {
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${payload.token}`,
+      },
+    };
+    await axios
+      .patch(
+        `${API_HOST}/api/posts/${payload.collaborateRoomID}/kanbans/${payload.listID}/cards/${payload.cardID}/`,
+        payload.values,
+        config
+      )
+      .then(async (res) => {
+        console.log("Update card success", res.data);
+      })
+      .catch(async (err) => {
+        console.log("Update card error", err.response);
+      });
+    socket.in(payload.roomID).emit("card updated", payload);
+  });
+
+  socket.on("delete list", async (payload) => {
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${payload.token}`,
+      },
+    };
+    await axios
+      .delete(
+        `${API_HOST}/api/posts/${payload.collaborateRoomID}/kanbans/${payload.listID}/cards/${payload.cardID}/`,
+        config
+      )
+      .then(async (res) => {
+        console.log("Delete card success", res.data);
+      })
+      .catch(async (err) => {
+        console.log("Delete card error", err.response);
+      });
+    socket.in(payload.roomID).emit("list deleted", payload);
+  });
+
+  socket.on("delete card", async (payload) => {
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Token ${payload.token}`,
+      },
+    };
+    await axios
+      .delete(
+        `${API_HOST}/api/posts/${payload.collaborateRoomID}/kanbans/${payload.listID}/`,
+        config
+      )
+      .then(async (res) => {
+        console.log("Delete list success", res.data);
+      })
+      .catch(async (err) => {
+        console.log("Delete list error", err.response);
+      });
+    socket.in(payload.roomID).emit("card deleted", payload);
   });
 
   socket.on("disconnect", () => {
