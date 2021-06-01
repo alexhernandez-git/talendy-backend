@@ -51,6 +51,7 @@ class KanbanListViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
     AddPostMixin,
 ):
@@ -92,6 +93,7 @@ class KanbanCardViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
     AddListMixin,
 ):
@@ -127,4 +129,4 @@ class KanbanCardViewSet(
 
     def get_queryset(self):
 
-        return KanbanCard.objects.filter(post=self.post_object)
+        return KanbanCard.objects.filter(kanban_list=self.kanban_list)
