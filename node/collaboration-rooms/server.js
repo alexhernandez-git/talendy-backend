@@ -157,55 +157,55 @@ io.on("connection", (socket) => {
   // Shared whiteboard
   socket.on("drawing", (payload) => {
     console.log("enter on drawing", payload.roomID);
-    const config = {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Token ${payload.token}`,
-      },
-    };
+    // const config = {
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Authorization: `Token ${payload.token}`,
+    //   },
+    // };
 
-    axios
-      .patch(
-        `${API_HOST}/api/posts/${payload.roomID}/update_drawing/`,
-        { drawing: payload.data },
+    // axios
+    //   .patch(
+    //     `${API_HOST}/api/posts/${payload.roomID}/update_drawing/`,
+    //     { drawing: payload.data },
 
-        config
-      )
-      .then((res) => {
-        console.log(res.data);
-        console.log("Post drawing to django successfully");
-      })
-      .catch((err) => {
-        console.log(err.response);
-        console.log("Post drawing to django failed");
-      });
+    //     config
+    //   )
+    //   .then((res) => {
+    //     console.log(res.data);
+    //     console.log("Post drawing to django successfully");
+    //   })
+    //   .catch((err) => {
+    //     console.log(err.response);
+    //     console.log("Post drawing to django failed");
+    //   });
     payload.token = null;
 
     socket.in(payload.roomID).emit("drawing", payload.data);
   });
 
   socket.on("clear canvas", (payload) => {
-    const config = {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Token ${payload.token}`,
-      },
-    };
+    // const config = {
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //     Authorization: `Token ${payload.token}`,
+    //   },
+    // };
 
-    axios
-      .patch(
-        `${API_HOST}/api/posts/${payload.roomID}/clear_drawing/`,
-        {},
-        config
-      )
-      .then((res) => {
-        console.log(res.data);
-        console.log("Post drawing to django successfully");
-      })
-      .catch((err) => {
-        console.log(err.response);
-        console.log("Clear post drawing to django failed");
-      });
+    // axios
+    //   .patch(
+    //     `${API_HOST}/api/posts/${payload.roomID}/clear_drawing/`,
+    //     {},
+    //     config
+    //   )
+    //   .then((res) => {
+    //     console.log(res.data);
+    //     console.log("Post drawing to django successfully");
+    //   })
+    //   .catch((err) => {
+    //     console.log(err.response);
+    //     console.log("Clear post drawing to django failed");
+    //   });
     payload.token = null;
 
     socket.in(payload.roomID).emit("clear canvas");
