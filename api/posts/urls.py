@@ -13,6 +13,8 @@ from .views import post_messages as post_message_views
 from .views import post_seen_by as post_seen_by_views
 from .views import post_members as post_member_views
 from .views import post_kanbans as post_kanban_views
+from .views import post_files as post_file_views
+from .views import post_folders as post_folder_views
 
 router = DefaultRouter()
 router.register(r'posts', post_views.PostViewSet, basename='posts')
@@ -32,6 +34,16 @@ router.register(
 )
 router.register(r"posts/(?P<slug_id>[-a-zA-Z0-9_]+)/kanbans/(?P<list_slug_id>[-a-zA-Z0-9_]+)/cards",
                 post_kanban_views.KanbanCardViewSet, basename="post_kanbans_cards")
+router.register(
+    r'posts/(?P<slug_id>[-a-zA-Z0-9_]+)/files',
+    post_file_views.PostFileViewSet,
+    basename='post_files'
+)
+router.register(
+    r'posts/(?P<slug_id>[-a-zA-Z0-9_]+)/folders',
+    post_folder_views.PostFolderViewSet,
+    basename='post_folders'
+)
 urlpatterns = [
     path('', include(router.urls))
 ]

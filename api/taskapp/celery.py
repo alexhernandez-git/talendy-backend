@@ -6,7 +6,7 @@ from django.conf import settings
 from datetime import timedelta
 from celery.schedules import crontab
 
-# set the default Django settings module for the 'celery' program.
+# set the default Django settings module for the 'celery' post.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.base')
 
 app = Celery('api')
