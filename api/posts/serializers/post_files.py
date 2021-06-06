@@ -40,9 +40,21 @@ class PostFileModelSerializer(serializers.ModelSerializer):
     def get_filename(self, obj):
         return obj.filename()
 
+    def validate(self, data):
+        post = self.context['post']
+        file = data['file']
+        # Check if all files are not more than 1 Gb
+        if (post.files_size + file.size) > 1073741824:
+            raise serializers.ValidationError("You cannot store more than 2 GB in a single post")
+
+        return data
+
     def create(self, validated_data):
         post = self.context['post']
         validated_data['post'] = post
+        file = validated_data['file']
+        post.files_size += file.size
+        post.save()
         if self.context['top_folder']:
             validated_data['top_folder'] = PostFolder.objects.get(
                 pk=self.context['top_folder'])

@@ -49,6 +49,8 @@ class Post(CModel):
         default=ACTIVE
     )
 
+    files_size = models.IntegerField(default=0)
+
 
 class PostImage(CModel):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
