@@ -118,28 +118,6 @@ class PostFileViewSet(mixins.CreateModelMixin,
         return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['put', 'patch'])
-    def update_shared_users(self, request, *args, **kwargs):
-        file = self.get_object()
-        post = self.post_object
-        partial = request.method == 'PATCH'
-
-        serializer = ShareUsersPostFilesSerializer(
-            file,
-            data=request.data,
-            context={
-                'post': post,
-                'request': request
-            },
-            partial=partial
-        )
-        serializer.is_valid(raise_exception=True)
-
-        file = serializer.save()
-
-        data = PostFileModelSerializer(file).data
-        return Response(data, status=status.HTTP_200_OK)
-
-    @action(detail=True, methods=['put', 'patch'])
     def update_top_folder(self, request, *args, **kwargs):
         file = self.get_object()
         partial = request.method == 'PATCH'
@@ -158,3 +136,12 @@ class PostFileViewSet(mixins.CreateModelMixin,
 
         data = PostFileModelSerializer(file).data
         return Response(data, status=status.HTTP_200_OK)
+
+    def perform_destroy(self, instance):
+        post = instance.post
+        size = instance.size
+
+        # Delete the instance
+        instance.delete()
+        post.files_size -= size
+        post.save()

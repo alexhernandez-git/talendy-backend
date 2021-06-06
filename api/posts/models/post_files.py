@@ -31,6 +31,7 @@ class PostFile(CModel):
     shared_users = models.ManyToManyField(
         'users.User'
     )
+    size = models.IntegerField(default=0)
 
     def filename(self):
         return os.path.basename(self.file.name)

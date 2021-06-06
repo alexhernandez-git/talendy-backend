@@ -53,6 +53,7 @@ class PostFileModelSerializer(serializers.ModelSerializer):
         post = self.context['post']
         validated_data['post'] = post
         file = validated_data['file']
+        validated_data['size'] = file.size
         post.files_size += file.size
         post.save()
         if self.context['top_folder']:
