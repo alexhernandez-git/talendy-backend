@@ -24,6 +24,7 @@ class PostFile(CModel):
     file = models.FileField(
         upload_to='posts/resources/files/',
         max_length=500,
+        null=True, blank=True
     )
     top_folder = models.ForeignKey(
         'posts.PostFolder', on_delete=models.CASCADE, related_name='post_files_folder', null=True, blank=True)
@@ -32,9 +33,6 @@ class PostFile(CModel):
         'users.User'
     )
     size = models.IntegerField(default=0)
-
-    def filename(self):
-        return os.path.basename(self.file.name)
 
     def __str__(self):
         """Return description."""

@@ -43,6 +43,12 @@ class CreatePostMessageSerializer(serializers.Serializer):
 
     text = serializers.CharField(max_length=1000)
 
+    def validate(self, data):
+        post = self.context["post"]
+        if post.status == Post.SOLVED:
+            raise serializers.ValidationError("This post has already been finalized")
+        return data
+
     def create(self, validated_data):
 
         user = self.context["request"].user

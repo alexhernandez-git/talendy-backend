@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 # Models
-from api.posts.models import PostFile, PostFolder
+from api.posts.models import PostFile, PostFolder, Post
 from api.users.models import User
 
 # Serializers
@@ -16,7 +16,6 @@ from .post_folders import TopPostFolderModelSerializer
 
 class PostFileModelSerializer(serializers.ModelSerializer):
     """PostFile model serializer."""
-    filename = serializers.SerializerMethodField(read_only=True)
     top_folder = TopPostFolderModelSerializer(read_only=True)
 
     class Meta:
@@ -30,15 +29,11 @@ class PostFileModelSerializer(serializers.ModelSerializer):
             'is_private',
             'file',
             'top_folder',
-            'filename',
         )
 
         read_only_fields = (
             'id',
         )
-
-    def get_filename(self, obj):
-        return obj.filename()
 
     def validate(self, data):
         post = self.context['post']
@@ -47,6 +42,8 @@ class PostFileModelSerializer(serializers.ModelSerializer):
         if (post.files_size + file.size) > 1073741824:
             raise serializers.ValidationError("You cannot store more than 2 GB in a single post")
 
+        if post.status == Post.SOLVED:
+            raise serializers.ValidationError("This post has already been finalized")
         return data
 
     def create(self, validated_data):

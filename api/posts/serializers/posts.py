@@ -23,7 +23,7 @@ from .post_members import PostMemberModelSerializer
 
 # Models
 from api.users.models import User, Review, Follow, Connection
-from api.posts.models import Post, PostImage, PostMember, CollaborateRequest, PostSeenBy, KanbanList, KanbanCard
+from api.posts.models import Post, PostImage, PostMember, CollaborateRequest, PostSeenBy, KanbanList, KanbanCard, PostFile
 from api.notifications.models import Notification, NotificationUser
 
 # Utils
@@ -150,6 +150,10 @@ class PostModelSerializer(serializers.ModelSerializer):
         return post
 
     def update(self, instance, validated_data):
+        # Check if the post has been not finalized
+        if instance.status == Post.SOLVED:
+            raise serializers.ValidationError("This post has already been finalized")
+
         validated_data.pop("karma_offered", None)
         images = self.context["images"]
         current_images = json.loads(self.context["current_images"])
@@ -240,6 +244,12 @@ class ClearPostChatNotificationSerializer(serializers.Serializer):
 class UpdatePostSharedNotesSerializer(serializers.Serializer):
     shared_notes = serializers.CharField(allow_blank=True)
 
+    def validate(self, data):
+        post = self.instance
+        if post.status == Post.SOLVED:
+            raise serializers.ValidationError("This post has already been finalized")
+        return data
+
     def update(self, instance, validated_data):
         instance.shared_notes = validated_data['shared_notes']
         instance.save()
@@ -261,6 +271,12 @@ class UpdateKanbanListOrderSerializer(serializers.Serializer):
     droppable_index_start = serializers.IntegerField()
     droppable_index_end = serializers.IntegerField()
 
+    def validate(self, data):
+        post = self.instance
+        if post.status == Post.SOLVED:
+            raise serializers.ValidationError("This post has already been finalized")
+        return data
+
     def update(self, instance, validated_data):
         droppable_index_start = validated_data['droppable_index_start']
         droppable_index_end = validated_data['droppable_index_end']
@@ -281,6 +297,12 @@ class UpdateKanbanCardOrderSerializer(serializers.Serializer):
     list_id = serializers.UUIDField()
     droppable_index_start = serializers.IntegerField()
     droppable_index_end = serializers.IntegerField()
+
+    def validate(self, data):
+        post = self.instance
+        if post.status == Post.SOLVED:
+            raise serializers.ValidationError("This post has already been finalized")
+        return data
 
     def update(self, instance, validated_data):
         list_id = validated_data['list_id']
@@ -304,6 +326,12 @@ class UpdateKanbanCardOrderBetweenListsSerializer(serializers.Serializer):
     list_end_id = serializers.UUIDField()
     droppable_index_start = serializers.IntegerField()
     droppable_index_end = serializers.IntegerField()
+
+    def validate(self, data):
+        post = self.instance
+        if post.status == Post.SOLVED:
+            raise serializers.ValidationError("This post has already been finalized")
+        return data
 
     def update(self, instance, validated_data):
 
@@ -343,6 +371,9 @@ class UpdatePostWinnerKarmaSerializer(serializers.Serializer):
     def validate(self, data):
         # Validate if the memeber exists
         karma_winner = get_object_or_404(PostMember, id=data.get('karma_winner'))
+        post = self.instance
+        if post.status == Post.SOLVED:
+            raise serializers.ValidationError("This post has already been finalized")
         return {"karma_winner": karma_winner}
 
     def update(self, instance, validated_data):
@@ -354,6 +385,12 @@ class UpdatePostWinnerKarmaSerializer(serializers.Serializer):
 
 class UpdatePostDrawingSerializer(serializers.Serializer):
     drawing = serializers.CharField()
+
+    def validate(self, data):
+        post = self.instance
+        if post.status == Post.SOLVED:
+            raise serializers.ValidationError("This post has already been finalized")
+        return data
 
     def update(self, instance, validated_data):
         drawing = validated_data.get('drawing')
@@ -370,6 +407,11 @@ class UpdatePostDrawingSerializer(serializers.Serializer):
 
 
 class ClearPostDrawingSerializer(serializers.Serializer):
+    def validate(self, data):
+        post = self.instance
+        if post.status == Post.SOLVED:
+            raise serializers.ValidationError("This post has already been finalized")
+        return data
 
     def update(self, instance, validated_data):
 
@@ -386,6 +428,10 @@ class FinalizePostSerializer(serializers.Serializer):
         post = self.instance
         if post.members.all().count() > 1 and not post.karma_winner:
             raise serializers.ValidationError("You need a karma winner")
+
+        if post.status == Post.SOLVED:
+            raise serializers.ValidationError("This post has already been finalized")
+        return data
 
         return data
 
@@ -467,6 +513,8 @@ class FinalizePostSerializer(serializers.Serializer):
         admin.save()
         post.status = Post.SOLVED
         post.save()
+        # Remove files
+        PostFile.objects.filter(post=post).update(file=None)
         return instance
 
 
