@@ -36,7 +36,7 @@ class CustomUserAdmin(UserAdmin):
                                              "region_name",
                                              "city",
                                              "zip",
-                                             "geolocation",)}),)
+                                             "geolocation", "karma_amount")}),)
 
     list_display = ("email", "first_name", "last_name", "is_staff",
                     "is_client", "is_online", "country")

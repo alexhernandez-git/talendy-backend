@@ -29,8 +29,12 @@ SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env.bool("DEBUG", default=True)
 
 ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['localhost'])
-CORS_ALLOWED_ORIGINS = ["https://talendy.com", "https://www.talendy.com", "https://talendy.s3.amazonaws.com"]
-
+CORS_ALLOWED_ORIGINS = ["https://talendy.com", "https://www.talendy.com",
+                        "https://talendy.s3.amazonaws.com"]
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://\w+\.talendy\.com",
+    r"^http://\w+\.localhost:3000",
+]
 if DEBUG:
     ALLOWED_HOSTS.append("localhost")
     ALLOWED_HOSTS.append("127.0.0.1")
@@ -42,6 +46,7 @@ if DEBUG:
     CORS_ALLOWED_ORIGINS.append("http://collaboraterooms:5500")
     CORS_ALLOWED_ORIGINS.append("http://django:8000")
     CORS_ALLOWED_ORIGINS.append("http://django")
+    CORS_ALLOWED_ORIGINS.append("http://hola.localhost:3000")
 
 CORS_ORIGIN_WHITELIST = env.list('CORS_ORIGIN_WHITELIST', default=('localhost:3000',))
 
@@ -80,6 +85,7 @@ INSTALLED_APPS = [
     "api.donations.apps.DonationsAppConfig",
     "api.posts.apps.PostsAppConfig",
     "api.communities.apps.CommunitiesAppConfig",
+    "api.clients.apps.ClientsAppConfig",
     "api.chats",
     # THIRD_PARTY_APPS
     "rest_framework",

@@ -9,6 +9,7 @@ from api.chats.models import Chat
 from api.posts.models import Post, KanbanList
 
 # Utils
+from urllib.parse import urlparse
 
 
 class AddListMixin(viewsets.GenericViewSet):

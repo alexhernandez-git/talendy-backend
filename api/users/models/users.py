@@ -21,10 +21,8 @@ class User(CModel, AbstractUser):
 
     email = models.EmailField(
         'email address',
-        unique=True,
-        error_messages={
-            'unique': 'Already exists a user with this email.'
-        },
+        unique=False,
+
         blank=True,
     )
     username = models.CharField(

@@ -230,12 +230,14 @@ class UserSignUpSerializer(serializers.Serializer):
     Handle sign up data validation and user/profile creation.
     """
 
+    # Future me: filter email UniqueValidator by only public client
     email = serializers.CharField(
         validators=[
             UniqueValidator(queryset=User.objects.all())
         ],
         required=False,
     )
+
     username = serializers.CharField(
         min_length=4,
         max_length=40,
@@ -354,22 +356,21 @@ class UserLoginSerializer(serializers.Serializer):
         request = self.context['request']
         regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
         # for custom mails use: '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$'
+        user = None
         if email and password:
             if re.search(regex, email):
-                user_request = get_object_or_404(
-                    User,
-                    email=email
-                )
-                email = user_request.username
-            # Check if user set email
+                users_request = User.objects.filter(email=email)
+                for user_request in users_request:
 
-        users = User.objects.filter(username=email, account_deactivated=True)
+                    email = user_request.username
 
-        if users.exists():
+                    user = authenticate(username=email, password=password)
+            else:
+                user = authenticate(username=email, password=password)
+
+        if user.account_deactivated == True:
             raise serializers.ValidationError(
                 'This account has already been desactivated')
-
-        user = authenticate(username=email, password=password)
         if not user:
             raise serializers.ValidationError(
                 'Invalid credentials')
