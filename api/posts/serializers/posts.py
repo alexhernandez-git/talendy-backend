@@ -110,11 +110,34 @@ class PostModelSerializer(serializers.ModelSerializer):
         user.karma_amount = user.karma_amount - post.karma_offered
 
         KarmaEarning.objects.create(user=user, amount=post.karma_offered, type=KarmaEarning.SPENT)
+
         user.karma_spent += post.karma_offered
+        # Calc karma ratio
+        karma_earned = 1
+        karma_spent = 1
+
+        if user.karma_earned > 1:
+            karma_earned = user.karma_earned
+        if user.karma_spent > 1:
+            karma_spent = user.karma_spent
+        user.karma_ratio = karma_earned / karma_spent
+
         user.posts_count += 1
         user.created_posts_count += 1
         user.created_active_posts_count += 1
+
+        karma_earned = 1
+        karma_spent = 1
+
+        if user.karma_earned > 1:
+            karma_earned = user.karma_earned
+        if user.karma_spent > 1:
+            karma_spent = user.karma_spent
+        user.karma_ratio = karma_earned / karma_spent
+
         user.save()
+        import pdb
+        pdb.set_trace()
         for image in images:
 
             PostImage.objects.create(
@@ -458,6 +481,15 @@ class FinalizePostSerializer(serializers.Serializer):
             karma_winner.karma_amount += post.karma_offered
             KarmaEarning.objects.create(user=karma_winner, amount=post.karma_offered, type=KarmaEarning.EARNED)
             karma_winner.karma_earned += post.karma_offered
+            # Calc karma ratio
+            karma_earned = 1
+            karma_spent = 1
+
+            if karma_winner.karma_earned > 1:
+                karma_earned = karma_winner.karma_earned
+            if karma_winner.karma_spent > 1:
+                karma_spent = karma_winner.karma_spent
+            karma_winner.karma_ratio = karma_earned / karma_spent
             karma_winner.save()
 
         # Update the post finalized to members

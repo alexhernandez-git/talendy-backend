@@ -519,6 +519,17 @@ class PostViewSet(
         user.karma_amount = user.karma_amount + instance.karma_offered
         KarmaEarning.objects.create(user=user, amount=instance.karma_offered, type=KarmaEarning.EARNED)
         user.karma_earned += instance.karma_offered
+
+        # Calc karma ratio
+        karma_earned = 1
+        karma_spent = 1
+
+        if user.karma_earned > 1:
+            karma_earned = user.karma_earned
+        if user.karma_spent > 1:
+            karma_spent = user.karma_spent
+        user.karma_ratio = karma_earned / karma_spent
+
         user.save()
 
         for member in instance.members.all().exclude(id=user.id):
