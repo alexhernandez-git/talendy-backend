@@ -1,6 +1,7 @@
 """Notifications serializers."""
 
 # Django REST Framework
+from api.users.models.karma_earnings import KarmaEarning
 from api.posts.serializers.post_kanbans import KanbanListModelSerializer
 from api.taskapp.tasks import send_post_finalized, send_post_to_followers
 from rest_framework import serializers
@@ -107,6 +108,9 @@ class PostModelSerializer(serializers.ModelSerializer):
         post = Post.objects.create(user=user, **validated_data, members_count=1)
 
         user.karma_amount = user.karma_amount - post.karma_offered
+
+        KarmaEarning.objects.create(user=user, amount=post.karma_offered, type=KarmaEarning.SPENT)
+
         user.posts_count += 1
         user.created_posts_count += 1
         user.created_active_posts_count += 1
@@ -452,6 +456,8 @@ class FinalizePostSerializer(serializers.Serializer):
         if post.karma_winner:
             karma_winner = post.karma_winner.user
             karma_winner.karma_amount += post.karma_offered
+            KarmaEarning.objects.create(user=karma_winner, amount=post.karma_offered, type=KarmaEarning.EARNED)
+
             karma_winner.save()
 
         # Update the post finalized to members

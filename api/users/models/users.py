@@ -108,7 +108,7 @@ class User(CModel, AbstractUser):
 
     pending_messages = models.BooleanField(default=False)
 
-    karma_amount = models.IntegerField(default=1000)
+    karma_amount = models.IntegerField(default=0)
 
     reputation = models.FloatField(
         blank=True, null=True

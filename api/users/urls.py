@@ -12,6 +12,7 @@ from .views import follows as follow_views
 from .views import earnings as earning_views
 from .views import connections as connection_views
 from .views import reviews as review_views
+from .views import karma_earnings as karma_earning_views
 
 
 router = DefaultRouter()
@@ -20,6 +21,7 @@ router.register(r'follows', follow_views.FollowViewSet, basename='follow')
 router.register(r'earnings', earning_views.EarningViewSet, basename='earnings')
 router.register(r'connections', connection_views.ConnectionViewSet, basename='connections')
 router.register(r'reviews', review_views.ReviewViewSet, basename='reviews')
+router.register(r'karma-earnings', karma_earning_views.KarmaEarningViewSet, basename='karma_earnings')
 urlpatterns = [
     path('', include(router.urls))
 ]

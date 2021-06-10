@@ -1,6 +1,7 @@
 """Users serializers."""
 
 # Django
+from api.users.models.karma_earnings import KarmaEarning
 from django.conf import settings
 from django.contrib.auth import password_validation, authenticate
 from django.core.validators import RegexValidator, validate_email
@@ -294,6 +295,8 @@ class UserSignUpSerializer(serializers.Serializer):
         if not 'currency' in data or not data['currency'] and currency:
             data['currency'] = currency
 
+        karma_amount = 1000
+
         user = User.objects.create_user(**data,
                                         is_verified=False,
                                         is_client=True,
@@ -303,8 +306,12 @@ class UserSignUpSerializer(serializers.Serializer):
                                         region_name=region_name,
                                         city=city,
                                         zip=zip,
-                                        geolocation=Point(lon, lat)
+                                        geolocation=Point(lon, lat),
+                                        karma_amount=karma_amount,
                                         )
+        # Set the 1000 karma earned
+        KarmaEarning.objects.create(user=user, amount=karma_amount, type=KarmaEarning.EARNED)
+
         token, created = Token.objects.get_or_create(
             user=user)
 
@@ -356,21 +363,25 @@ class UserLoginSerializer(serializers.Serializer):
         request = self.context['request']
         regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
         # for custom mails use: '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$'
-        user = None
         if email and password:
             if re.search(regex, email):
-                users_request = User.objects.filter(email=email)
-                for user_request in users_request:
 
-                    email = user_request.username
+                # ¡Alert in the future filter also by client!
+                user_request = get_object_or_404(
+                    User,
+                    email=email
+                )
+                email = user_request.username
 
-                    user = authenticate(username=email, password=password)
-            else:
-                user = authenticate(username=email, password=password)
+        # Check if user set email
 
-        if user.account_deactivated == True:
+        users = User.objects.filter(username=email, account_deactivated=True)
+
+        if users.exists():
             raise serializers.ValidationError(
                 'This account has already been desactivated')
+
+        user = authenticate(username=email, password=password)
         if not user:
             raise serializers.ValidationError(
                 'Invalid credentials')
@@ -1044,6 +1055,8 @@ class CreateDonationSerializer(serializers.Serializer):
             send_new_donation(user, to_user, is_anonymous)
         if not is_anonymous and user:
             user.karma_amount += paid_karma
+            KarmaEarning.objects.create(user=user, amount=paid_karma, type=KarmaEarning.EARNED)
+
             user.is_currency_permanent = True
             user.donations_made_count += 1
             user.save()

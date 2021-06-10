@@ -13,4 +13,4 @@ class Client(CModel):
     )
 
     # Config
-    donations_disabled = models.BooleanField(default=False)
+    donations_enabled = models.BooleanField(default=False)

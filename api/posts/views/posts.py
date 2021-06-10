@@ -1,6 +1,7 @@
 """Users views."""
 
 # Django
+from api.users.models.karma_earnings import KarmaEarning
 from django.http.response import HttpResponse
 from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
@@ -516,6 +517,8 @@ class PostViewSet(
         elif instance.status == Post.SOLVED:
             user.created_solved_posts_count -= 1
         user.karma_amount = user.karma_amount + instance.karma_offered
+        KarmaEarning.objects.create(user=user, amount=instance.karma_offered, type=KarmaEarning.EARNED)
+
         user.save()
 
         for member in instance.members.all().exclude(id=user.id):

@@ -6,3 +6,4 @@ from .connections import Connection
 from .follows import Follow
 from .reviews import Review
 from .blacklist import Blacklist
+from .karma_earnings import KarmaEarning
