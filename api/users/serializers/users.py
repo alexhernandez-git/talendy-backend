@@ -311,6 +311,7 @@ class UserSignUpSerializer(serializers.Serializer):
                                         )
         # Set the 1000 karma earned
         KarmaEarning.objects.create(user=user, amount=karma_amount, type=KarmaEarning.EARNED)
+        user.karma_earned += karma_amount
 
         token, created = Token.objects.get_or_create(
             user=user)
@@ -1056,7 +1057,7 @@ class CreateDonationSerializer(serializers.Serializer):
         if not is_anonymous and user:
             user.karma_amount += paid_karma
             KarmaEarning.objects.create(user=user, amount=paid_karma, type=KarmaEarning.EARNED)
-
+            user.karma_earned += paid_karma
             user.is_currency_permanent = True
             user.donations_made_count += 1
             user.save()

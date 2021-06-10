@@ -518,7 +518,7 @@ class PostViewSet(
             user.created_solved_posts_count -= 1
         user.karma_amount = user.karma_amount + instance.karma_offered
         KarmaEarning.objects.create(user=user, amount=instance.karma_offered, type=KarmaEarning.EARNED)
-
+        user.karma_earned += instance.karma_offered
         user.save()
 
         for member in instance.members.all().exclude(id=user.id):

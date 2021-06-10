@@ -110,6 +110,9 @@ class User(CModel, AbstractUser):
 
     karma_amount = models.IntegerField(default=0)
 
+    karma_earned = models.IntegerField(default=0)
+    karma_spent = models.IntegerField(default=0)
+
     reputation = models.FloatField(
         blank=True, null=True
     )
