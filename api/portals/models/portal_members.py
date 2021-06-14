@@ -4,9 +4,7 @@ from django.contrib.gis.db import models
 from django.utils.text import slugify
 
 
-class Role(CModel):
-
-    name = models.CharField('Role name', max_length=140)
+class PortalMember(CModel):
 
     ADMINISTRATOR = 'AD'
     MANAGERS = 'MA'
@@ -21,6 +19,7 @@ class Role(CModel):
     role = models.CharField(
         max_length=2,
         choices=ROLE_CHOICES,
+        default=BASIC
     )
 
     portal = models.ForeignKey('portals.Portal', on_delete=models.CASCADE)

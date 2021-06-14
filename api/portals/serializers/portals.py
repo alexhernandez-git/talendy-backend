@@ -19,7 +19,7 @@ from api.posts.serializers import PostModelSerializer
 from api.plans.serializers import PlanModelSerializer
 
 # Models
-from api.portals.models import Portal, PlanSubscription
+from api.portals.models import Portal, PlanSubscription, PortalMember
 from api.users.models import User, UserLoginActivity, Earning, Connection, Follow, Blacklist, KarmaEarning
 from api.plans.models import Plan
 
@@ -200,6 +200,7 @@ class CreatePortalSerializer(serializers.Serializer):
             )
             user.stripe_customer_id = new_customer['id']
             user.save()
+
         # Get plan and start the free trial subscription
         plan = helpers.get_plan(user.currency, Plan.MONTHLY)
         subscription = stripe.Subscription.create(
@@ -209,9 +210,20 @@ class CreatePortalSerializer(serializers.Serializer):
             ],
             trial_period_days="14",
         )
+
+        # Create portal
+        portal = Portal.objects.create(**validated_data, owner=user)
+
+        # Add user to users in portal
+        PortalMember.objects.create(portal=portal, user=user, role=PortalMember.ADMINISTRATOR)
+        portal.all_users_count += 1
+        portal.admins_count += 1
+        portal.save()
+
         # Create plan subscription
         PlanSubscription.objects.create(
             user=user,
+            portal=portal,
             subscription_id=subscription["id"],
             plan_unit_amount=plan.unit_amount,
             plan_currency=plan.currency,
@@ -223,3 +235,4 @@ class CreatePortalSerializer(serializers.Serializer):
         )
 
         send_confirmation_email(user)
+        return portal
