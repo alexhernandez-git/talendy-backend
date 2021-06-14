@@ -40,6 +40,7 @@ env = environ.Env()
 
 class PortalViewSet(
     mixins.ListModelMixin,
+    mixins.CreateModelMixin,
     viewsets.GenericViewSet
 ):
     """User view set.

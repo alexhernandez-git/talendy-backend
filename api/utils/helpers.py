@@ -219,7 +219,7 @@ def get_location_data(request):
     return currency, country_code, country_name, region, region_name, city, zip, lat, lon
 
 
-def get_location_data_portal_creation(request):
+def get_location_data_plan(request):
     country_code = None
     currency = None
     country_name = None
@@ -270,6 +270,52 @@ def get_location_data_portal_creation(request):
         currency = "USD"
 
     return currency, country_code, country_name, region, region_name, city, zip, lat, lon
+
+
+def get_currency_and_country_plan(request):
+    user = request.user
+    country_code = user.country
+    currency = user.currency
+    if not currency:
+        # Get country
+        if not country_code:
+            current_login_ip = get_client_ip(request)
+            # Remove this line in production
+            if env.bool("DEBUG", default=True):
+                current_login_ip = "147.161.106.227"
+            # Get country
+
+            r = None
+            status = None
+            try:
+                r = requests.get('http://ip-api.com/json/{}'.format(current_login_ip))
+                status = r.status_code
+            except:
+                pass
+            if status == 200:
+                data = r.json()
+                country_code = data['countryCode']
+                if not country_code:
+                    country_code = "US"
+
+        # Get the currency by country
+
+        try:
+            country_currency = ccy.countryccy(country_code)
+            if Plan.objects.filter(currency=country_currency).exists():
+                currency = country_currency
+        except Exception as e:
+            print(e)
+            currency = "USD"
+
+            pass
+
+    if not user.currency:
+        user.currency = currency
+    if not user.country:
+        user.country = country_code
+    user.save()
+    return currency, country_code
 
 
 def get_currency_and_country(request):

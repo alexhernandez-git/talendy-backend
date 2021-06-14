@@ -125,7 +125,7 @@ class CreatePortalSerializer(serializers.Serializer):
         # Check if user exists
         if not request.user.id:
             # Create the user
-            currency, country, country_name, region, region_name, city, zip, lat, lon = helpers.get_location_data_portal_creation(
+            currency, country, country_name, region, region_name, city, zip, lat, lon = helpers.get_location_data_plan(
                 request)
 
             if not 'currency' in validated_data or not validated_data['currency'] and currency:
@@ -203,6 +203,13 @@ class CreatePortalSerializer(serializers.Serializer):
             user.stripe_customer_id = new_customer['id']
             user.save()
 
+        # If user has no currency set then
+        if not user.currency:
+            currency, _ = helpers.get_currency_and_country_plan(
+                request)
+            user.currency = currency
+            user.save()
+
         # Get plan and start the free trial subscription
 
         plan = helpers.get_portal_plan(user.currency, Plan.MONTHLY)
@@ -249,4 +256,4 @@ class CreatePortalSerializer(serializers.Serializer):
 
         send_confirmation_email(user)
 
-        return {"portal": portal, "user": user, "access_token": str(token)}
+        return {"portal": portal, "user": user, "access_token": str(Token.objects.get(user=user))}
