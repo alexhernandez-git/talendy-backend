@@ -84,8 +84,9 @@ INSTALLED_APPS = [
     "api.notifications.apps.NotificationsAppConfig",
     "api.donations.apps.DonationsAppConfig",
     "api.posts.apps.PostsAppConfig",
+    "api.plans.apps.PlansAppConfig",
     "api.communities.apps.CommunitiesAppConfig",
-    "api.clients.apps.ClientsAppConfig",
+    "api.portals.apps.PortalsAppConfig",
     "api.chats",
     # THIRD_PARTY_APPS
     "rest_framework",

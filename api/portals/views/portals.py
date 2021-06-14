@@ -23,10 +23,10 @@ from django.http import HttpResponse
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 
 # Models
-from api.clients.models import Portal
+from api.portals.models import Portal
 
 # Serializers
-from api.clients.serializers import PortalModelSerializer
+from api.portals.serializers import PortalModelSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -52,29 +52,8 @@ class PortalViewSet(
 
     def get_permissions(self):
         """Assign permissions based on action."""
-
-        permissions = [IsAuthenticated]
+        if self.action in ['create']:
+            permissions = [AllowAny]
+        elif self.action in ['']:
+            permissions = [IsAuthenticated]
         return [p() for p in permissions]
-
-    def get_queryset(self):
-        """Restrict list to public-only."""
-        if self.action == "user":
-            user = get_object_or_404(User, id=self.kwargs['id'])
-            queryset = Portal.objects.filter(reviewd_user=user)
-        else:
-            user = self.request.user
-            queryset = Portal.objects.filter(reviewd_user=user)
-        return queryset
-
-    @action(detail=True, methods=['get'])
-    def user(self, request, *args, **kwargs):
-
-        queryset = self.filter_queryset(self.get_queryset())
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)

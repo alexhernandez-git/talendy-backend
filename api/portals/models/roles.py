@@ -23,5 +23,5 @@ class Role(CModel):
         choices=ROLE_CHOICES,
     )
 
-    client = models.ForeignKey('clients.Portal', on_delete=models.CASCADE)
+    portal = models.ForeignKey('portals.Portal', on_delete=models.CASCADE)
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)

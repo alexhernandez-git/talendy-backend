@@ -1,2 +1,2 @@
-from .clients import Portal
+from .portals import Portal
 from .roles import Role

@@ -9,14 +9,15 @@ class Portal(CModel):
     name = models.CharField('Portal name', max_length=140)
     url = models.SlugField(max_length=40)
     users = models.ManyToManyField(
-        "users.User", through="clients.Role", verbose_name="room_participants"
+        "users.User", through="portals.Role", verbose_name="room_participants"
     )
+    owner = models.ForeignKey("users.User", on_delete=models.SET_NULL, null=True, related_name="portal_owner")
 
     about = models.TextField('about client', max_length=500, null=True, blank=True)
 
     logo = models.ImageField(
         'client logo',
-        upload_to='clients/logos/',
+        upload_to='portals/logos/',
         blank=True,
         null=True,
         max_length=500
@@ -29,7 +30,9 @@ class Portal(CModel):
     all_users_count = models.IntegerField(default=0)
 
     admins_count = models.IntegerField(default=0)
+
     managers_count = models.IntegerField(default=0)
+
     users_count = models.IntegerField(default=0)
 
     posts_count = models.IntegerField(default=0)

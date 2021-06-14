@@ -125,6 +125,7 @@ class User(CModel, AbstractUser):
     stripe_customer_id = models.CharField(
         max_length=100, blank=True, null=True)
 
+
     is_currency_permanent = models.BooleanField(default=False)
     currency = models.CharField(max_length=3, blank=True, null=True)
     default_payment_method = models.CharField(max_length=100, blank=True, null=True)
