@@ -27,9 +27,7 @@ from api.plans.models import Plan
 # Celery
 from api.taskapp.tasks import (
     send_confirmation_email,
-
 )
-
 
 # Utils
 from api.utils import helpers
@@ -127,7 +125,7 @@ class CreatePortalSerializer(serializers.Serializer):
         # Check if user exists
         if not request.user.id:
             # Create the user
-            currency, country, country_name, region, region_name, city, zip, lat, lon = helpers.get_location_data(
+            currency, country, country_name, region, region_name, city, zip, lat, lon = helpers.get_location_data_portal_creation(
                 request)
 
             if not 'currency' in validated_data or not validated_data['currency'] and currency:
@@ -141,6 +139,7 @@ class CreatePortalSerializer(serializers.Serializer):
                 password=validated_data['password'],
                 first_name=validated_data['first_name'],
                 last_name=validated_data['last_name'],
+                currency=validated_data['currency'],
                 is_verified=False,
                 is_client=True,
                 country=country,
@@ -205,7 +204,9 @@ class CreatePortalSerializer(serializers.Serializer):
             user.save()
 
         # Get plan and start the free trial subscription
+
         plan = helpers.get_portal_plan(user.currency, Plan.MONTHLY)
+
         subscription = stripe.Subscription.create(
             customer=user.stripe_customer_id,
             items=[
@@ -215,7 +216,13 @@ class CreatePortalSerializer(serializers.Serializer):
         )
 
         # Create portal
-        portal = Portal.objects.create(**validated_data, owner=user)
+        portal = Portal.objects.create(
+            name=validated_data['name'],
+            url=validated_data['url'],
+            about=validated_data['about'],
+            logo=validated_data['logo'],
+            owner=user
+        )
 
         # Add user to users in portal
         PortalMember.objects.create(portal=portal, user=user, role=PortalMember.ADMINISTRATOR)
@@ -241,4 +248,4 @@ class CreatePortalSerializer(serializers.Serializer):
         )
 
         send_confirmation_email(user)
-        return {"portal": portal, "user": user}
+        return {"portal": portal, "user": user, "access_token": token}

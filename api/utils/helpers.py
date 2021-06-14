@@ -210,6 +210,60 @@ def get_location_data(request):
             if DonationOption.objects.filter(currency=country_currency).exists():
                 currency = country_currency
         except Exception as e:
+            currency = "USD"
+            print(e)
+            pass
+    else:
+        currency = "USD"
+
+    return currency, country_code, country_name, region, region_name, city, zip, lat, lon
+
+
+def get_location_data_portal_creation(request):
+    country_code = None
+    currency = None
+    country_name = None
+    region = None
+    region_name = None
+    city = None
+    zip = None
+    lat = None
+    lon = None
+    current_login_ip = get_client_ip(request)
+    # Remove this line in production
+    if env.bool("DEBUG", default=True):
+        current_login_ip = "147.161.106.227"
+    # Get country
+    r = None
+    status = None
+    try:
+        r = requests.get('http://ip-api.com/json/{}'.format(current_login_ip))
+        status = r.status_code
+    except:
+        pass
+
+    if status == 200:
+        data = r.json()
+        country_code = data['countryCode']
+        country_name = data['country']
+        region = data['region']
+        region_name = data['regionName']
+        city = data['city']
+        zip = data['zip']
+        lat = data['lat']
+        lon = data['lon']
+        if not country_code:
+            country_code = "US"
+
+    # Get the currency by country
+    if country_code:
+
+        try:
+            country_currency = ccy.countryccy(country_code)
+            if Plan.objects.filter(currency=country_currency).exists():
+                currency = country_currency
+        except Exception as e:
+            currency = "USD"
             print(e)
             pass
     else:

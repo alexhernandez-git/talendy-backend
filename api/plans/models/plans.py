@@ -28,7 +28,7 @@ class Plan(CModel):
         choices=INTERVAL_CHOICES,
         default=MONTHLY
     )
-
+    users_amount = models.IntegerField()
     unit_amount = models.FloatField(null=True, blank=True)
     currency = models.CharField(max_length=3, blank=True, null=True)
     price_label = models.CharField(max_length=100, blank=True, null=True)
