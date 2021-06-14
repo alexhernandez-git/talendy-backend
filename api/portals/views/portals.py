@@ -89,10 +89,9 @@ class PortalViewSet(
 
         data = serializer.save()
 
-        headers = self.get_success_headers(data['portal'])
         data = {
             "portal": PortalModelSerializer(data['portal']).data,
             "user": UserModelSerializer(data['user']).data,
             "access_token": data['access_token']
         }
-        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(data, status=status.HTTP_201_CREATED)
