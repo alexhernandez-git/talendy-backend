@@ -7,7 +7,6 @@ from config.settings.base import env
 
 # Django REST Framework
 from api.users.models import User
-import stripe
 import json
 import uuid
 

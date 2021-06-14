@@ -7,10 +7,13 @@ from django.utils.text import slugify
 class Portal(CModel):
 
     name = models.CharField('Portal name', max_length=140)
+
     url = models.SlugField(max_length=40)
+
     users = models.ManyToManyField(
-        "users.User", through="portals.Role", verbose_name="room_participants"
+        "users.User", through="portals.PortalMember", verbose_name="room_participants"
     )
+
     owner = models.ForeignKey("users.User", on_delete=models.SET_NULL, null=True, related_name="portal_owner")
 
     about = models.TextField('about client', max_length=500, null=True, blank=True)

@@ -10,7 +10,6 @@ class PlanPayment(CModel):
 
     invoice_id = models.CharField(max_length=100, blank=True, null=True)
     charge_id = models.CharField(max_length=100, blank=True, null=True)
-    subscription_id = models.CharField(max_length=100, blank=True, null=True)
 
     amount_paid = models.FloatField()
 

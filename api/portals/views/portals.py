@@ -6,9 +6,6 @@ from django.template.loader import render_to_string
 
 
 # Django REST Framework
-import stripe
-import json
-import uuid
 
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status, viewsets, mixins
@@ -26,15 +23,18 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from api.portals.models import Portal
 
 # Serializers
-from api.portals.serializers import PortalModelSerializer
+from api.portals.serializers import PortalModelSerializer, CreatePortalSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
-
+# Utils
 import os
 from api.utils import helpers
+import stripe
+import environ
+env = environ.Env()
 
 
 class PortalViewSet(
@@ -57,3 +57,37 @@ class PortalViewSet(
         elif self.action in ['']:
             permissions = [IsAuthenticated]
         return [p() for p in permissions]
+
+    def get_serializer_class(self):
+        """Return serializer based on action."""
+
+        if self.action in ['create']:
+            return CreatePortalSerializer
+        return PortalModelSerializer
+
+    def get_serializer_context(self):
+        """
+        Extra context provided to the serializer class.
+        """
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
+        else:
+            stripe.api_key = 'sk_test_51HCopMKRJ23zrNRsBClyDiNSIItLH6jxRjczuqwvtXRnTRTKIPAPMaukgGr3HA9PjvCPwC8ZJ5mjoR7mq18od40S00IgdsI8TG'
+
+        return {
+            "request": self.request,
+            "format": self.format_kwarg,
+            "view": self,
+            "stripe": stripe,
+        }
+
+    def create(self, request, *args, **kwargs):
+        request.data['username'] = helpers.get_random_username()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.save()
+        import pdb
+        pdb.set_trace()
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

@@ -120,11 +120,12 @@ class User(CModel, AbstractUser):
 
     reviews_count = models.IntegerField(default=0)
 
+    portals_count = models.IntegerField(default=0)
+
     # Payments
 
     stripe_customer_id = models.CharField(
         max_length=100, blank=True, null=True)
-
 
     is_currency_permanent = models.BooleanField(default=False)
     currency = models.CharField(max_length=3, blank=True, null=True)

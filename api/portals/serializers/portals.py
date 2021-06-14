@@ -92,8 +92,6 @@ class CreatePortalSerializer(serializers.Serializer):
     phone_regex = RegexValidator(
         regex=r'\+?1?\d{9,15}$',
         message="Phone number must be entered in the format: +999999999. Up to 15 digits allowed.",
-        required=False,
-        allow_blank=True
 
     )
     phone_number = serializers.CharField(
@@ -137,18 +135,23 @@ class CreatePortalSerializer(serializers.Serializer):
 
             karma_amount = 1000
 
-            user = User.objects.create_user(**validated_data,
-                                            is_verified=False,
-                                            is_client=True,
-                                            country=country,
-                                            country_name=country_name,
-                                            region=region,
-                                            region_name=region_name,
-                                            city=city,
-                                            zip=zip,
-                                            geolocation=Point(lon, lat),
-                                            karma_amount=karma_amount,
-                                            )
+            user = User.objects.create_user(
+                email=validated_data['email'],
+                username=validated_data['username'],
+                password=validated_data['password'],
+                first_name=validated_data['first_name'],
+                last_name=validated_data['last_name'],
+                is_verified=False,
+                is_client=True,
+                country=country,
+                country_name=country_name,
+                region=region,
+                region_name=region_name,
+                city=city,
+                zip=zip,
+                geolocation=Point(lon, lat),
+                karma_amount=karma_amount,
+            )
             # Set the 1000 karma earned
             KarmaEarning.objects.create(user=user, amount=karma_amount, type=KarmaEarning.EARNED)
             user.karma_earned += karma_amount
@@ -202,7 +205,7 @@ class CreatePortalSerializer(serializers.Serializer):
             user.save()
 
         # Get plan and start the free trial subscription
-        plan = helpers.get_plan(user.currency, Plan.MONTHLY)
+        plan = helpers.get_portal_plan(user.currency, Plan.MONTHLY)
         subscription = stripe.Subscription.create(
             customer=user.stripe_customer_id,
             items=[
@@ -220,6 +223,9 @@ class CreatePortalSerializer(serializers.Serializer):
         portal.admins_count += 1
         portal.save()
 
+        user.portals_count += 1
+        user.save()
+
         # Create plan subscription
         PlanSubscription.objects.create(
             user=user,
@@ -235,4 +241,4 @@ class CreatePortalSerializer(serializers.Serializer):
         )
 
         send_confirmation_email(user)
-        return portal
+        return {"portal": portal, "user": user}
