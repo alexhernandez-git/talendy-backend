@@ -1,6 +1,7 @@
 """Users views."""
 
 # Django
+from typing import OrderedDict
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
@@ -84,8 +85,12 @@ class PortalViewSet(
         }
 
     def create(self, request, *args, **kwargs):
-        request.data['username'] = helpers.get_random_username()
-        serializer = self.get_serializer(data=request.data)
+
+        data = OrderedDict()
+        data.update(request.data)
+        if not request.user.id:
+            data['username'] = helpers.get_random_username()
+        serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
 
         data = serializer.save()

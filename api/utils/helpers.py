@@ -131,6 +131,7 @@ def get_random_username():
 
     if status == 200:
         data = r.json()
+
         try:
             return data['results'][0]['login']['username']
         except:

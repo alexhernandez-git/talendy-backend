@@ -67,7 +67,7 @@ class CreatePortalSerializer(serializers.Serializer):
 
     about = serializers.CharField(allow_blank=True)
 
-    logo = serializers.FileField(allow_empty_file=True)
+    logo = serializers.FileField(required=False, allow_null=True)
 
     # User login in case user is not authenticate
     email = serializers.CharField(
@@ -227,7 +227,7 @@ class CreatePortalSerializer(serializers.Serializer):
             name=validated_data['name'],
             url=validated_data['url'],
             about=validated_data['about'],
-            logo=validated_data['logo'],
+            logo=validated_data.get('logo', None),
             owner=user
         )
 
