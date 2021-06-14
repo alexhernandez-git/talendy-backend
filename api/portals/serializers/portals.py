@@ -256,4 +256,4 @@ class CreatePortalSerializer(serializers.Serializer):
 
         send_confirmation_email(user)
 
-        return {"portal": portal, "user": user, "access_token": str(Token.objects.get(user=user))}
+        return {"user": user, "access_token": str(Token.objects.get(user=user))}

@@ -91,7 +91,6 @@ class PortalViewSet(
         data = serializer.save()
 
         data = {
-            "portal": PortalModelSerializer(data['portal']).data,
             "user": UserModelSerializer(data['user']).data,
             "access_token": data['access_token']
         }
