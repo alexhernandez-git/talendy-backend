@@ -1,6 +1,7 @@
 
 # Django
 
+from api.plans.models.plans import Plan
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -273,6 +274,22 @@ def get_plan(currency):
 
     except DonationOption.DoesNotExist:
         plans_queryset = DonationOption.objects.filter(currency="USD")
+        if plans_queryset.exists():
+            plan = plans_queryset.first()
+
+    return plan
+
+
+def get_portal_plan(currency, interval):
+    plan = None
+
+    try:
+        plans_queryset = Plan.objects.filter(currency=currency, interval=interval)
+        if plans_queryset.exists():
+            plan = plans_queryset.first()
+
+    except Plan.DoesNotExist:
+        plans_queryset = Plan.objects.filter(currency="USD", interval=Plan.MONTHLY)
         if plans_queryset.exists():
             plan = plans_queryset.first()
 

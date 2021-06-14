@@ -1,7 +1,6 @@
 """Users serializers."""
 
 # Django
-from api.users.models.karma_earnings import KarmaEarning
 from django.conf import settings
 from django.contrib.auth import password_validation, authenticate
 from django.core.validators import RegexValidator, validate_email
@@ -19,7 +18,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.validators import UniqueValidator
 
 # Models
-from api.users.models import User, UserLoginActivity, Earning, Connection, Follow, Blacklist
+from api.users.models import User, UserLoginActivity, Earning, Connection, Follow, Blacklist, KarmaEarning
 from api.notifications.models import Notification, NotificationUser
 from api.donations.models import DonationOption
 from djmoney.models.fields import Money
