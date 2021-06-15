@@ -253,8 +253,8 @@ def get_location_data_plan(request):
         zip = data['zip']
         lat = data['lat']
         lon = data['lon']
-        if not country_code:
-            country_code = "US"
+    if not country_code:
+        country_code = "US"
 
     # Get the currency by country
     if country_code:
