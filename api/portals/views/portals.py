@@ -25,7 +25,7 @@ from api.portals.models import Portal
 
 # Serializers
 from api.portals.serializers import PortalModelSerializer, CreatePortalSerializer
-from api.users.serializers import UserModelSerializer
+from api.users.serializers import UserModelSerializer, DetailedUserModelSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -96,7 +96,8 @@ class PortalViewSet(
         data = serializer.save()
 
         data = {
-            "user": UserModelSerializer(data['user']).data,
+            "portal": PortalModelSerializer(data['portal']).data,
+            "user": DetailedUserModelSerializer(data['user']).data,
             "access_token": data['access_token']
         }
         return Response(data, status=status.HTTP_201_CREATED)

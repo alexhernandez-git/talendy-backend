@@ -296,8 +296,8 @@ def get_currency_and_country_plan(user, request):
             if status == 200:
                 data = r.json()
                 country_code = data['countryCode']
-                if not country_code:
-                    country_code = "US"
+            if not country_code:
+                country_code = "US"
 
         # Get the currency by country
 

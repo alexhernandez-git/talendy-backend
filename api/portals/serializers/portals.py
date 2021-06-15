@@ -239,6 +239,7 @@ class CreatePortalSerializer(serializers.Serializer):
         portal.save()
 
         user.portals_count += 1
+        user.is_currency_permanent = True
         user.save()
 
         # Create plan subscription
@@ -257,4 +258,4 @@ class CreatePortalSerializer(serializers.Serializer):
 
         send_confirmation_email(user)
 
-        return {"user": user, "access_token": str(Token.objects.get(user=user))}
+        return {"portal": portal, "user": user, "access_token": str(Token.objects.get(user=user))}
