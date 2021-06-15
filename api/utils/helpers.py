@@ -273,8 +273,8 @@ def get_location_data_plan(request):
     return currency, country_code, country_name, region, region_name, city, zip, lat, lon
 
 
-def get_currency_and_country_plan(request):
-    user = request.user
+def get_currency_and_country_plan(user, request):
+
     country_code = user.country
     currency = user.currency
     if not currency:
@@ -305,6 +305,9 @@ def get_currency_and_country_plan(request):
             country_currency = ccy.countryccy(country_code)
             if Plan.objects.filter(currency=country_currency).exists():
                 currency = country_currency
+            else:
+                currency = "USD"
+
         except Exception as e:
             print(e)
             currency = "USD"

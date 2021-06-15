@@ -6,9 +6,9 @@ from django.utils.text import slugify
 
 class Portal(CModel):
 
-    name = models.CharField('Portal name', max_length=140)
+    name = models.CharField('Portal name', max_length=140, unique=True)
 
-    url = models.SlugField(max_length=40)
+    url = models.SlugField(max_length=40, unique=True)
 
     users = models.ManyToManyField(
         "users.User", through="portals.PortalMember", verbose_name="room_participants"

@@ -204,9 +204,10 @@ class CreatePortalSerializer(serializers.Serializer):
             user.save()
 
         # If user has no currency set then
-        if not user.currency:
+
+        if user and not user.currency:
             currency, _ = helpers.get_currency_and_country_plan(
-                request)
+                user, request)
             user.currency = currency
             user.save()
 
