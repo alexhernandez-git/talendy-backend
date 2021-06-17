@@ -10,7 +10,7 @@ class Portal(CModel):
 
     url = models.SlugField(max_length=40, unique=True)
 
-    users = models.ManyToManyField(
+    members = models.ManyToManyField(
         "users.User", through="portals.PortalMember", verbose_name="room_participants"
     )
 

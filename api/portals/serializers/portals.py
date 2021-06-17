@@ -44,10 +44,38 @@ class PortalModelSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "url",
+            "logo",
             "donations_enabled"
         )
 
         read_only_fields = ("id",)
+
+
+class PortalListModelSerializer(serializers.ModelSerializer):
+    """User model serializer."""
+    owner = UserModelSerializer(read_only=True)
+    members = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        """Meta class."""
+
+        model = Portal
+        fields = (
+            "id",
+            "name",
+            "url",
+            "about",
+            "logo",
+            "owner",
+            "donations_enabled",
+            "members"
+        )
+
+        read_only_fields = ("id",)
+
+    def get_members(self, obj):
+
+        return PortalMember.objects.filter(portal=obj.id).count()
 
 
 class CreatePortalSerializer(serializers.Serializer):
@@ -259,3 +287,35 @@ class CreatePortalSerializer(serializers.Serializer):
         send_confirmation_email(user)
 
         return {"portal": portal, "user": user, "access_token": str(Token.objects.get(user=user))}
+
+
+class IsNameAvailableSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+
+    name = serializers.CharField(allow_blank=True)
+
+    def validate(self, data):
+        """Update user's verified status."""
+
+        name = data['name']
+
+        if Portal.objects.filter(name=name).exists():
+            raise serializers.ValidationError('This name is already in use')
+
+        return {"name": name}
+
+
+class IsUrlAvailableSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+
+    url = serializers.CharField(allow_blank=True)
+
+    def validate(self, data):
+        """Update user's verified status."""
+
+        url = data['url']
+
+        if Portal.objects.filter(url=url).exists():
+            raise serializers.ValidationError('This url is already in use')
+
+        return {"url": url}
