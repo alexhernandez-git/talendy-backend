@@ -30,12 +30,6 @@ class Portal(CModel):
     donations_enabled = models.BooleanField(default=False)
 
     # Users count
-    all_users_count = models.IntegerField(default=0)
-
-    admins_count = models.IntegerField(default=0)
-
-    managers_count = models.IntegerField(default=0)
-
     users_count = models.IntegerField(default=0)
 
     posts_count = models.IntegerField(default=0)

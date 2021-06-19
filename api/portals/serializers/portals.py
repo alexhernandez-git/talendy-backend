@@ -2,6 +2,7 @@
 
 # Django REST Framework
 
+from api.portals.models.portal_roles import PortalRole
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from rest_framework.validators import UniqueValidator
@@ -261,7 +262,8 @@ class CreatePortalSerializer(serializers.Serializer):
         )
 
         # Add user to users in portal
-        PortalMember.objects.create(portal=portal, user=user, role=PortalMember.ADMINISTRATOR)
+        portal_member = PortalMember.objects.create(portal=portal, user=user)
+        portal_member.roles.add(PortalRole.objects.get(code="ADMINISTRATOR"))
         portal.all_users_count += 1
         portal.admins_count += 1
         portal.save()
