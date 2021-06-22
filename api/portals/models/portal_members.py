@@ -8,4 +8,18 @@ class PortalMember(CModel):
 
     portal = models.ForeignKey('portals.Portal', on_delete=models.CASCADE)
     user = models.ForeignKey('users.User', on_delete=models.CASCADE)
-    roles = models.ManyToManyField("portals.PortalRole")
+
+    ADMINISTRATOR = 'AD'
+    MANAGER = 'MA'
+    BASIC = 'BA'
+    MEMBER_TYPE = [
+        (ADMINISTRATOR, 'Administrator'),
+        (MANAGER, 'Manager'),
+        (BASIC, 'Basic'),
+    ]
+
+    type = models.CharField(
+        max_length=2,
+        choices=MEMBER_TYPE,
+        default=BASIC
+    )

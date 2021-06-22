@@ -41,6 +41,7 @@ env = environ.Env()
 
 class PortalViewSet(
     mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
     viewsets.GenericViewSet
 ):
@@ -50,7 +51,7 @@ class PortalViewSet(
     """
 
     queryset = Portal.objects.all()
-    lookup_field = "id"
+    lookup_field = "url"
     serializer_class = PortalModelSerializer
     filter_backends = (SearchFilter, DjangoFilterBackend)
     search_fields = (
@@ -63,7 +64,7 @@ class PortalViewSet(
         """Assign permissions based on action."""
         permissions = []
 
-        if self.action in ['create', 'is_name_available', 'is_url_available']:
+        if self.action in ['create', 'is_name_available', 'is_url_available', 'retrieve']:
             permissions = [AllowAny]
         elif self.action in ['list']:
             permissions = [IsAuthenticated]

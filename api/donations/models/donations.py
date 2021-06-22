@@ -6,6 +6,8 @@ from djmoney.models.fields import MoneyField
 
 
 class Donation(CModel):
+    portal = models.ForeignKey("portals.Portal", on_delete=models.SET_NULL, null=True)
+
     is_other_amount = models.BooleanField(default=False)
     # If is other amount the donation item will be null
     donation_option = models.ForeignKey("donations.DonationOption", on_delete=models.SET_NULL,

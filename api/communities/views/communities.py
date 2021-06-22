@@ -49,8 +49,13 @@ class CommunityViewSet(
     Handle sign up, login and account verification.
     """
 
-    queryset = Community.objects.all().order_by('created')
+    queryset = Community.objects.all()
     lookup_field = "id"
     serializer_class = CommunityModelSerializer
     filter_backends = (SearchFilter, DjangoFilterBackend)
     pagination_class = None
+
+    def get_queryset(self):
+        queryset = Community.objects.all().order_by('created')
+
+        return queryset

@@ -10,6 +10,7 @@ from django.utils import timezone
 
 
 class Earning(CModel):
+    portal = models.ForeignKey("portals.Portal", on_delete=models.SET_NULL, null=True)
 
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
 

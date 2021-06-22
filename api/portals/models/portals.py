@@ -16,10 +16,10 @@ class Portal(CModel):
 
     owner = models.ForeignKey("users.User", on_delete=models.SET_NULL, null=True, related_name="portal_owner")
 
-    about = models.TextField('about client', max_length=500, null=True, blank=True)
+    about = models.TextField('about portal', max_length=500, null=True, blank=True)
 
     logo = models.ImageField(
-        'client logo',
+        'portal logo',
         upload_to='portals/logos/',
         blank=True,
         null=True,
@@ -31,6 +31,10 @@ class Portal(CModel):
 
     # Users count
     users_count = models.IntegerField(default=0)
+
+    base_users_count = models.IntegerField(default=0)
+    managers_count = models.IntegerField(default=0)
+    administrators_count = models.IntegerField(default=0)
 
     posts_count = models.IntegerField(default=0)
 

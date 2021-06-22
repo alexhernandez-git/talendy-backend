@@ -3,7 +3,7 @@ from django.contrib.gis.db import models
 
 
 class Post(CModel):
-
+    portal = models.ForeignKey("portals.Portal", on_delete=models.SET_NULL, null=True)
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
     members = models.ManyToManyField("users.User", through="posts.PostMember", related_name="post_members")
     karma_winner = models.ForeignKey("posts.PostMember", on_delete=models.SET_NULL,

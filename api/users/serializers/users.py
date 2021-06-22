@@ -23,6 +23,7 @@ from api.notifications.models import Notification, NotificationUser
 from api.donations.models import DonationOption
 from djmoney.models.fields import Money
 from api.donations.models import Donation, DonationOption, DonationPayment
+from api.portals.models import Portal, PortalMember
 
 # Serializers
 
@@ -47,7 +48,7 @@ from api.utils import helpers
 import re
 import geoip2.database
 import ccy
-
+import tldextract
 import environ
 env = environ.Env()
 
@@ -370,6 +371,14 @@ class UserLoginSerializer(serializers.Serializer):
         email = data['email']
         password = data['password']
         request = self.context['request']
+        subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
+        portal = None
+
+        try:
+            portal = Portal.objects.get(url=subdomain)
+        except Portal.DoesNotExist:
+            pass
+
         regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
         # for custom mails use: '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$'
         if email and password:
@@ -387,6 +396,7 @@ class UserLoginSerializer(serializers.Serializer):
         users = User.objects.filter(username=email, account_deactivated=True)
 
         if users.exists():
+
             raise serializers.ValidationError(
                 'This account has already been desactivated')
 
@@ -394,7 +404,10 @@ class UserLoginSerializer(serializers.Serializer):
         if not user:
             raise serializers.ValidationError(
                 'Invalid credentials')
-
+        # If there is a portal check if user is a member of this portal
+        if portal and not PortalMember.objects.filter(user=user, portal=portal).exists():
+            raise serializers.ValidationError(
+                'You are not a member of this portal')
         if user:
             current_login_ip = helpers.get_client_ip(request)
             if Blacklist.objects.filter(IP=current_login_ip).exists():
