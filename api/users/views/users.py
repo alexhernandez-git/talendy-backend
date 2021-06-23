@@ -1,5 +1,7 @@
 """Users views."""
 # Django
+from api.portals.models.portal_members import PortalMember
+from api.portals.models.portals import Portal
 from api.users.serializers.users import ConfirmUserSerializer, CreateDonationSerializer
 from operator import sub
 from django.core.mail import EmailMultiAlternatives
@@ -70,6 +72,7 @@ from api.utils.paginations import ShortResultsSetPagination
 from datetime import timedelta
 from django.utils import timezone
 import environ
+import tldextract
 env = environ.Env()
 
 
@@ -400,7 +403,16 @@ class UserViewSet(mixins.RetrieveModelMixin,
     def get_user(self, request, *args, **kwargs):
         if request.user.id == None:
             return Response(status=404)
+        subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
+        portal = None
 
+        try:
+            portal = Portal.objects.get(url=subdomain)
+        except Portal.DoesNotExist:
+            pass
+
+        if portal and not PortalMember.objects.filter(user=request.user, portal=portal).exists():
+            return Response(status=404)
         data = {
             'user': DetailedUserModelSerializer(request.user, many=False).data,
 

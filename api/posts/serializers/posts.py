@@ -1,6 +1,7 @@
 """Notifications serializers."""
 
 # Django REST Framework
+from api.portals.models.portals import Portal
 from api.users.models.karma_earnings import KarmaEarning
 from api.posts.serializers.post_kanbans import KanbanListModelSerializer
 from api.taskapp.tasks import send_post_finalized, send_post_to_followers
@@ -30,6 +31,8 @@ from api.notifications.models import Notification, NotificationUser
 # Utils
 import json
 import base64
+
+import tldextract
 
 
 class PostImageModelSerializer(serializers.ModelSerializer):
@@ -103,10 +106,24 @@ class PostModelSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        user = self.context['request'].user
+        request = self.context['request']
+        user = request.user
         images = self.context["images"]
-        post = Post.objects.create(user=user, **validated_data, members_count=1)
+        subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
+        portal = None
 
+        try:
+            portal = Portal.objects.get(url=subdomain)
+        except Portal.DoesNotExist:
+            pass
+        post = Post.objects.create(user=user, **validated_data, members_count=1)
+        if portal:
+            post.portal = portal
+            post.save()
+            portal.posts_count += 1
+            portal.created_posts_count += 1
+            portal.created_active_posts_count += 1
+            portal.save()
         user.karma_amount = user.karma_amount - post.karma_offered
 
         KarmaEarning.objects.create(user=user, amount=post.karma_offered, type=KarmaEarning.SPENT)
@@ -136,8 +153,7 @@ class PostModelSerializer(serializers.ModelSerializer):
         user.karma_ratio = karma_earned / karma_spent
 
         user.save()
-        import pdb
-        pdb.set_trace()
+
         for image in images:
 
             PostImage.objects.create(

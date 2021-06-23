@@ -56,6 +56,7 @@ class CommunityViewSet(
     pagination_class = None
 
     def get_queryset(self):
+        
         queryset = Community.objects.all().order_by('created')
 
         return queryset

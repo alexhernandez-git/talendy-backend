@@ -405,9 +405,11 @@ class UserLoginSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'Invalid credentials')
         # If there is a portal check if user is a member of this portal
+
         if portal and not PortalMember.objects.filter(user=user, portal=portal).exists():
             raise serializers.ValidationError(
                 'You are not a member of this portal')
+
         if user:
             current_login_ip = helpers.get_client_ip(request)
             if Blacklist.objects.filter(IP=current_login_ip).exists():
