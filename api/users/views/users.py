@@ -129,16 +129,46 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return UserModelSerializer
 
     def get_queryset(self):
-        if self.action == 'list_users_with_most_karma':
+        subdomain = tldextract.extract(self.request.META['HTTP_ORIGIN']).subdomain
+        portal = None
 
+        try:
+            portal = Portal.objects.get(url=subdomain)
+        except Portal.DoesNotExist:
+            pass
+        if self.action == 'list_users_with_most_karma':
+            if portal:
+                user = self.request.user
+                members = PortalMember.objects.filter(portal=portal).values_list('user__pk')
+                members_list = [x[0] for x in members]
+                members_list.append(user.pk)
+                return User.objects.filter(pk__in=members_list, account_deactivated=False, is_staff=False)
             return User.objects.filter(account_deactivated=False, is_staff=False)
         elif self.action == "list_users_not_followed":
+
             user = self.request.user
             users = Follow.objects.filter(from_user=user).values_list('follow_user__pk')
             users_list = [x[0] for x in users]
             users_list.append(user.pk)
-            return User.objects.filter(account_deactivated=False, is_staff=False).exclude(pk__in=users_list)
 
+            if portal:
+                members = PortalMember.objects.filter(portal=portal).values_list('user__pk')
+                members_list = [x[0] for x in members]
+                members_list.append(user.pk)
+                return User.objects.filter(
+                    pk__in=members_list, account_deactivated=False, is_staff=False).exclude(
+                    pk__in=users_list)
+            return User.objects.filter(
+                account_deactivated=False, is_staff=False).exclude(
+                pk__in=users_list)
+
+        if portal:
+            user = self.request.user
+
+            members = PortalMember.objects.filter(portal=portal).values_list('user__pk')
+            members_list = [x[0] for x in members]
+            members_list.append(user.pk)
+            return User.objects.filter(pk__in=members_list, account_deactivated=False, is_staff=False)
         return User.objects.filter(account_deactivated=False, is_staff=False)
 
     # User destroy
