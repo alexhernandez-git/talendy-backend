@@ -46,6 +46,7 @@ class PortalModelSerializer(serializers.ModelSerializer):
             "url",
             "logo",
             "donations_enabled",
+            "users_count",
             "posts_count",
             "created_posts_count",
             "created_active_posts_count",
