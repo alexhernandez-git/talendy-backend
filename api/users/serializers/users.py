@@ -55,6 +55,7 @@ env = environ.Env()
 
 class DetailedUserModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
+    member_role = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -98,13 +99,30 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
             'reviews_count',
             'is_currency_permanent',
             'email_notifications_allowed',
-            'geolocation'
+            'geolocation',
+            'member_role'
 
         )
 
         read_only_fields = (
             'id',
         )
+
+    def get_member_role(self, obj):
+  
+        if 'request' in self.context:
+            subdomain = tldextract.extract(self.context['request'].META['HTTP_ORIGIN']).subdomain
+            portal = None
+
+            try:
+                portal = Portal.objects.get(url=subdomain)
+            except Portal.DoesNotExist:
+                pass
+
+            if portal:
+                portal_member = PortalMember.objects.get(portal=portal, user=obj)
+                return portal_member.role
+        return None
 
 
 class UserModelSerializer(serializers.ModelSerializer):

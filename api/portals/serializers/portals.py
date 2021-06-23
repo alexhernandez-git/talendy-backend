@@ -45,7 +45,14 @@ class PortalModelSerializer(serializers.ModelSerializer):
             "name",
             "url",
             "logo",
-            "donations_enabled"
+            "donations_enabled",
+            "posts_count",
+            "created_posts_count",
+            "created_active_posts_count",
+            "created_solved_posts_count",
+            "collaborated_posts_count",
+            "collaborated_active_posts_count",
+            "collaborated_solved_posts_count"
         )
 
         read_only_fields = ("id",)
@@ -261,7 +268,7 @@ class CreatePortalSerializer(serializers.Serializer):
         )
 
         # Add user to users in portal
-        PortalMember.objects.create(portal=portal, user=user, type=PortalMember.ADMINISTRATOR)
+        PortalMember.objects.create(portal=portal, user=user, role=PortalMember.ADMINISTRATOR)
         portal.users_count += 1
         portal.administrators_count += 1
         portal.save()

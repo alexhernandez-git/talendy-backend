@@ -18,7 +18,7 @@ class PortalMember(CModel):
         (BASIC, 'Basic'),
     ]
 
-    type = models.CharField(
+    role = models.CharField(
         max_length=2,
         choices=MEMBER_TYPE,
         default=BASIC

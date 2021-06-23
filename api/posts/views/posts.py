@@ -17,6 +17,7 @@ from api.posts.permissions import IsPostMember, IsPostOwner
 # Models
 from api.posts.models import Post
 from api.users.models import Follow, User
+from api.portals.models import Portal
 
 # Serializers
 from api.posts.serializers import (
@@ -40,6 +41,9 @@ from api.posts.serializers import (
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from api.posts.filters import PostFilter
+
+# Utils
+import tldextract
 
 
 class PostViewSet(
@@ -90,24 +94,31 @@ class PostViewSet(
 
     def get_queryset(self):
         """Restrict list to public-only."""
+        subdomain = tldextract.extract(self.request.META['HTTP_ORIGIN']).subdomain
+        portal = None
+        try:
+            portal = Portal.objects.get(url=subdomain)
+        except Portal.DoesNotExist:
+            pass
         queryset = Post.objects.all()
-
+        if portal:
+            queryset = Post.objects.filter(portal=portal)
         if self.action == "list":
-            queryset = Post.objects.filter(
+            queryset = queryset.filter(
                 members_count__lte=5)
 
         elif self.action == "list_most_karma_posts":
-            queryset = Post.objects.filter(members_count__lte=5).order_by('-karma_offered')
+            queryset = queryset.filter(members_count__lte=5).order_by('-karma_offered')
 
         elif self.action == "list_followed_users_posts":
             if self.request.user.id:
 
                 user = self.request.user
-                queryset = Post.objects.filter(
+                queryset = queryset.filter(
                     user__id__in=Follow.objects.filter(from_user=user).values_list(
                         'followed_user'), members_count__lte=5)
             else:
-                queryset = Post.objects.none()
+                queryset = queryset.none()
         elif self.action == "list_nearest_posts":
             if self.request.user.id and self.request.user.id:
                 user = self.request.user
@@ -122,39 +133,39 @@ class PostViewSet(
 
         elif self.action == "list_my_posts":
             user = self.request.user
-            queryset = Post.objects.filter(user=user)
+            queryset = queryset.filter(user=user)
 
         elif self.action == "list_my_active_posts":
             user = self.request.user
-            queryset = Post.objects.filter(user=user, status=Post.ACTIVE)
+            queryset = queryset.filter(user=user, status=Post.ACTIVE)
 
         elif self.action == "list_my_solved_posts":
             user = self.request.user
-            queryset = Post.objects.filter(user=user, status=Post.SOLVED)
+            queryset = queryset.filter(user=user, status=Post.SOLVED)
 
         elif self.action == "list_collaborated_posts":
             user = self.request.user
-            queryset = Post.objects.filter(members=user).exclude(user=user)
+            queryset = queryset.filter(members=user).exclude(user=user)
 
         elif self.action == "list_collaborated_active_posts":
             user = self.request.user
-            queryset = Post.objects.filter(members=user, status=Post.ACTIVE).exclude(user=user)
+            queryset = queryset.filter(members=user, status=Post.ACTIVE).exclude(user=user)
 
         elif self.action == "list_collaborated_solved_posts":
             user = self.request.user
-            queryset = Post.objects.filter(members=user, status=Post.SOLVED).exclude(user=user)
+            queryset = queryset.filter(members=user, status=Post.SOLVED).exclude(user=user)
 
         elif self.action == "list_user_posts":
             user = get_object_or_404(User, id=self.kwargs['id'])
-            queryset = Post.objects.filter(Q(user=user) | Q(members=user)).distinct()
+            queryset = queryset.filter(Q(user=user) | Q(members=user)).distinct()
 
         elif self.action == "list_user_created":
             user = get_object_or_404(User, id=self.kwargs['id'])
-            queryset = Post.objects.filter(user=user)
+            queryset = queryset.filter(user=user)
 
         elif self.action == "list_user_collaborated":
             user = get_object_or_404(User, id=self.kwargs['id'])
-            queryset = Post.objects.filter(members=user).exclude(user=user)
+            queryset = queryset.filter(members=user).exclude(user=user)
 
         return queryset
 

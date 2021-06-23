@@ -136,25 +136,26 @@ class UserViewSet(mixins.RetrieveModelMixin,
             portal = Portal.objects.get(url=subdomain)
         except Portal.DoesNotExist:
             pass
+
+        if portal:
+            user = self.request.user
+            members = PortalMember.objects.filter(portal=portal).values_list('user__pk')
+            members_list = [x[0] for x in members]
+            members_list.append(user.pk)
+
         if self.action == 'list_users_with_most_karma':
+
             if portal:
-                user = self.request.user
-                members = PortalMember.objects.filter(portal=portal).values_list('user__pk')
-                members_list = [x[0] for x in members]
-                members_list.append(user.pk)
                 return User.objects.filter(pk__in=members_list, account_deactivated=False, is_staff=False)
             return User.objects.filter(account_deactivated=False, is_staff=False)
-        elif self.action == "list_users_not_followed":
 
+        elif self.action == "list_users_not_followed":
             user = self.request.user
             users = Follow.objects.filter(from_user=user).values_list('follow_user__pk')
             users_list = [x[0] for x in users]
             users_list.append(user.pk)
 
             if portal:
-                members = PortalMember.objects.filter(portal=portal).values_list('user__pk')
-                members_list = [x[0] for x in members]
-                members_list.append(user.pk)
                 return User.objects.filter(
                     pk__in=members_list, account_deactivated=False, is_staff=False).exclude(
                     pk__in=users_list)
@@ -163,11 +164,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
                 pk__in=users_list)
 
         if portal:
-            user = self.request.user
-
-            members = PortalMember.objects.filter(portal=portal).values_list('user__pk')
-            members_list = [x[0] for x in members]
-            members_list.append(user.pk)
             return User.objects.filter(pk__in=members_list, account_deactivated=False, is_staff=False)
         return User.objects.filter(account_deactivated=False, is_staff=False)
 
@@ -324,7 +320,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         user, token = serializer.save()
 
         data = {
-            'user': DetailedUserModelSerializer(user).data,
+            'user': DetailedUserModelSerializer(user, context={"request": request}, many=False).data,
             'access_token': token,
         }
 
@@ -444,7 +440,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if portal and not PortalMember.objects.filter(user=request.user, portal=portal).exists():
             return Response(status=404)
         data = {
-            'user': DetailedUserModelSerializer(request.user, many=False).data,
+            'user': DetailedUserModelSerializer(request.user, context={"request": request}, many=False).data,
 
         }
         if 'STRIPE_API_KEY' in env:
