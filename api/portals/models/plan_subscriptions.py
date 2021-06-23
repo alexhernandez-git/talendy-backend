@@ -19,6 +19,7 @@ class PlanSubscription(CModel):
     payment_issue = models.BooleanField(null=False, blank=False, default=False)
     coupon = models.CharField(max_length=100, blank=True, null=True)
     current_period_end = models.IntegerField(blank=True, default=0)
+
     plan_type = models.CharField(max_length=2,
                                  choices=Plan.TYPE_CHOICES,)
     plan_unit_amount = models.FloatField(null=True, blank=True)

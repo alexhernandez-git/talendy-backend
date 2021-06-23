@@ -17,6 +17,7 @@ from django.contrib.gis.geos import Point
 from api.users.serializers import UserModelSerializer
 from api.posts.serializers import PostModelSerializer
 from api.plans.serializers import PlanModelSerializer
+from .plan_subscriptions import PlanSubscriptionModelSerializer
 
 # Models
 from api.portals.models import Portal, PlanSubscription, PortalMember
@@ -31,10 +32,13 @@ from api.taskapp.tasks import (
 
 # Utils
 from api.utils import helpers
+import datetime
+from django.utils import timezone
 
 
 class PortalModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
+    plan = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -53,10 +57,15 @@ class PortalModelSerializer(serializers.ModelSerializer):
             "created_solved_posts_count",
             "collaborated_posts_count",
             "collaborated_active_posts_count",
-            "collaborated_solved_posts_count"
+            "collaborated_solved_posts_count",
+            "plan"
         )
 
         read_only_fields = ("id",)
+
+    def get_plan(self, obj):
+        plan = PlanSubscription.objects.get(portal=obj)
+        return PlanSubscriptionModelSerializer(plan, many=False).data
 
 
 class PortalListModelSerializer(serializers.ModelSerializer):
@@ -260,12 +269,16 @@ class CreatePortalSerializer(serializers.Serializer):
         )
 
         # Create portal
+        expiration_date = timezone.now() + datetime.timedelta(days=14)
         portal = Portal.objects.create(
             name=validated_data['name'],
             url=validated_data['url'],
             about=validated_data['about'],
             logo=validated_data.get('logo', None),
-            owner=user
+            owner=user,
+            is_free_trial=True,
+            free_trial_expiration=expiration_date,
+            have_active_plan=True
         )
 
         # Add user to users in portal

@@ -1,6 +1,9 @@
 from api.utils.models import CModel
 from django.contrib.gis.db import models
 
+# Models
+from api.plans.models import Plan
+
 from django.utils.text import slugify
 
 
@@ -49,3 +52,28 @@ class Portal(CModel):
     collaborated_active_posts_count = models.IntegerField(default=0)
 
     collaborated_solved_posts_count = models.IntegerField(default=0)
+
+    current_plan = models.ForeignKey("portals.PlanSubscription", on_delete=models.SET_NULL,
+                                     null=True, blank=True, related_name="portal_plan")
+
+    plan_default_payment_method = models.CharField(max_length=100, blank=True, null=True)
+
+    free_trial_invoiced = models.BooleanField(default=False)
+
+    is_free_trial = models.BooleanField(
+        'free trial',
+        default=False,
+        help_text='Set to true when the seller is in free trial.'
+    )
+
+    passed_free_trial_once = models.BooleanField(
+        'passed free trial',
+        default=False,
+        help_text='Set to true when the seller alreay passed free trial once.'
+    )
+
+    free_trial_expiration = models.DateTimeField(
+        'free trial expiration at',
+        help_text='Date time on the free tiral expiration.',
+        null=True, blank=True,
+    )
