@@ -183,12 +183,13 @@ class PortalViewSet(
             if plan_subscriptions.exists():
                 plan_subscription = plan_subscriptions.first()
                 plan_user = plan_subscription.user
-                plan_portal = plan_subscription.user
+                plan_portal = plan_subscription.portal
+
                 PlanPayment.objects.create(
                     user=plan_user,
                     portal=plan_portal,
                     invoice_id=invoice_id,
-                    subscription_id=subscription_id,
+                    subscription=plan_subscription,
                     invoice_pdf=invoice_pdf,
                     charge_id=charge_id,
                     amount_paid=amount_paid,
@@ -223,6 +224,7 @@ class PortalViewSet(
                     plan_currency = plan_subscription.plan_currency
                     plan_type = plan_subscription.plan_type
                     plan_interval = plan_subscription.interval
+
                     plans = Plan.objects.filter(stripe_product_id=product_id,
                                                 currency=plan_currency, type=plan_type, interval=plan_interval)
                     if plans.exists():
@@ -253,3 +255,4 @@ class PortalViewSet(
                     # enter the free trial invocie
                     plan_portal.free_trial_invoiced = True
                     plan_portal.save()
+        return HttpResponse(status=200)

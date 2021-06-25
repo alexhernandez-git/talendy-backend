@@ -44,7 +44,7 @@ services:
   stripecli:
     image: stripe/stripe-cli:latest
     network_mode: host
-    command: listen --api-key sk_test_51HCopMKRJ23zrNRsBClyDiNSIItLH6jxRjczuqwvtXRnTRTKIPAPMaukgGr3HA9PjvCPwC8ZJ5mjoR7mq18od40S00IgdsI8TG --events customer.subscription.deleted  --forward-to http://localhost:8000/api/users/stripe_webhook_subscription_deleted/
+    command: listen --api-key sk_test_51HCopMKRJ23zrNRsBClyDiNSIItLH6jxRjczuqwvtXRnTRTKIPAPMaukgGr3HA9PjvCPwC8ZJ5mjoR7mq18od40S00IgdsI8TG --events invoice.payment_succeeded  --forward-to http://localhost:8000/api/portals/stripe_webhooks_invoice_payment_succeeded/
 
   celeryworker:
     <<: *django
