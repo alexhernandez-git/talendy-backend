@@ -19,9 +19,11 @@ from django.http import HttpResponse
 
 # Permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from api.portals.permissions import IsAdminOrManager
 
 # Models
-from api.portals.models import Portal
+from api.portals.models import Portal, PlanSubscription, PlanPayment
+from api.plans.models import Plan
 
 # Serializers
 from api.portals.serializers import PortalModelSerializer, CreatePortalSerializer, IsNameAvailableSerializer, IsUrlAvailableSerializer, PortalListModelSerializer
@@ -36,6 +38,7 @@ import os
 from api.utils import helpers
 import stripe
 import environ
+import json
 env = environ.Env()
 
 
@@ -43,6 +46,7 @@ class PortalViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
     viewsets.GenericViewSet
 ):
     """User view set.
@@ -68,6 +72,8 @@ class PortalViewSet(
             permissions = [AllowAny]
         elif self.action in ['list']:
             permissions = [IsAuthenticated]
+        elif self.action in ['update']:
+            permissions = [IsAdminOrManager]
 
         return [p() for p in permissions]
 
@@ -142,3 +148,108 @@ class PortalViewSet(
         serializer.is_valid(raise_exception=True)
         url = serializer.data
         return Response(data=url, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
+    def stripe_webhooks_invoice_payment_succeeded(self, request, *args, **kwargs):
+        """Process stripe webhook notification for subscription cancellation"""
+        payload = request.body
+        event = None
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
+        else:
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
+
+        try:
+            event = stripe.Event.construct_from(
+                json.loads(payload), stripe.api_key
+            )
+        except ValueError as e:
+            # Invalid payload
+            return HttpResponse(status=400)
+        print(event)
+        # Handle the event
+        if event.type == 'invoice.payment_succeeded':
+            invoice_success = event.data.object
+            invoice_id = invoice_success['id']
+            charge_id = invoice_success['charge']
+            invoice_pdf = invoice_success['invoice_pdf']
+            subscription_id = invoice_success['subscription']
+            amount_paid = float(invoice_success['amount_paid']) / 100
+            currency = invoice_success['currency']
+            status = invoice_success['status']
+
+            # Get plan subscription
+            plan_subscriptions = PlanSubscription.objects.filter(subscription_id=subscription_id)
+            if plan_subscriptions.exists():
+                plan_subscription = plan_subscriptions.first()
+                plan_user = plan_subscription.user
+                plan_portal = plan_subscription.user
+                PlanPayment.objects.create(
+                    user=plan_user,
+                    portal=plan_portal,
+                    invoice_id=invoice_id,
+                    subscription_id=subscription_id,
+                    invoice_pdf=invoice_pdf,
+                    charge_id=charge_id,
+                    amount_paid=amount_paid,
+                    currency=currency,
+                    status=status,
+                )
+                if plan_portal.free_trial_invoiced:
+
+                    def create_new_price():
+                        price = stripe.Price.create(
+                            unit_amount=int(plan_subscription.plan_unit_amount * 100),
+                            currency=plan_subscription.plan_currency,
+                            product=product_id,
+                            recurring={"interval": "month"},
+                        )
+
+                        subscription = stripe.Subscription.retrieve(
+                            subscription_id)
+
+                        stripe.Subscription.modify(
+                            subscription_id,
+                            cancel_at_period_end=False,
+                            proration_behavior=None,
+                            items=[
+                                {
+                                    'id': subscription['items']['data'][0]['id'],
+                                    "price": price['id']
+                                },
+                            ],
+                        )
+                    product_id = plan_subscription.product_id
+                    plan_currency = plan_subscription.plan_currency
+                    plan_type = plan_subscription.plan_type
+                    plan_interval = plan_subscription.interval
+                    plans = Plan.objects.filter(stripe_product_id=product_id,
+                                                currency=plan_currency, type=plan_type, interval=plan_interval)
+                    if plans.exists():
+                        plan = plans.first()
+                        if plan.unit_amount != plan_subscription.plan_unit_amount:
+                            create_new_price()
+                        else:
+
+                            subscription = stripe.Subscription.retrieve(
+                                subscription_id)
+
+                            stripe.Subscription.modify(
+                                subscription_id,
+                                cancel_at_period_end=False,
+                                proration_behavior=None,
+                                items=[
+                                    {
+                                        'id': subscription['items']['data'][0]['id'],
+                                        "price": plan.stripe_price_id
+                                    },
+                                ],
+                            )
+
+                            # If plan does not exists
+                    else:
+                        create_new_price()
+                else:
+                    # enter the free trial invocie
+                    plan_portal.free_trial_invoiced = True
+                    plan_portal.save()

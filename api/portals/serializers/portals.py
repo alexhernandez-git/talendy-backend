@@ -49,6 +49,7 @@ class PortalModelSerializer(serializers.ModelSerializer):
             "name",
             "url",
             "logo",
+            "about",
             "donations_enabled",
             "users_count",
             "posts_count",
@@ -58,13 +59,20 @@ class PortalModelSerializer(serializers.ModelSerializer):
             "collaborated_posts_count",
             "collaborated_active_posts_count",
             "collaborated_solved_posts_count",
-            "plan"
+            "free_trial_invoiced",
+            "plan_default_payment_method",
+            "have_active_plan",
+            "is_free_trial",
+            "passed_free_trial_once",
+            "free_trial_expiration",
+            "plan",
+            "created"
         )
 
         read_only_fields = ("id",)
 
     def get_plan(self, obj):
-        plan = PlanSubscription.objects.get(portal=obj)
+        plan = PlanSubscription.objects.get(portal=obj, cancelled=False)
         return PlanSubscriptionModelSerializer(plan, many=False).data
 
 
@@ -305,7 +313,8 @@ class CreatePortalSerializer(serializers.Serializer):
             interval=plan.interval
         )
 
-        send_confirmation_email(user)
+        if not request.user.id:
+            send_confirmation_email(user)
 
         return {"portal": portal, "user": user, "access_token": str(Token.objects.get(user=user))}
 

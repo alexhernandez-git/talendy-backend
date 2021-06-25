@@ -388,12 +388,12 @@ def get_portal_plan(currency, interval):
     plan = None
 
     try:
-        plans_queryset = Plan.objects.filter(currency=currency, interval=interval)
+        plans_queryset = Plan.objects.filter(currency=currency, interval=interval).order_by("unit_amount")
         if plans_queryset.exists():
             plan = plans_queryset.first()
 
     except Plan.DoesNotExist:
-        plans_queryset = Plan.objects.filter(currency="USD", interval=Plan.MONTHLY)
+        plans_queryset = Plan.objects.filter(currency="USD", interval=Plan.MONTHLY).order_by("unit_amount")
         if plans_queryset.exists():
             plan = plans_queryset.first()
 

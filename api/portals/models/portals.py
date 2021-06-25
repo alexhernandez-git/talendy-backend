@@ -53,12 +53,15 @@ class Portal(CModel):
 
     collaborated_solved_posts_count = models.IntegerField(default=0)
 
-    current_plan = models.ForeignKey("portals.PlanSubscription", on_delete=models.SET_NULL,
-                                     null=True, blank=True, related_name="portal_plan")
-
     plan_default_payment_method = models.CharField(max_length=100, blank=True, null=True)
 
     free_trial_invoiced = models.BooleanField(default=False)
+
+    have_active_plan = models.BooleanField(
+        'have active plan',
+        default=False,
+        help_text='Set to true have active plan.'
+    )
 
     is_free_trial = models.BooleanField(
         'free trial',
