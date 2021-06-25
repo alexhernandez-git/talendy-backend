@@ -11,6 +11,7 @@ urlpatterns = [
     path("api/", include(("api.posts.urls", "posts"), namespace="posts")),
     path("api/", include(("api.communities.urls", "communities"), namespace="communities")),
     path("api/", include(("api.portals.urls", "portals"), namespace="portals")),
+    path("api/", include(("api.plans.urls", "plans"), namespace="plans")),
     # path(r'api/(?P<client_slug>[-a-zA-Z0-9_]+)', include(("api.users.urls", "users"), namespace="users")),
     path("admin/", admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
