@@ -516,7 +516,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        data = UserModelSerializer(user, many=False).data
+        data = DetailedUserModelSerializer(user, many=False).data
 
         stripe_customer_id = data['stripe_customer_id']
 

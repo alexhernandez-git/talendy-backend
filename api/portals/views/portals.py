@@ -165,29 +165,6 @@ class PortalViewSet(
         return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['patch'])
-    def attach_payment_method(self, request, *args, **kwargs):
-        """Process stripe connect auth flow."""
-        partial = request.method == 'PATCH'
-        subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
-
-        portal = get_object_or_404(Portal, url=subdomain)
-
-        partial = request.method == 'PATCH'
-        serializer = self.get_serializer(
-            portal,
-            data=request.data,
-            partial=partial
-        )
-        serializer.is_valid(raise_exception=True)
-        data = serializer.save()
-
-        data = {
-            "payment_methods": helpers.get_payment_methods(stripe, request.user.stripe_customer_id),
-            "portal": PortalModelSerializer(data).data
-        }
-        return Response(data, status=status.HTTP_200_OK)
-
-    @action(detail=False, methods=['patch'])
     def change_payment_method(self, request, *args, **kwargs):
 
         partial = request.method == 'PATCH'

@@ -109,7 +109,7 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
         )
 
     def get_member_role(self, obj):
-  
+
         if 'request' in self.context:
             subdomain = tldextract.extract(self.context['request'].META['HTTP_ORIGIN']).subdomain
             portal = None
