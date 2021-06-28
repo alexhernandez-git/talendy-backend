@@ -384,7 +384,7 @@ def get_plan(currency):
     return plan
 
 
-def get_portal_plan(currency, interval):
+def get_portal_plan(currency, interval=Plan.MONTHLY):
     plan = None
 
     try:

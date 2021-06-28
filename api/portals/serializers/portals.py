@@ -34,6 +34,7 @@ from api.taskapp.tasks import (
 from api.utils import helpers
 import datetime
 from django.utils import timezone
+import tldextract
 
 
 class PortalModelSerializer(serializers.ModelSerializer):
@@ -349,3 +350,122 @@ class IsUrlAvailableSerializer(serializers.Serializer):
             raise serializers.ValidationError('This url is already in use')
 
         return {"url": url}
+
+
+class StripeSellerSubscriptionSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
+    payment_method_id = serializers.CharField(required=True)
+    card_name = serializers.CharField(required=True)
+    city = serializers.CharField(required=False, allow_blank=True)
+    country = serializers.CharField(required=True)
+    email = serializers.CharField(required=True)
+    line1 = serializers.CharField(required=False, allow_blank=True)
+    line2 = serializers.CharField(required=False, allow_blank=True)
+    postal_code = serializers.CharField(required=True)
+    state = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, data):
+        """Update user's verified status."""
+        stripe = self.context['stripe']
+        request = self.context['request']
+        portal = self.instance
+        user = request.user
+        payment_method_id = None
+        # subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
+
+        # portal = get_object_or_404(Portal, url=subdomain)
+        if "payment_method_id" in data and data["payment_method_id"]:
+            payment_method_id = data["payment_method_id"]
+        else:
+            raise serializers.ValidationError(
+                'There is no payment method')
+
+        currency, country = helpers.get_currency_and_country(request)
+        subscriptions_queryset = PlanSubscription.objects.filter(user=user, portal=portal, cancelled=False)
+
+        if subscriptions_queryset.exists():
+
+            plan_subscription = subscriptions_queryset.first()
+            plan_currency = plan_subscription.plan_currency
+            interval = plan_subscription.interval
+            if currency != plan_currency:
+                plan = helpers.get_portal_plan(currency, interval)
+
+                subscription = stripe.Subscription.retrieve(plan_subscription.subscription_id)
+
+                stripe.Subscription.modify(
+                    subscription["id"],
+                    cancel_at_period_end=False,
+                    proration_behavior=None,
+                    items=[
+                        {
+                            'id': subscription['items']['data'][0].id,
+                            "price": plan.stripe_price_id,
+                        },
+                    ]
+                )
+                plan_subscription.plan_type = plan.type
+                plan_subscription.plan_currency = plan.currency
+                plan_subscription.plan_unit_amount = plan.unit_amount
+                plan_subscription.plan_price_label = plan.price_label
+                plan_subscription.interval = plan.interval
+                plan_subscription.save()
+            stripe.PaymentMethod.attach(
+                payment_method_id,
+                customer=user.stripe_plan_customer_id,
+            )
+            stripe.Customer.modify(
+                user.stripe_plan_customer_id,
+                address={
+                    "city": data.get('city', " "),
+                    "country": data.get('country', " "),
+                    "line1": data.get('line1', " "),
+                    "line2": data.get('line2', " "),
+                    "postal_code": data.get('postal_code', " "),
+                    "state": data.get('state', " "),
+                },
+                email=data.get('email', " "),
+                name=data.get('first_name', " ")+"_"+data.get('last_name', " "),
+                invoice_settings={
+                    "default_payment_method": payment_method_id
+                }
+            )
+            stripe.PaymentMethod.modify(
+                payment_method_id,
+                billing_details={
+                    "name": data.get('card_name', " "),
+                }
+            )
+
+        else:
+            plan = helpers.get_portal_plan(user.currency)
+
+            subscription = stripe.Subscription.create(
+                customer=user.stripe_customer_id,
+                items=[
+                    {"price": plan.stripe_price_id}
+                ],
+            )
+            plan_subscription = PlanSubscription.objects.create(
+                user=user,
+                subscription_id=subscription["id"],
+                plan_unit_amount=plan.unit_amount,
+                plan_currency=plan.currency,
+                plan_price_label=plan.price_label,
+                plan_type=plan.type,
+                product_id=plan.stripe_product_id,
+                interval=plan.interval
+            )
+
+        portal.have_active_plan = True
+        portal.save()
+        return data
+
+    def update(self, instance, validated_data):
+
+        instance.plan_default_payment_method = validated_data['payment_method_id']
+        instance.save()
+        return instance
