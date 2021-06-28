@@ -364,7 +364,7 @@ class IsUrlAvailableSerializer(serializers.Serializer):
         return {"url": url}
 
 
-class AddBillingInformationSubscriptionSerializer(serializers.Serializer):
+class AddBillingInformationSerializer(serializers.Serializer):
     """Acount verification serializer."""
 
     first_name = serializers.CharField(required=True)
@@ -386,9 +386,7 @@ class AddBillingInformationSubscriptionSerializer(serializers.Serializer):
         portal = self.instance
         user = request.user
         payment_method_id = None
-        # subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
 
-        # portal = get_object_or_404(Portal, url=subdomain)
         if "payment_method_id" in data and data["payment_method_id"]:
             payment_method_id = data["payment_method_id"]
         else:

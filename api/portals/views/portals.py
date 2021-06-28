@@ -26,7 +26,9 @@ from api.portals.models import Portal, PlanSubscription, PlanPayment
 from api.plans.models import Plan
 
 # Serializers
-from api.portals.serializers import PortalModelSerializer, CreatePortalSerializer, IsNameAvailableSerializer, IsUrlAvailableSerializer, PortalListModelSerializer
+from api.portals.serializers import (
+    PortalModelSerializer, CreatePortalSerializer, IsNameAvailableSerializer, IsUrlAvailableSerializer,
+    PortalListModelSerializer, AddBillingInformationSerializer)
 from api.users.serializers import UserModelSerializer, DetailedUserModelSerializer
 
 # Filters
@@ -39,6 +41,7 @@ from api.utils import helpers
 import stripe
 import environ
 import json
+import tldextract
 env = environ.Env()
 
 
@@ -82,8 +85,10 @@ class PortalViewSet(
 
         if self.action in ['create']:
             return CreatePortalSerializer
-        if self.action in ['list']:
+        elif self.action in ['list']:
             return PortalListModelSerializer
+        elif self.action in ['add_billing_information']:
+            return AddBillingInformationSerializer
         return PortalModelSerializer
 
     def get_queryset(self):
@@ -101,13 +106,21 @@ class PortalViewSet(
             stripe.api_key = env('STRIPE_API_KEY')
         else:
             stripe.api_key = 'sk_test_51HCopMKRJ23zrNRsBClyDiNSIItLH6jxRjczuqwvtXRnTRTKIPAPMaukgGr3HA9PjvCPwC8ZJ5mjoR7mq18od40S00IgdsI8TG'
+        if self.action in ['create']:
+            return {
+                "request": self.request,
+                "format": self.format_kwarg,
+                "view": self,
+                "stripe": stripe,
+            }
 
-        return {
-            "request": self.request,
-            "format": self.format_kwarg,
-            "view": self,
-            "stripe": stripe,
-        }
+        else:
+            return {
+                "request": self.request,
+                "format": self.format_kwarg,
+                "view": self,
+                "stripe": stripe,
+            }
 
     def create(self, request, *args, **kwargs):
 
@@ -126,6 +139,22 @@ class PortalViewSet(
             "access_token": data['access_token']
         }
         return Response(data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['patch'])
+    def add_billing_information(self, request, *args, **kwargs):
+
+        partial = request.method == 'PATCH'
+        subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
+
+        portal = get_object_or_404(Portal, url=subdomain)
+        serializer = self.get_serializer(
+            portal,
+            data=request.data,
+            partial=partial)
+
+        serializer.is_valid(raise_exception=True)
+        data = serializer.save()
+        return Response(PortalModelSerializer(data).data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
     def is_name_available(self, request):
