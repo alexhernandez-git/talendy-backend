@@ -253,6 +253,7 @@ class CreatePortalSerializer(serializers.Serializer):
                 description="claCustomer_"+user.first_name+'_'+user.last_name,
                 name=user.first_name+' '+user.last_name,
                 email=user.email,
+
             )
             user.stripe_customer_id = new_customer['id']
             user.save()
@@ -264,6 +265,17 @@ class CreatePortalSerializer(serializers.Serializer):
                 user, request)
             user.currency = currency
             user.save()
+
+        # Set default payment method the user default payment method
+
+        if user.default_payment_method:
+
+            stripe.Customer.modify(
+                user.stripe_plan_customer_id,
+                invoice_settings={
+                    "default_payment_method": user.default_payment_method
+                }
+            )
 
         # Get plan and start the free trial subscription
 
@@ -465,7 +477,8 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
         return data
 
     def update(self, instance, validated_data):
-
+        user = instance.owner
+        user.default_payment_method = validated_data['payment_method_id']
         instance.plan_default_payment_method = validated_data['payment_method_id']
         instance.save()
         return instance
