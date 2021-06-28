@@ -331,44 +331,6 @@ class CreatePortalSerializer(serializers.Serializer):
         return {"portal": portal, "user": user, "access_token": str(Token.objects.get(user=user))}
 
 
-class AttachPaymentMethodSerializer(serializers.Serializer):
-    """Acount verification serializer."""
-    payment_method_id = serializers.CharField(required=True)
-    card_name = serializers.CharField(required=True)
-
-    def validate(self, data):
-        """Update user's verified status."""
-        stripe = self.context['stripe']
-        user = self.context['request'].user
-        payment_method_id = data['payment_method_id']
-        payment_method_object = stripe.PaymentMethod.retrieve(
-            payment_method_id,
-        )
-        payment_methods = helpers.get_payment_methods(stripe, user.stripe_customer_id)
-        if payment_methods:
-            for payment_method in payment_methods:
-                if payment_method.card.fingerprint == payment_method_object.card.fingerprint:
-                    raise serializers.ValidationError(
-                        'This payment method is already added')
-
-        stripe.PaymentMethod.attach(
-            payment_method_id,
-            customer=user.stripe_plan_customer_id,
-        )
-        stripe.PaymentMethod.modify(
-            payment_method_id,
-            billing_details={
-                "name": data.get('card_name', " "),
-            }
-        )
-
-        return data
-
-    def update(self, instance, validated_data):
-
-        return instance
-
-
 class IsNameAvailableSerializer(serializers.Serializer):
     """Acount verification serializer."""
 
@@ -520,4 +482,28 @@ class AddBillingInformationSerializer(serializers.Serializer):
         instance.plan_default_payment_method = validated_data['payment_method_id']
         instance.save()
 
+        return instance
+
+
+class ChangePaymentMethodSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+
+    payment_method_id = serializers.CharField(required=True)
+
+    def validate(self, data):
+        """Update user's verified status."""
+        request = self.context['request']
+        user = request.user
+        subscriptions_queryset = PlanSubscription.objects.filter(user=user, cancelled=False)
+
+        if not subscriptions_queryset.exists():
+            raise serializers.ValidationError(
+                "Portal have not a plan subscription")
+
+        return data
+
+    def update(self, instance, validated_data):
+
+        instance.plan_default_payment_method = validated_data['payment_method_id']
+        instance.save()
         return instance

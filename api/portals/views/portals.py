@@ -28,7 +28,7 @@ from api.plans.models import Plan
 # Serializers
 from api.portals.serializers import (
     PortalModelSerializer, CreatePortalSerializer, IsNameAvailableSerializer, IsUrlAvailableSerializer,
-    PortalListModelSerializer, AddBillingInformationSerializer, AttachPaymentMethodSerializer)
+    PortalListModelSerializer, AddBillingInformationSerializer, ChangePaymentMethodSerializer)
 from api.users.serializers import UserModelSerializer, DetailedUserModelSerializer
 
 # Filters
@@ -89,8 +89,8 @@ class PortalViewSet(
             return PortalListModelSerializer
         elif self.action in ['add_billing_information']:
             return AddBillingInformationSerializer
-        elif self.action in ['attach_payment_method']:
-            return AttachPaymentMethodSerializer
+        elif self.action in ['change_payment_method']:
+            return ChangePaymentMethodSerializer
         return PortalModelSerializer
 
     def get_queryset(self):
