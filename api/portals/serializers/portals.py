@@ -494,7 +494,8 @@ class ChangePaymentMethodSerializer(serializers.Serializer):
         """Update user's verified status."""
         request = self.context['request']
         user = request.user
-        subscriptions_queryset = PlanSubscription.objects.filter(user=user, cancelled=False)
+        portal = self.instance
+        subscriptions_queryset = PlanSubscription.objects.filter(user=user, portal=portal, cancelled=False)
 
         if not subscriptions_queryset.exists():
             raise serializers.ValidationError(
@@ -503,7 +504,19 @@ class ChangePaymentMethodSerializer(serializers.Serializer):
         return data
 
     def update(self, instance, validated_data):
+        stripe = self.context['stripe']
+        request = self.context['request']
+        user = request.user
+        portal = instance
+        # Update subscription with new payment method
 
+        # Get the subscription
+        current_subscription = PlanSubscription.objects.filter(user=user, portal=portal, cancelled=False).first()
+
+        stripe.Subscription.modify(
+            current_subscription.subscription_id,
+            default_payment_method=validated_data['payment_method_id']
+        )
         instance.plan_default_payment_method = validated_data['payment_method_id']
         instance.save()
         return instance
