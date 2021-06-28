@@ -364,7 +364,7 @@ class IsUrlAvailableSerializer(serializers.Serializer):
         return {"url": url}
 
 
-class StripeSellerSubscriptionSerializer(serializers.Serializer):
+class AddBillingInformationSubscriptionSerializer(serializers.Serializer):
     """Acount verification serializer."""
 
     first_name = serializers.CharField(required=True)
@@ -477,7 +477,9 @@ class StripeSellerSubscriptionSerializer(serializers.Serializer):
         return data
 
     def update(self, instance, validated_data):
-        user = instance.owner
+        request = self.context['request']
+        user = request.user
+
         user.default_payment_method = validated_data['payment_method_id']
         instance.plan_default_payment_method = validated_data['payment_method_id']
         instance.save()
