@@ -28,7 +28,7 @@ from api.plans.models import Plan
 # Serializers
 from api.portals.serializers import (
     PortalModelSerializer, CreatePortalSerializer, IsNameAvailableSerializer, IsUrlAvailableSerializer,
-    PortalListModelSerializer, AddBillingInformationSerializer)
+    PortalListModelSerializer, AddBillingInformationSerializer, AttachPaymentMethodSerializer)
 from api.users.serializers import UserModelSerializer, DetailedUserModelSerializer
 
 # Filters
@@ -89,6 +89,8 @@ class PortalViewSet(
             return PortalListModelSerializer
         elif self.action in ['add_billing_information']:
             return AddBillingInformationSerializer
+        elif self.action in ['attach_payment_method']:
+            return AttachPaymentMethodSerializer
         return PortalModelSerializer
 
     def get_queryset(self):
@@ -140,7 +142,7 @@ class PortalViewSet(
         }
         return Response(data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['patch'])
+    @action(detail=False, methods=['patch'])
     def add_billing_information(self, request, *args, **kwargs):
 
         partial = request.method == 'PATCH'
@@ -154,7 +156,55 @@ class PortalViewSet(
 
         serializer.is_valid(raise_exception=True)
         data = serializer.save()
-        return Response(PortalModelSerializer(data).data, status=status.HTTP_200_OK)
+        # Return Portal and also the user payment methods
+        data = {
+            "payment_methods": helpers.get_payment_methods(stripe, request.user.stripe_customer_id),
+            "portal": PortalModelSerializer(data).data
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['patch'])
+    def attach_payment_method(self, request, *args, **kwargs):
+        """Process stripe connect auth flow."""
+        partial = request.method == 'PATCH'
+        subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
+
+        portal = get_object_or_404(Portal, url=subdomain)
+
+        partial = request.method == 'PATCH'
+        serializer = self.get_serializer(
+            portal,
+            data=request.data,
+            partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+        data = serializer.save()
+
+        data = {
+            "payment_methods": helpers.get_payment_methods(stripe, request.user.stripe_customer_id),
+            "portal": PortalModelSerializer(data).data
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['patch'])
+    def change_payment_method(self, request, *args, **kwargs):
+
+        partial = request.method == 'PATCH'
+        subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
+
+        portal = get_object_or_404(Portal, url=subdomain)
+        serializer = self.get_serializer(
+            portal,
+            data=request.data,
+            partial=partial)
+
+        serializer.is_valid(raise_exception=True)
+        data = serializer.save()
+        # Return Portal and also the user payment methods
+        data = PortalModelSerializer(data).data
+
+        return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
     def is_name_available(self, request):

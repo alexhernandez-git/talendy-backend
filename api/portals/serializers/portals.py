@@ -250,7 +250,7 @@ class CreatePortalSerializer(serializers.Serializer):
 
         if not user.stripe_customer_id:
             new_customer = stripe.Customer.create(
-                description="claCustomer_"+user.first_name+'_'+user.last_name,
+                description="talCustomer_"+user.first_name+'_'+user.last_name,
                 name=user.first_name+' '+user.last_name,
                 email=user.email,
 
@@ -269,9 +269,8 @@ class CreatePortalSerializer(serializers.Serializer):
         # Set default payment method the user default payment method
 
         if user.default_payment_method:
-
             stripe.Customer.modify(
-                user.stripe_plan_customer_id,
+                user.stripe_customer_id,
                 invoice_settings={
                     "default_payment_method": user.default_payment_method
                 }
@@ -330,6 +329,44 @@ class CreatePortalSerializer(serializers.Serializer):
             send_confirmation_email(user)
 
         return {"portal": portal, "user": user, "access_token": str(Token.objects.get(user=user))}
+
+
+class AttachPaymentMethodSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+    payment_method_id = serializers.CharField(required=True)
+    card_name = serializers.CharField(required=True)
+
+    def validate(self, data):
+        """Update user's verified status."""
+        stripe = self.context['stripe']
+        user = self.context['request'].user
+        payment_method_id = data['payment_method_id']
+        payment_method_object = stripe.PaymentMethod.retrieve(
+            payment_method_id,
+        )
+        payment_methods = helpers.get_payment_methods(stripe, user.stripe_customer_id)
+        if payment_methods:
+            for payment_method in payment_methods:
+                if payment_method.card.fingerprint == payment_method_object.card.fingerprint:
+                    raise serializers.ValidationError(
+                        'This payment method is already added')
+
+        stripe.PaymentMethod.attach(
+            payment_method_id,
+            customer=user.stripe_plan_customer_id,
+        )
+        stripe.PaymentMethod.modify(
+            payment_method_id,
+            billing_details={
+                "name": data.get('card_name', " "),
+            }
+        )
+
+        return data
+
+    def update(self, instance, validated_data):
+
+        return instance
 
 
 class IsNameAvailableSerializer(serializers.Serializer):
@@ -423,12 +460,13 @@ class AddBillingInformationSerializer(serializers.Serializer):
                 plan_subscription.plan_price_label = plan.price_label
                 plan_subscription.interval = plan.interval
                 plan_subscription.save()
+
             stripe.PaymentMethod.attach(
                 payment_method_id,
-                customer=user.stripe_plan_customer_id,
+                customer=user.stripe_customer_id,
             )
             stripe.Customer.modify(
-                user.stripe_plan_customer_id,
+                user.stripe_customer_id,
                 address={
                     "city": data.get('city', " "),
                     "country": data.get('country', " "),
@@ -481,4 +519,5 @@ class AddBillingInformationSerializer(serializers.Serializer):
         user.default_payment_method = validated_data['payment_method_id']
         instance.plan_default_payment_method = validated_data['payment_method_id']
         instance.save()
+
         return instance
