@@ -28,7 +28,7 @@ from api.plans.models import Plan
 # Serializers
 from api.portals.serializers import (
     PortalModelSerializer, CreatePortalSerializer, IsNameAvailableSerializer, IsUrlAvailableSerializer,
-    PortalListModelSerializer, AddBillingInformationSerializer, ChangePaymentMethodSerializer)
+    ChangePlanSerializer, PortalListModelSerializer, AddBillingInformationSerializer, ChangePaymentMethodSerializer)
 from api.users.serializers import UserModelSerializer, DetailedUserModelSerializer
 
 # Filters
@@ -91,6 +91,8 @@ class PortalViewSet(
             return AddBillingInformationSerializer
         elif self.action in ['change_payment_method']:
             return ChangePaymentMethodSerializer
+        elif self.action in ['change_plan']:
+            return ChangePlanSerializer
         return PortalModelSerializer
 
     def get_queryset(self):
@@ -205,6 +207,25 @@ class PortalViewSet(
         url = serializer.data
         return Response(data=url, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['patch'])
+    def change_plan(self, request, *args, **kwargs):
+
+        partial = request.method == 'PATCH'
+        subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
+
+        portal = get_object_or_404(Portal, url=subdomain)
+        serializer = self.get_serializer(
+            portal,
+            data=request.data,
+            partial=partial)
+
+        serializer.is_valid(raise_exception=True)
+        data = serializer.save()
+        # Return Portal and also the user payment methods
+        data = PortalModelSerializer(data).data
+
+        return Response(data, status=status.HTTP_200_OK)
+
     @action(detail=False, methods=['post'])
     def stripe_webhooks_invoice_payment_succeeded(self, request, *args, **kwargs):
         """Process stripe webhook notification for subscription cancellation"""
@@ -279,7 +300,7 @@ class PortalViewSet(
                     product_id = plan_subscription.product_id
                     plan_currency = plan_subscription.plan_currency
                     plan_type = plan_subscription.plan_type
-                    plan_interval = plan_subscription.interval
+                    plan_interval = plan_subscription.plan_interval
 
                     plans = Plan.objects.filter(stripe_product_id=product_id,
                                                 currency=plan_currency, type=plan_type, interval=plan_interval)

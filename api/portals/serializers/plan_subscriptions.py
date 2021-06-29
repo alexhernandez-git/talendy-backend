@@ -56,7 +56,8 @@ class PlanSubscriptionModelSerializer(serializers.ModelSerializer):
             "plan_unit_amount",
             "plan_currency",
             "plan_price_label",
-            "interval",
+            "plan_users_amount",
+            "plan_interval",
         )
 
         read_only_fields = ("id",)

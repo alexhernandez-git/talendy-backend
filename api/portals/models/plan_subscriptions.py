@@ -25,4 +25,5 @@ class PlanSubscription(CModel):
     plan_unit_amount = models.FloatField(null=True, blank=True)
     plan_currency = models.CharField(max_length=3, blank=True, null=True)
     plan_price_label = models.CharField(max_length=100, blank=True, null=True)
-    interval = models.CharField(max_length=2, choices=Plan.INTERVAL_CHOICES, blank=True, null=True)
+    plan_users_amount = models.IntegerField(default=0)
+    plan_interval = models.CharField(max_length=2, choices=Plan.INTERVAL_CHOICES, blank=True, null=True)

@@ -321,8 +321,8 @@ class CreatePortalSerializer(serializers.Serializer):
             status=subscription['status'],
             plan_price_label=plan.price_label,
             plan_type=plan.type,
+            plan_interval=plan.interval,
             product_id=plan.stripe_product_id,
-            interval=plan.interval
         )
 
         if not request.user.id:
@@ -399,7 +399,7 @@ class AddBillingInformationSerializer(serializers.Serializer):
 
             plan_subscription = subscriptions_queryset.first()
             plan_currency = plan_subscription.plan_currency
-            interval = plan_subscription.interval
+            interval = plan_subscription.plan_interval
             if currency != plan_currency:
                 plan = helpers.get_portal_plan(currency, interval)
 
@@ -420,7 +420,7 @@ class AddBillingInformationSerializer(serializers.Serializer):
                 plan_subscription.plan_currency = plan.currency
                 plan_subscription.plan_unit_amount = plan.unit_amount
                 plan_subscription.plan_price_label = plan.price_label
-                plan_subscription.interval = plan.interval
+                plan_subscription.plan_interval = plan.interval
                 plan_subscription.save()
 
             stripe.PaymentMethod.attach(
@@ -467,7 +467,7 @@ class AddBillingInformationSerializer(serializers.Serializer):
                 plan_price_label=plan.price_label,
                 plan_type=plan.type,
                 product_id=plan.stripe_product_id,
-                interval=plan.interval
+                plan_interval=plan.interval
             )
 
         portal.have_active_plan = True
@@ -520,3 +520,57 @@ class ChangePaymentMethodSerializer(serializers.Serializer):
         instance.plan_default_payment_method = validated_data['payment_method_id']
         instance.save()
         return instance
+
+
+class ChangePlanSerializer(serializers.Serializer):
+    # Plan id
+    plan_id = serializers.UUIDField(required=True)
+
+    def validate(self, data):
+        request = self.context['request']
+        user = request.user
+        portal = self.instance
+        new_plan = get_object_or_404(Plan, id=data['plan_id'])
+        plan_subscription = get_object_or_404(PlanSubscription, user=user, portal=portal, cancelled=False)
+
+        # Check if the plan is the same currency as the user
+        if new_plan.currency != user.currency:
+            raise serializers.ValidationError(
+                "The currency of the plan is not allowed")
+        # Check if is not the current plan
+        if plan_subscription.plan_type == new_plan.type and plan_subscription.plan_interval == new_plan.interval:
+            raise serializers.ValidationError(
+                "This plan is already your plan")
+        return data
+
+    def update(self, instance, validated_data):
+        request = self.context['request']
+        stripe = self.context['stripe']
+        user = request.user
+        portal = instance
+        new_plan = get_object_or_404(Plan, id=validated_data['plan_id'])
+        plan_subscription = get_object_or_404(PlanSubscription, user=user, portal=portal, cancelled=False)
+
+        # Update the current stripe subscription
+        subscription = stripe.Subscription.retrieve(
+            plan_subscription.subscription_id)
+        stripe.Subscription.modify(
+            plan_subscription.subscription_id,
+            cancel_at_period_end=False,
+            proration_behavior=None,
+            items=[
+                {'id': subscription['items']['data'][0]['id'], "price": new_plan.stripe_price_id}
+            ],
+
+        )
+
+        # Save the changes on the subscription object
+        plan_subscription.plan_type = new_plan.type
+        plan_subscription.plan_unit_amount = new_plan.unit_amount
+        plan_subscription.plan_currency = new_plan.currency
+        plan_subscription.plan_price_label = new_plan.price_label
+        plan_subscription.plan_users_amount = new_plan.users_amount
+        plan_subscription.plan_interval = new_plan.interval
+        plan_subscription.save()
+
+        return portal
