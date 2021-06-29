@@ -541,6 +541,10 @@ class ChangePlanSerializer(serializers.Serializer):
         if plan_subscription.plan_type == new_plan.type and plan_subscription.plan_interval == new_plan.interval:
             raise serializers.ValidationError(
                 "This plan is already your plan")
+        # Check if the portal have less or equal members than new plan
+        if portal.users_count > new_plan.users_amount:
+            raise serializers.ValidationError(
+                "You have too much members in your portal")
         return data
 
     def update(self, instance, validated_data):
@@ -574,3 +578,86 @@ class ChangePlanSerializer(serializers.Serializer):
         plan_subscription.save()
 
         return portal
+
+
+class CancelSubscriptionSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+
+    def validate(self, data):
+        """Update user's verified status."""
+        stripe = self.context['stripe']
+        user = self.context['request'].user
+        portal = self.instance
+        subscriptions_queryset = PlanSubscription.objects.filter(user=user, portal=portal, cancelled=False)
+
+        if not subscriptions_queryset.exists():
+            raise serializers.ValidationError(
+                "User have not a plan subscription")
+
+        plan_subscription = subscriptions_queryset.first()
+        stripe.Subscription.modify(
+            plan_subscription.subscription_id,
+            cancel_at_period_end=True
+        )
+        self.context['plan_subscription'] = plan_subscription
+
+        return data
+
+    def update(self, instance, validated_data):
+        plan_subscription = self.context['plan_subscription']
+        plan_subscription.to_be_cancelled = True
+        plan_subscription.save()
+        return instance
+
+
+class ReactivateSubscriptionSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+
+    def validate(self, data):
+        """Update user's verified status."""
+        stripe = self.context['stripe']
+        user = self.context['request'].user
+        portal = self.instance
+
+        subscriptions_queryset = PlanSubscription.objects.filter(user=user, portal=portal, cancelled=False)
+
+        if subscriptions_queryset.exists():
+
+            plan_subscription = subscriptions_queryset.first()
+            stripe.Subscription.modify(
+                plan_subscription.subscription_id,
+                cancel_at_period_end=False
+            )
+        else:
+            plan = helpers.get_portal_plan(user.currency)
+
+            subscription = stripe.Subscription.create(
+                customer=user.stripe_customer_id,
+                items=[
+                    {"price": plan.stripe_price_id}
+                ],
+            )
+            plan_subscription = PlanSubscription.objects.create(
+                user=user,
+                portal=portal,
+                subscription_id=subscription["id"],
+                plan_unit_amount=plan.unit_amount,
+                plan_currency=plan.currency,
+                plan_price_label=plan.price_label,
+                plan_users_amount=plan.users_amount,
+                plan_type=plan.type,
+                plan_interval=plan.interval,
+                product_id=plan.stripe_product_id
+            )
+            portal.have_active_plan = True
+
+            portal.save()
+        self.context['plan_subscription'] = plan_subscription
+
+        return data
+
+    def update(self, instance, validated_data):
+        plan_subscription = self.context['plan_subscription']
+        plan_subscription.to_be_cancelled = False
+        plan_subscription.save()
+        return instance

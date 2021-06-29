@@ -28,7 +28,8 @@ from api.plans.models import Plan
 # Serializers
 from api.portals.serializers import (
     PortalModelSerializer, CreatePortalSerializer, IsNameAvailableSerializer, IsUrlAvailableSerializer,
-    ChangePlanSerializer, PortalListModelSerializer, AddBillingInformationSerializer, ChangePaymentMethodSerializer)
+    ChangePlanSerializer, PortalListModelSerializer, AddBillingInformationSerializer, ChangePaymentMethodSerializer,
+    CancelSubscriptionSerializer, ReactivateSubscriptionSerializer)
 from api.users.serializers import UserModelSerializer, DetailedUserModelSerializer
 
 # Filters
@@ -93,6 +94,10 @@ class PortalViewSet(
             return ChangePaymentMethodSerializer
         elif self.action in ['change_plan']:
             return ChangePlanSerializer
+        elif self.action in ['reactivate_subscription']:
+            return ReactivateSubscriptionSerializer
+        elif self.action in ['cancel_subscription']:
+            return CancelSubscriptionSerializer
         return PortalModelSerializer
 
     def get_queryset(self):
@@ -226,6 +231,46 @@ class PortalViewSet(
 
         return Response(data, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['patch'])
+    def cancel_subscription(self, request, *args, **kwargs):
+        """Process stripe connect auth flow."""
+
+        subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
+
+        portal = get_object_or_404(Portal, url=subdomain)
+        partial = request.method == 'PATCH'
+        serializer = self.get_serializer(
+            portal,
+            data=request.data,
+            partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+        data = serializer.save()
+
+        data = PortalModelSerializer(data).data
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['patch'])
+    def reactivate_subscription(self, request, *args, **kwargs):
+        """Process stripe connect auth flow."""
+
+        subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
+
+        portal = get_object_or_404(Portal, url=subdomain)
+        partial = request.method == 'PATCH'
+        serializer = self.get_serializer(
+            portal,
+            data=request.data,
+            partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+        data = serializer.save()
+
+        data = PortalModelSerializer(data).data
+
+        return Response(data, status=status.HTTP_200_OK)
+
     @action(detail=False, methods=['post'])
     def stripe_webhooks_invoice_payment_succeeded(self, request, *args, **kwargs):
         """Process stripe webhook notification for subscription cancellation"""
@@ -332,4 +377,74 @@ class PortalViewSet(
                     # enter the free trial invocie
                     plan_portal.free_trial_invoiced = True
                     plan_portal.save()
+        return HttpResponse(status=200)
+
+    @action(detail=False, methods=['post'])
+    def stripe_webhook_subscription_deleted(self, request, *args, **kwargs):
+        """Process stripe webhook notification for subscription cancellation"""
+        payload = request.body
+        event = None
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
+        else:
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
+
+        try:
+            event = stripe.Event.construct_from(
+                json.loads(payload), stripe.api_key
+            )
+        except ValueError as e:
+            # Invalid payload
+            return HttpResponse(status=400)
+
+        # Handle the event
+        if event.type == 'customer.subscription.deleted':
+            subscription = event.data.object  # contains a stripe.Subscription
+
+            subscriptions_queryset = PlanSubscription.objects.filter(
+                subscription_id=subscription['id'], cancelled=False)
+
+            if subscriptions_queryset.exists():
+                plan_subscription = subscriptions_queryset.first()
+                portal = plan_subscription.portal
+                plan_subscription.update(cancelled=True)
+                portal.update(have_active_plan=False)
+
+        return HttpResponse(status=200)
+
+    @action(detail=False, methods=['post'])
+    def stripe_webhook_subscription_updated(self, request, *args, **kwargs):
+        """Process stripe webhook notification for subscription cancellation"""
+        payload = request.body
+        event = None
+        if 'STRIPE_API_KEY' in env:
+            stripe.api_key = env('STRIPE_API_KEY')
+        else:
+            stripe.api_key = 'sk_test_51IZy28Dieqyg7vAImOKb5hg7amYYGSzPTtSqoT9RKI69VyycnqXV3wCPANyYHEl2hI7KLHHAeIPpC7POg7I4WMwi00TSn067f4'
+
+        try:
+            event = stripe.Event.construct_from(
+                json.loads(payload), stripe.api_key
+            )
+        except ValueError as e:
+            # Invalid payload
+            return HttpResponse(status=200)
+
+        # Handle the event
+        if event.type == 'customer.subscription.updated':
+            subscription = event.data.object  # contains a stripe.Subscription
+            if subscription['status'] == "active":
+                subscriptions_queryset = PlanSubscription.objects.filter(
+                    subscription_id=subscription['id'])
+                if subscriptions_queryset.exists():
+                    plan_subscription = subscriptions_queryset.first()
+                    portal = plan_subscription.portal
+                    plan_subscription.update(status="active")
+                    portal.update(have_active_plan=True, passed_free_trial_once=True, is_free_trial=False)
+            if subscription['status'] == "past_due":
+                subscriptions_queryset = PlanSubscription.objects.filter(
+                    subscription_id=subscription['id'])
+                if subscriptions_queryset.exists():
+                    plan_subscription = subscriptions_queryset.first()
+                    plan_subscription.update(status="past_due")
         return HttpResponse(status=200)
