@@ -533,6 +533,11 @@ class ChangePlanSerializer(serializers.Serializer):
         new_plan = get_object_or_404(Plan, id=data['plan_id'])
         plan_subscription = get_object_or_404(PlanSubscription, user=user, portal=portal, cancelled=False)
 
+        # Check if the subscription will not end at the end of cycle
+        if plan_subscription.to_be_cancelled:
+            raise serializers.ValidationError(
+                "The subscription will be cancelled")
+
         # Check if the plan is the same currency as the user
         if new_plan.currency != user.currency:
             raise serializers.ValidationError(
