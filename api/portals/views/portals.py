@@ -191,7 +191,7 @@ class PortalViewSet(
         return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
-    def is_name_available(self, request):
+    def is_name_available(self, request, *args, **kwargs):
         """Check if name passed is correct."""
         serializer = IsNameAvailableSerializer(
             data=request.data,
@@ -202,7 +202,7 @@ class PortalViewSet(
         return Response(data=name, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
-    def is_url_available(self, request):
+    def is_url_available(self, request, *args, **kwargs):
         """Check if url passed is correct."""
         serializer = IsUrlAvailableSerializer(
             data=request.data,

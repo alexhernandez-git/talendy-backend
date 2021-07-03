@@ -15,12 +15,12 @@ class KarmaEarning(CModel):
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
 
     REFUNDED = 'RE'
-    EARNED_FOR_DONATION = 'ED'
+    EARNED_BY_DONATION = 'ED'
     EARNED = 'EA'
     SPENT = 'SP'
     EARNING_TYPES = [
         (REFUNDED, 'Refunded'),
-        (EARNED_FOR_DONATION, 'Earned for donation'),
+        (EARNED_BY_DONATION, 'Earned by donation'),
         (EARNED, 'Earned'),
         (SPENT, 'Spent'),
     ]

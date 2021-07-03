@@ -7,9 +7,29 @@ from rest_framework.generics import get_object_or_404
 # Models
 from api.chats.models import Chat
 from api.posts.models import Post, KanbanList
+from api.portals.models import Portal
 
 # Utils
 from urllib.parse import urlparse
+
+
+class AddPortalMixin(viewsets.GenericViewSet):
+    """Add circle mixin
+
+    Manages adding a circle object to views
+    that require it.
+    """
+
+    def dispatch(self, request, *args, **kwargs):
+        """Return the normal dispatch but adds the circle model."""
+        url = self.kwargs["portal_url"]
+
+        try:
+            self.portal = Portal.objects.get(url=url)
+        except Portal.DoesNotExist:
+            self.portal = get_object_or_404(Portal, url="oficial")
+
+        return super(AddPortalMixin, self).dispatch(request, *args, **kwargs)
 
 
 class AddListMixin(viewsets.GenericViewSet):

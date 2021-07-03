@@ -549,7 +549,7 @@ class ChangePlanSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 "This plan is already your plan")
         # Check if the portal have less or equal members than new plan
-        if portal.users_count > new_plan.users_amount:
+        if portal.members_count > new_plan.users_amount:
             raise serializers.ValidationError(
                 "You have too much members in your portal")
         return data

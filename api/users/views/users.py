@@ -9,8 +9,6 @@ from django.template.loader import render_to_string
 
 
 # Django REST Framework
-import uuid
-
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import action
@@ -18,6 +16,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
 from django.http import HttpResponse
+
 # Permissions
 from rest_framework.permissions import (
     AllowAny,
@@ -67,6 +66,7 @@ import json
 
 # Utils
 from api.utils import helpers
+from api.utils.mixins import AddPortalMixin
 from api.utils.paginations import ShortResultsSetPagination
 
 from datetime import timedelta
@@ -80,7 +80,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
                   mixins.ListModelMixin,
                   mixins.UpdateModelMixin,
                   mixins.DestroyModelMixin,
-                  viewsets.GenericViewSet):
+                  AddPortalMixin):
     """User view set.
 
     Handle sign up, login and account verification.
@@ -192,7 +192,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'])
-    def leave_feedback(self, request):
+    def leave_feedback(self, request, *args, **kwargs):
         """Check if email passed is correct."""
 
         send_feedback_email(request.data)
@@ -237,7 +237,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(serializer.data)
 
     @ action(detail=False, methods=['get'])
-    def get_currency(self, request):
+    def get_currency(self, request, *args, **kwargs):
         """Check if email passed is correct."""
         serializer = self.get_serializer(data=self.request.data)
 
@@ -247,7 +247,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(data=data, status=status.HTTP_200_OK)
 
     @ action(detail=False, methods=['post'])
-    def confirm_user(self, request):
+    def confirm_user(self, request, *args, **kwargs):
         """Check if email passed is correct."""
         serializer = ConfirmUserSerializer(
             data=request.data,
@@ -258,7 +258,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(status=status.HTTP_200_OK)
 
     @ action(detail=False, methods=['post'])
-    def is_email_available(self, request):
+    def is_email_available(self, request, *args, **kwargs):
         """Check if email passed is correct."""
         serializer = IsEmailAvailableSerializer(
             data=request.data,
@@ -269,7 +269,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(data=email, status=status.HTTP_200_OK)
 
     @ action(detail=False, methods=['post'])
-    def is_username_available(self, request):
+    def is_username_available(self, request, *args, **kwargs):
         """Check if email passed is correct."""
         serializer = IsUsernameAvailableSerializer(
             data=request.data,
@@ -279,7 +279,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(data={"message": "This username is available"}, status=status.HTTP_200_OK)
 
     @ action(detail=False, methods=['post'])
-    def signup(self, request):
+    def signup(self, request, *args, **kwargs):
         """User sign up."""
         request.data['username'] = helpers.get_random_username()
         invitation_token = None
@@ -298,7 +298,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(data, status=status.HTTP_201_CREATED)
 
     @ action(detail=False, methods=['get'])
-    def send_verification_email(self, request):
+    def send_verification_email(self, request, *args, **kwargs):
         """Send the email confirmation."""
         if request.user.id:
             user = request.user
@@ -307,7 +307,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @ action(detail=False, methods=['post'])
-    def login(self, request):
+    def login(self, request, *args, **kwargs):
         """User login."""
 
         serializer = UserLoginSerializer(
@@ -337,7 +337,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(data, status=status.HTTP_201_CREATED)
 
     @ action(detail=False, methods=['post'])
-    def change_password(self, request):
+    def change_password(self, request, *args, **kwargs):
         """User login."""
         serializer = ChangePasswordSerializer(
             data=request.data,
@@ -349,7 +349,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(status=status.HTTP_200_OK)
 
     @ action(detail=False, methods=['post'])
-    def change_email(self, request):
+    def change_email(self, request, *args, **kwargs):
         """Account verification."""
         serializer = ChangeEmailSerializer(
             data=request.data, context={'user': request.user})
@@ -357,7 +357,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(status=status.HTTP_200_OK)
 
     @ action(detail=False, methods=['post'])
-    def validate_change_email(self, request):
+    def validate_change_email(self, request, *args, **kwargs):
         """Account verification."""
         serializer = ValidateChangeEmail(
             data=request.data, context={'user': request.user})
@@ -367,7 +367,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(data, status=status.HTTP_200_OK)
 
     @ action(detail=False, methods=['post'])
-    def forget_password(self, request):
+    def forget_password(self, request, *args, **kwargs):
         """User login."""
         serializer = ForgetPasswordSerializer(
             data=request.data,
@@ -378,7 +378,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(status=status.HTTP_200_OK)
 
     @ action(detail=False, methods=['post'])
-    def reset_password(self, request):
+    def reset_password(self, request, *args, **kwargs):
         """Account verification."""
         serializer = ResetPasswordSerializer(
             data=request.data)
@@ -387,7 +387,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(status=status.HTTP_200_OK)
 
     @ action(detail=False, methods=['post'])
-    def verify(self, request):
+    def verify(self, request, *args, **kwargs):
         """Account verification."""
         serializer = AccountVerificationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

@@ -333,6 +333,13 @@ class UserSignUpSerializer(serializers.Serializer):
                                         geolocation=Point(lon, lat),
                                         karma_amount=karma_amount,
                                         )
+        # Add this user to oficial portal and update the statistics
+        # (
+
+
+
+
+        # )
         # Set the 1000 karma earned
         KarmaEarning.objects.create(user=user, amount=karma_amount, type=KarmaEarning.EARNED)
         user.karma_earned += karma_amount
@@ -845,6 +852,9 @@ class CreateDonationSerializer(serializers.Serializer):
 
     def validate(self, data):
         stripe = self.context['stripe']
+        request = self.context['request']
+        subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
+        portal = get_object_or_404(Portal, url=subdomain)
         currency = data['currency']
         payment_method_id = data['payment_method_id']
         to_user = self.instance
@@ -1009,11 +1019,13 @@ class CreateDonationSerializer(serializers.Serializer):
             'paid_karma': paid_karma,
             'message': message,
             'email': email,
+            'portal': portal,
         }
 
     def update(self, instance, validated_data):
 
         # Get the validated data
+        portal = validated_data['portal']
         is_anonymous = validated_data["is_anonymous"]
         to_user = instance
         user = validated_data["user"]
@@ -1108,6 +1120,7 @@ class CreateDonationSerializer(serializers.Serializer):
             # THINK WHAT TO DO WITH THE KARMA EARNINGS BY DONATIONS !!!!
 
             user.karma_earned += paid_karma
+            user.karma_earned_by_donations += paid_karma
             # Calc karma ratio
             karma_earned = 1
             karma_spent = 1
