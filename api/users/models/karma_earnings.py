@@ -16,6 +16,7 @@ class KarmaEarning(CModel):
 
     REFUNDED = 'RE'
     EARNED_BY_DONATION = 'ED'
+    EARNED_BY_JOIN_PORTAL = 'ED'
     EARNED = 'EA'
     SPENT = 'SP'
     EARNING_TYPES = [

@@ -487,6 +487,7 @@ class FinalizePostSerializer(serializers.Serializer):
         return data
 
     def update(self, instance, validated_data):
+        request = self.context['request']
         post = instance
         admin = post.user
 
@@ -504,7 +505,41 @@ class FinalizePostSerializer(serializers.Serializer):
             karma_winner = post.karma_winner.user
             karma_winner.karma_amount += post.karma_offered
             KarmaEarning.objects.create(user=karma_winner, amount=post.karma_offered, type=KarmaEarning.EARNED)
+            subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
+            portal = get_object_or_404(Portal, url=subdomain)
+
+            # Substract portal created_active_posts_count
+            portal.created_active_posts_count -= 1
+
+            # Add portal created_solved_posts_count
+            portal.created_solved_posts_count += 1
+
+            portal.save()
+            # Update member statistics
+            member = PortalMember.objects.get(user=karma_winner, portal=portal)
+
+            member.karma_earned += post.karma_offered
+            member.earned_by_post += post.karma_offered
+            member.created_active_posts_count -= 1
+            member.created_solved_posts_count += 1
+
+            # Calc member karma ratio
+            karma_earned = 1
+            karma_spent = 1
+
+            if member.karma_earned > 1:
+                karma_earned = member.karma_earned
+            if member.karma_spent > 1:
+                karma_spent = member.karma_spent
+
+            member.karma_ratio = karma_earned / karma_spent
+
+            member.save()
+
+            # Update karma winner statistics
+
             karma_winner.karma_earned += post.karma_offered
+            karma_winner.earned_by_post += post.karma_offered
             # Calc karma ratio
             karma_earned = 1
             karma_spent = 1

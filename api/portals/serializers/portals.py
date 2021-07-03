@@ -206,8 +206,12 @@ class CreatePortalSerializer(serializers.Serializer):
                 karma_amount=karma_amount,
             )
             # Set the 1000 karma earned
-            KarmaEarning.objects.create(user=user, amount=karma_amount, type=KarmaEarning.EARNED)
+            # Add oficial portal later
+            KarmaEarning.objects.create(user=user, amount=karma_amount,
+                                        type=KarmaEarning.EARNED_BY_JOIN_PORTAL)
             user.karma_earned += karma_amount
+            user.karma_by_join_portal += karma_amount
+
             # Calc karma ratio
             karma_earned = 1
             karma_spent = 1

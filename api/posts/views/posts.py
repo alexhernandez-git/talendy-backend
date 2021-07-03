@@ -579,7 +579,16 @@ class PostViewSet(
         user.save()
 
         for member in instance.members.all().exclude(id=user.id):
+            # Update portal member statistics
+            portal_member = PortalMember.objects.get(user=member, portal=portal)
+            portal_member.posts_count -= 1
+            portal_member.collaborated_posts_count -= 1
+            if instance.status == Post.ACTIVE:
+                portal_member.collaborated_active_posts_count -= 1
+            elif instance.status == Post.SOLVED:
+                portal_member.collaborated_solved_posts_count -= 1
 
+            # Update post member statistics
             member.posts_count -= 1
             member.collaborated_posts_count -= 1
             if instance.status == Post.ACTIVE:

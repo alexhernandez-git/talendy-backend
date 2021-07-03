@@ -340,6 +340,7 @@ class UserSignUpSerializer(serializers.Serializer):
         # Set the 1000 karma earned
         KarmaEarning.objects.create(user=user, amount=karma_amount, type=KarmaEarning.EARNED)
         user.karma_earned += karma_amount
+        user.karma_earned_by_join_portal += karma_amount
         # Calc karma ratio
         karma_earned = 1
         karma_spent = 1
