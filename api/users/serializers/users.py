@@ -1113,9 +1113,29 @@ class CreateDonationSerializer(serializers.Serializer):
         if not to_user.is_online and to_user.email_notifications_allowed:
             send_new_donation(user, to_user, is_anonymous)
         if not is_anonymous and user:
-            user.karma_amount += paid_karma
             KarmaEarning.objects.create(user=user, amount=paid_karma, type=KarmaEarning.EARNED_BY_DONATION)
 
+            # Update member statistics
+            member = PortalMember.objects.get(user=user, portal=portal)
+            member.karma_amount += paid_karma
+            member.karma_earned += paid_karma
+            member.karma_earned_by_donations += paid_karma
+            # Calc member karma ratio
+            karma_earned = 1
+            karma_spent = 1
+
+            if member.karma_earned > 1:
+                karma_earned = member.karma_earned
+            if member.karma_spent > 1:
+                karma_spent = member.karma_spent
+
+            member.karma_ratio = karma_earned / karma_spent
+
+            member.save()
+
+            # Update user statistics
+
+            user.karma_amount += paid_karma
             user.karma_earned += paid_karma
             user.karma_earned_by_donations += paid_karma
             # Calc karma ratio
