@@ -300,6 +300,12 @@ class UserSignUpSerializer(serializers.Serializer):
                 raise serializers.ValidationError('Invalid token')
             self.context['payload'] = payload
 
+        # Check if there is a portal
+
+        # If not get or 404 the oficial portal
+
+        # If there is a portal check if allow registers
+
         return data
 
     def create(self, data):

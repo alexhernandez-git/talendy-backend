@@ -517,7 +517,7 @@ class PostViewSet(
         if instance.members.all().count() > 1:
 
             return Response(
-                {"message": "You cannot delete a post that already has members"},
+                {"message": "You can't delete a post that already has members."},
                 status=status.HTTP_400_BAD_REQUEST)
 
         # Update statistics on post deletion
@@ -528,18 +528,22 @@ class PostViewSet(
         elif instance.status == Post.SOLVED:
             user.created_solved_posts_count -= 1
         user.karma_amount = user.karma_amount + instance.karma_offered
-        KarmaEarning.objects.create(user=user, amount=instance.karma_offered, type=KarmaEarning.EARNED)
-        user.karma_earned += instance.karma_offered
+
+        subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
+        portal = get_object_or_404(Portal, url=subdomain)
+
+        KarmaEarning.objects.create(user=user, amount=instance.karma_offered, type=KarmaEarning.REFUNDED, portal=portal)
+        user.karma_refunded += instance.karma_offered
 
         # Calc karma ratio
-        karma_earned = 1
+        karma_refunded = 1
         karma_spent = 1
 
-        if user.karma_earned > 1:
-            karma_earned = user.karma_earned
+        if user.karma_refunded > 1:
+            karma_refunded = user.karma_refunded
         if user.karma_spent > 1:
             karma_spent = user.karma_spent
-        user.karma_ratio = karma_earned / karma_spent
+        user.karma_ratio = karma_refunded / karma_spent
 
         user.save()
 

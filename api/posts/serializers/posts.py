@@ -109,48 +109,42 @@ class PostModelSerializer(serializers.ModelSerializer):
         request = self.context['request']
         user = request.user
         images = self.context["images"]
+
         subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
-        portal = None
+        portal = get_object_or_404(Portal, url=subdomain)
 
-        try:
-            portal = Portal.objects.get(url=subdomain)
-        except Portal.DoesNotExist:
-            pass
-        post = Post.objects.create(user=user, **validated_data, members_count=1)
+        post = Post.objects.create(user=user, **validated_data, members_count=1, portal=portal)
 
+        portal.posts_count += 1
+        portal.created_posts_count += 1
+        portal.created_active_posts_count += 1
+        portal.save()
+
+        # Update member statistics
+        KarmaEarning.objects.create(user=user, amount=post.karma_offered, type=KarmaEarning.SPENT, portal=portal)
+        member = PortalMember.objects.get(user=user, portal=portal)
+        member.karma_amount -= post.karma_offered
+        member.karma_spent -= post.karma_offered
+        member.posts_count += 1
+        member.created_posts_count += 1
+        member.created_active_posts_count += 1
+
+        # Calc member karma ratio
+        karma_earned = 1
+        karma_spent = 1
+
+        if member.karma_earned > 1:
+            karma_earned = member.karma_earned
+        if member.karma_spent > 1:
+            karma_spent = member.karma_spent
+        member.karma_ratio = karma_earned / karma_spent
         user.karma_amount = user.karma_amount - post.karma_offered
 
-        if portal:
-            post.portal = portal
-            post.save()
-            portal.posts_count += 1
-            portal.created_posts_count += 1
-            portal.created_active_posts_count += 1
-            portal.save()
+        member.save()
 
-            # Update member statistics
-            KarmaEarning.objects.create(user=user, amount=post.karma_offered, type=KarmaEarning.SPENT, portal=portal)
-            member = PortalMember.objects.get(user=user, portal=portal)
-            member.karma_amount -= post.karma_offered
-            member.karma_spent -= post.karma_offered
-            member.posts_count += 1
-            member.created_posts_count += 1
-            member.created_active_posts_count += 1
-            # Calc member karma ratio
-            karma_earned = 1
-            karma_spent = 1
-
-            if member.karma_earned > 1:
-                karma_earned = member.karma_earned
-            if member.karma_spent > 1:
-                karma_spent = member.karma_spent
-            member.karma_ratio = karma_earned / karma_spent
-
-            member.save()
-        else:
-            KarmaEarning.objects.create(user=user, amount=post.karma_offered, type=KarmaEarning.SPENT)
-
+        # Update user statistics
         user.karma_spent += post.karma_offered
+
         # Calc karma ratio
         karma_earned = 1
         karma_spent = 1

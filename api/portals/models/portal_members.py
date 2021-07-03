@@ -40,6 +40,7 @@ class PortalMember(CModel):
     # Statistics
 
     karma_amount = models.IntegerField(default=0)
+    karma_refunded = models.IntegerField(default=0)
     karma_earned = models.IntegerField(default=0)
     karma_spent = models.IntegerField(default=0)
     karma_ratio = models.FloatField(default=0)
