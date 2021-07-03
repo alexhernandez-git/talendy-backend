@@ -137,12 +137,13 @@ class PostModelSerializer(serializers.ModelSerializer):
             karma_earned = member.karma_earned
         if member.karma_spent > 1:
             karma_spent = member.karma_spent
+
         member.karma_ratio = karma_earned / karma_spent
-        user.karma_amount = user.karma_amount - post.karma_offered
 
         member.save()
 
         # Update user statistics
+        user.karma_amount -= post.karma_offered
         user.karma_spent += post.karma_offered
 
         # Calc karma ratio

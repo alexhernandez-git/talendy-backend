@@ -17,7 +17,7 @@ from api.posts.permissions import IsPostMember, IsPostOwner
 # Models
 from api.posts.models import Post
 from api.users.models import Follow, User
-from api.portals.models import Portal
+from api.portals.models import Portal, PortalMember
 
 # Serializers
 from api.posts.serializers import (
@@ -520,19 +520,49 @@ class PostViewSet(
                 {"message": "You can't delete a post that already has members."},
                 status=status.HTTP_400_BAD_REQUEST)
 
-        # Update statistics on post deletion
+        subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
+        portal = get_object_or_404(Portal, url=subdomain)
+
+        KarmaEarning.objects.create(user=user, amount=instance.karma_offered, type=KarmaEarning.REFUNDED, portal=portal)
+        portal.posts_count -= 1
+        portal.created_posts_count -= 1
+        if instance.status == Post.ACTIVE:
+            portal.created_active_posts_count -= 1
+        elif instance.status == Post.SOLVED:
+            portal.created_solved_posts_count -= 1
+        portal.save()
+        # Update member statistics
+        member = PortalMember.objects.get(user=user, portal=portal)
+        member.karma_amount += instance.karma_offered
+        member.karma_refunded += instance.karma_offered
+        member.karma_spent -= instance.karma_offered
+        member.posts_count -= 1
+        if instance.status == Post.ACTIVE:
+            member.created_active_posts_count -= 1
+        elif instance.status == Post.SOLVED:
+            member.created_solved_posts_count -= 1
+
+        # Calc member karma ratio
+        karma_earned = 1
+        karma_spent = 1
+
+        if member.karma_earned > 1:
+            karma_earned = member.karma_earned
+        if member.karma_spent > 1:
+            karma_spent = member.karma_spent
+
+        member.karma_ratio = karma_earned / karma_spent
+
+        member.save()
+
+        # Update user statistics
         user.posts_count -= 1
         user.created_posts_count -= 1
         if instance.status == Post.ACTIVE:
             user.created_active_posts_count -= 1
         elif instance.status == Post.SOLVED:
             user.created_solved_posts_count -= 1
-        user.karma_amount = user.karma_amount + instance.karma_offered
-
-        subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
-        portal = get_object_or_404(Portal, url=subdomain)
-
-        KarmaEarning.objects.create(user=user, amount=instance.karma_offered, type=KarmaEarning.REFUNDED, portal=portal)
+        user.karma_amount += instance.karma_offered
         user.karma_refunded += instance.karma_offered
         user.karma_spent -= instance.karma_offered
 
