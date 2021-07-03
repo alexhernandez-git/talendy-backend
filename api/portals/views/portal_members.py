@@ -78,14 +78,14 @@ class PortalMemberViewSet(
         return queryset
 
     def create(self, request, *args, **kwargs):
-        data = []
-        for data in request.data:
 
-            serializer = self.get_serializer(data=data)
-            serializer.is_valid(raise_exception=True)
+        request.data['username'] = helpers.get_random_username()
 
-            data = serializer.save()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-            data.append(PortalMemberModelSerializer(data).data)
+        data = serializer.save()
+
+        data = PortalMemberModelSerializer(data).data
 
         return Response(data, status=status.HTTP_201_CREATED)

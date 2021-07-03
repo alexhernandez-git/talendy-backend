@@ -45,6 +45,10 @@ class PortalMember(CModel):
 
     karma_earned = models.IntegerField(default=0)
 
+    karma_earned_by_posts = models.IntegerField(default=0)
+
+    karma_earned_by_join_portal = models.IntegerField(default=0)
+
     karma_earned_by_donations = models.IntegerField(default=0)
 
     karma_spent = models.IntegerField(default=0)

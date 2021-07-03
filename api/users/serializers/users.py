@@ -27,6 +27,7 @@ from api.portals.models import Portal, PortalMember
 
 # Serializers
 
+
 # Celery
 from api.taskapp.tasks import (
     send_confirmation_email,
@@ -55,7 +56,7 @@ env = environ.Env()
 
 class DetailedUserModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
-    member_role = serializers.SerializerMethodField(read_only=True)
+    member = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -100,7 +101,7 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
             'is_currency_permanent',
             'email_notifications_allowed',
             'geolocation',
-            'member_role'
+            'member'
 
         )
 
@@ -108,7 +109,7 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
             'id',
         )
 
-    def get_member_role(self, obj):
+    def get_member(self, obj):
 
         if 'request' in self.context:
             subdomain = tldextract.extract(self.context['request'].META['HTTP_ORIGIN']).subdomain
@@ -120,8 +121,10 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
                 pass
 
             if portal:
+                from api.portals.serializers import PortalMemberModelSerializer
                 portal_member = PortalMember.objects.get(portal=portal, user=obj)
-                return portal_member.role
+                return PortalMemberModelSerializer(portal_member).data
+
         return None
 
 
@@ -131,6 +134,7 @@ class UserModelSerializer(serializers.ModelSerializer):
     connection_invitation_sent = serializers.SerializerMethodField(read_only=True)
     is_connection = serializers.SerializerMethodField(read_only=True)
     accept_invitation = serializers.SerializerMethodField(read_only=True)
+    member = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         """Meta class."""
@@ -165,8 +169,8 @@ class UserModelSerializer(serializers.ModelSerializer):
             'collaborated_solved_posts_count',
             'reputation',
             'reviews_count',
-            'geolocation'
-
+            'geolocation',
+            'member'
         )
 
         read_only_fields = (
@@ -197,6 +201,24 @@ class UserModelSerializer(serializers.ModelSerializer):
             return Connection.objects.filter(Q(requester=user, addressee=obj) |
                                              Q(requester=obj, addressee=user), accepted=True).exists()
         return False
+
+    def get_member(self, obj):
+
+        if 'request' in self.context:
+            subdomain = tldextract.extract(self.context['request'].META['HTTP_ORIGIN']).subdomain
+            portal = None
+
+            try:
+                portal = Portal.objects.get(url=subdomain)
+            except Portal.DoesNotExist:
+                pass
+
+            if portal:
+                from api.portals.serializers import PortalMemberModelSerializer
+                portal_member = PortalMember.objects.get(portal=portal, user=obj)
+                return PortalMemberModelSerializer(portal_member).data
+
+        return None
 
 
 class GetUserByJwtSerializer(serializers.Serializer):

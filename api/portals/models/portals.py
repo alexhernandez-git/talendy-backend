@@ -85,3 +85,5 @@ class Portal(CModel):
         help_text='Date time on the free tiral expiration.',
         null=True, blank=True,
     )
+
+    is_oficial = models.BooleanField(default=False)
