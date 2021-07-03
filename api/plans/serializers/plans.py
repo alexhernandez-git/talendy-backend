@@ -19,6 +19,7 @@ class PlanModelSerializer(serializers.ModelSerializer):
             "type",
             "unit_amount",
             "currency",
+            "users_amount",
             "price_label"
         )
 

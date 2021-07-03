@@ -302,9 +302,11 @@ class CreatePortalSerializer(serializers.Serializer):
         )
 
         # Add user to users in portal
-        PortalMember.objects.create(portal=portal, user=user, role=PortalMember.ADMINISTRATOR)
-        portal.users_count += 1
-        portal.administrators_count += 1
+        PortalMember.objects.create(portal=portal, user=user, active=True, role=PortalMember.ADMIN)
+        portal.members_count += 1
+        portal.active_members_count += 1
+        portal.admin_members_count += 1
+        portal.active_admin_members_count += 1
         portal.save()
 
         user.portals_count += 1

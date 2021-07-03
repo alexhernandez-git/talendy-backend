@@ -13,9 +13,8 @@ class Portal(CModel):
 
     url = models.SlugField(max_length=40, unique=True)
 
-    members = models.ManyToManyField(
-        "users.User", through="portals.PortalMember", verbose_name="room_participants"
-    )
+    members = models.ManyToManyField("users.User", through="portals.PortalMember",
+                                     through_fields=('portal', 'user'), verbose_name="room_participants")
 
     owner = models.ForeignKey("users.User", on_delete=models.SET_NULL, null=True, related_name="portal_owner")
 
@@ -33,11 +32,17 @@ class Portal(CModel):
     donations_enabled = models.BooleanField(default=False)
 
     # Users count
-    users_count = models.IntegerField(default=0)
+    members_count = models.IntegerField(default=0)
+    active_members_count = models.IntegerField(default=0)
 
-    base_users_count = models.IntegerField(default=0)
-    managers_count = models.IntegerField(default=0)
-    administrators_count = models.IntegerField(default=0)
+    basic_members_count = models.IntegerField(default=0)
+    active_basic_members_count = models.IntegerField(default=0)
+
+    manager_members_count = models.IntegerField(default=0)
+    active_manager_members_count = models.IntegerField(default=0)
+
+    admin_members_count = models.IntegerField(default=0)
+    active_admin_members_count = models.IntegerField(default=0)
 
     posts_count = models.IntegerField(default=0)
 

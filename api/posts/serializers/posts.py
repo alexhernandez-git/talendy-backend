@@ -1,9 +1,7 @@
 """Notifications serializers."""
 
 # Django REST Framework
-from api.portals.models.portals import Portal
-from api.users.models.karma_earnings import KarmaEarning
-from api.posts.serializers.post_kanbans import KanbanListModelSerializer
+
 from api.taskapp.tasks import send_post_finalized, send_post_to_followers
 from rest_framework import serializers
 
@@ -24,9 +22,11 @@ from api.users.serializers import UserModelSerializer
 from .post_members import PostMemberModelSerializer
 
 # Models
-from api.users.models import User, Review, Follow, Connection
+from api.users.models import User, Review, Follow, Connection, KarmaEarning
 from api.posts.models import Post, PostImage, PostMember, CollaborateRequest, PostSeenBy, KanbanList, KanbanCard, PostFile
 from api.notifications.models import Notification, NotificationUser
+from api.portals.models import Portal, PortalMember
+from api.posts.serializers.post_kanbans import KanbanListModelSerializer
 
 # Utils
 import json
@@ -117,6 +117,9 @@ class PostModelSerializer(serializers.ModelSerializer):
         except Portal.DoesNotExist:
             pass
         post = Post.objects.create(user=user, **validated_data, members_count=1)
+
+        user.karma_amount = user.karma_amount - post.karma_offered
+
         if portal:
             post.portal = portal
             post.save()
@@ -124,9 +127,28 @@ class PostModelSerializer(serializers.ModelSerializer):
             portal.created_posts_count += 1
             portal.created_active_posts_count += 1
             portal.save()
-        user.karma_amount = user.karma_amount - post.karma_offered
 
-        KarmaEarning.objects.create(user=user, amount=post.karma_offered, type=KarmaEarning.SPENT)
+            # Update member statistics
+            KarmaEarning.objects.create(user=user, amount=post.karma_offered, type=KarmaEarning.SPENT, portal=portal)
+            member = PortalMember.objects.get(user=user, portal=portal)
+            member.karma_amount -= post.karma_offered
+            member.karma_spent -= post.karma_offered
+            member.posts_count += 1
+            member.created_posts_count += 1
+            member.created_active_posts_count += 1
+            # Calc member karma ratio
+            karma_earned = 1
+            karma_spent = 1
+
+            if member.karma_earned > 1:
+                karma_earned = member.karma_earned
+            if member.karma_spent > 1:
+                karma_spent = member.karma_spent
+            member.karma_ratio = karma_earned / karma_spent
+
+            member.save()
+        else:
+            KarmaEarning.objects.create(user=user, amount=post.karma_offered, type=KarmaEarning.SPENT)
 
         user.karma_spent += post.karma_offered
         # Calc karma ratio
@@ -142,15 +164,6 @@ class PostModelSerializer(serializers.ModelSerializer):
         user.posts_count += 1
         user.created_posts_count += 1
         user.created_active_posts_count += 1
-
-        karma_earned = 1
-        karma_spent = 1
-
-        if user.karma_earned > 1:
-            karma_earned = user.karma_earned
-        if user.karma_spent > 1:
-            karma_spent = user.karma_spent
-        user.karma_ratio = karma_earned / karma_spent
 
         user.save()
 
