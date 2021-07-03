@@ -1103,7 +1103,10 @@ class CreateDonationSerializer(serializers.Serializer):
             send_new_donation(user, to_user, is_anonymous)
         if not is_anonymous and user:
             user.karma_amount += paid_karma
-            KarmaEarning.objects.create(user=user, amount=paid_karma, type=KarmaEarning.EARNED)
+            KarmaEarning.objects.create(user=user, amount=paid_karma, type=KarmaEarning.EARNED_FOR_DONATION)
+
+            # THINK WHAT TO DO WITH THE KARMA EARNINGS BY DONATIONS !!!!
+
             user.karma_earned += paid_karma
             # Calc karma ratio
             karma_earned = 1
