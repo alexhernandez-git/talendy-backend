@@ -336,9 +336,6 @@ class UserSignUpSerializer(serializers.Serializer):
         # Add this user to oficial portal and update the statistics
         # (
 
-
-
-
         # )
         # Set the 1000 karma earned
         KarmaEarning.objects.create(user=user, amount=karma_amount, type=KarmaEarning.EARNED)
@@ -1066,6 +1063,7 @@ class CreateDonationSerializer(serializers.Serializer):
 
         # Create the donation
         donation = Donation.objects.create(
+            portal=portal,
             is_other_amount=is_other_amount,
             donation_option=donation_option,
             donation_payment=donation_payment,
@@ -1082,6 +1080,7 @@ class CreateDonationSerializer(serializers.Serializer):
 
         # Create the to user earning
         Earning.objects.create(
+            portal=portal,
             user=to_user,
             amount=net_amount,
             available_for_withdrawn_date=timezone.now() + timedelta(days=14)
@@ -1115,9 +1114,7 @@ class CreateDonationSerializer(serializers.Serializer):
             send_new_donation(user, to_user, is_anonymous)
         if not is_anonymous and user:
             user.karma_amount += paid_karma
-            KarmaEarning.objects.create(user=user, amount=paid_karma, type=KarmaEarning.EARNED_FOR_DONATION)
-
-            # THINK WHAT TO DO WITH THE KARMA EARNINGS BY DONATIONS !!!!
+            KarmaEarning.objects.create(user=user, amount=paid_karma, type=KarmaEarning.EARNED_BY_DONATION)
 
             user.karma_earned += paid_karma
             user.karma_earned_by_donations += paid_karma
