@@ -44,6 +44,25 @@ class PortalMemberModelSerializer(serializers.ModelSerializer):
             "id",
             "portal",
             "user",
+            "karma_amount",
+            "karma_refunded",
+            "karma_earned",
+            "karma_earned_by_posts",
+            "karma_earned_by_join_portal",
+            "karma_earned_by_donations",
+            "karma_spent",
+            "karma_ratio",
+            "following_count",
+            "connections_count",
+            "invitations_count",
+            "followed_count",
+            "posts_count",
+            "created_posts_count",
+            "created_active_posts_count",
+            "created_solved_posts_count",
+            "collaborated_posts_count",
+            "collaborated_active_posts_count",
+            "collaborated_solved_posts_count",
             "role",
         )
 
@@ -53,32 +72,24 @@ class PortalMemberModelSerializer(serializers.ModelSerializer):
 class CreatePortalMemberSerializer(serializers.Serializer):
 
     # Future me: filter email UniqueValidator by only public client
-    email = serializers.CharField(
-        validators=[
-            UniqueValidator(queryset=User.objects.all())
-        ],
-        required=False,
-    )
-
-    username = serializers.CharField(
-        min_length=4,
-        max_length=40,
-        validators=[UniqueValidator(queryset=User.objects.all())]
-    )
+    email = serializers.CharField()
 
     # Name
     first_name = serializers.CharField(min_length=2, max_length=30)
     last_name = serializers.CharField(min_length=2, max_length=30)
-
-    picture = serializers.FileField(allow_empty_file=True)
 
     initial_karma_amount = serializers.IntegerField()
 
     role = serializers.CharField(min_length=2, max_length=2)
 
     def validate(self, data):
-        import pdb
-        pdb.set_trace()
+        portal = self.context['portal']
+
+        # Check if this member already exists
+        email = data.get('email')
+        if PortalMember.objects.filter(portal=portal, email=email).exists():
+            raise serializers.ValidationError("This email already exists in your members")
+
         return data
 
     def create(self, validated_data):
@@ -88,7 +99,6 @@ class CreatePortalMemberSerializer(serializers.Serializer):
         first_name = validated_data.get('first_name', None)
         last_name = validated_data.get('last_name', None)
         email = validated_data.get('email', None)
-        picture = validated_data.get('picture', None)
         initial_karma_amount = validated_data.get('initial_karma_amount', None)
         role = validated_data.get('role', None)
         # Create member
@@ -97,7 +107,6 @@ class CreatePortalMemberSerializer(serializers.Serializer):
             first_name=first_name,
             last_name=last_name,
             email=email,
-            picture=picture,
             initial_karma_amount=initial_karma_amount,
             role=role,
             creator=user
@@ -114,3 +123,20 @@ class CreatePortalMemberSerializer(serializers.Serializer):
         portal.save()
 
         return member
+
+
+class IsMemberEmailAvailableSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+
+    email = serializers.CharField()
+
+    def validate(self, data):
+        """Update user's verified status."""
+
+        email = data['email']
+        portal = self.context['portal']
+
+        if PortalMember.objects.filter(portal=portal, email=email).exists():
+            raise serializers.ValidationError('This email is already in use')
+
+        return {"email": email}

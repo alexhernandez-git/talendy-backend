@@ -28,7 +28,7 @@ from api.users.permissions import IsAccountOwner
 from api.portals.models import PortalMember, Portal
 
 # Serializers
-from api.portals.serializers import PortalMemberModelSerializer, CreatePortalMemberSerializer
+from api.portals.serializers import PortalMemberModelSerializer, CreatePortalMemberSerializer, IsMemberEmailAvailableSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -38,12 +38,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 import os
 from api.utils import helpers
+from api.utils.mixins import AddPortalMixin
 import tldextract
 
 
 class PortalMemberViewSet(
     mixins.ListModelMixin,
-    viewsets.GenericViewSet
+    AddPortalMixin
 ):
     """User view set.
 
@@ -65,7 +66,8 @@ class PortalMemberViewSet(
 
         if self.action in ['create']:
             return CreatePortalMemberSerializer
-
+        elif self.action in ['is_member_email_available']:
+            return IsMemberEmailAvailableSerializer
         return PortalMemberModelSerializer
 
     def get_queryset(self):
@@ -77,9 +79,26 @@ class PortalMemberViewSet(
 
         return queryset
 
-    def create(self, request, *args, **kwargs):
+    def get_serializer_context(self):
+        return {
+            "request": self.request,
+            "format": self.format_kwarg,
+            "view": self,
+            "portal": self.portal
+        }
 
-        request.data['username'] = helpers.get_random_username()
+    @ action(detail=False, methods=['post'])
+    def is_member_email_available(self, request, *args, **kwargs):
+        """Check if email passed is correct."""
+        serializer = self.get_serializer(
+            data=request.data,
+        )
+
+        serializer.is_valid(raise_exception=True)
+        email = serializer.data
+        return Response(data=email, status=status.HTTP_200_OK)
+
+    def create(self, request, *args, **kwargs):
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

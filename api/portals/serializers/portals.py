@@ -53,6 +53,7 @@ class PortalModelSerializer(serializers.ModelSerializer):
             "about",
             "donations_enabled",
             "members_count",
+            "active_members_count",
             "posts_count",
             "created_posts_count",
             "created_active_posts_count",
@@ -94,7 +95,7 @@ class PortalListModelSerializer(serializers.ModelSerializer):
             "logo",
             "owner",
             "donations_enabled",
-            "members"
+            "members",
         )
 
         read_only_fields = ("id",)
