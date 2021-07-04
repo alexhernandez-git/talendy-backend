@@ -246,6 +246,23 @@ def send_new_donation(user, sent_to, is_anonymous):
     msg.attach_alternative(content, "text/html")
     msg.send()
 
+
+@task(name='send_portal_access', max_retries=3)
+def send_portal_access(member, portal):
+    """Check if the free trial has ended and turn off"""
+
+    subject = '@{} access to portal of the'.format(
+        portal.name)
+
+    from_email = 'Talendy <no-reply@talendy.com>'
+    content = render_to_string(
+        'emails/users/access_to_portal.html',
+        {'member': member, 'portal': portal}
+    )
+    msg = EmailMultiAlternatives(subject, content, from_email, [member.email])
+    msg.attach_alternative(content, "text/html")
+    msg.send()
+
 # MESSAGES = 'ME'
 # NEW_INVITATION = 'NI'
 # NEW_CONNECTION = 'NC'

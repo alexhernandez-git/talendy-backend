@@ -467,8 +467,8 @@
                                                 data-start-index="9089"
                                                 data-end-index="9208"
                                               >
-                                                Access to the portal of Centre
-                                                d'Estudis Sant Francesc
+                                                Access to the portal of
+                                                {{portal.name}}
                                               </td>
                                             </tr>
                                           </tbody>
@@ -505,7 +505,7 @@
                                               >
                                                 Username:<br />
                                                 <span style="font-weight: 700">
-                                                  email@email.com
+                                                  {{member.email}}
                                                 </span>
                                               </td>
                                             </tr>
@@ -527,7 +527,7 @@
                                               >
                                                 Password:<br />
                                                 <span style="font-weight: 700">
-                                                  password123
+                                                  {{member.password}}
                                                 </span>
                                               </td>
                                             </tr>
@@ -575,7 +575,7 @@
                                                     color: white;
                                                     text-decoration: none;
                                                   "
-                                                  href="https://talendy.com/collaborate-room/{{post.id}}"
+                                                  href="https://{{portal.url}}.talendy.com"
                                                 >
                                                   Enter portal
                                                 </a>

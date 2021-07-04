@@ -27,6 +27,7 @@ from api.plans.models import Plan
 # Celery
 from api.taskapp.tasks import (
     send_confirmation_email,
+    send_portal_access,
 )
 
 # Utils
@@ -121,7 +122,8 @@ class CreatePortalMemberSerializer(serializers.Serializer):
             portal.admin_members_count += 1
 
         portal.save()
-
+        # Send portal access email
+        send_portal_access(member, portal)
         return member
 
 
