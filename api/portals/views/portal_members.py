@@ -72,10 +72,8 @@ class PortalMemberViewSet(
 
     def get_queryset(self):
         """Restrict list to public-only."""
-        subdomain = tldextract.extract(self.request.META['HTTP_ORIGIN']).subdomain
-        portal = get_object_or_404(Portal, url=subdomain)
 
-        queryset = PortalMember.objects.filter(portal=portal)
+        queryset = PortalMember.objects.filter(portal=self.portal)
 
         return queryset
 

@@ -38,12 +38,13 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 import os
 from api.utils import helpers
+from api.utils.mixins import AddPortalMixin
 import tldextract
 
 
 class PlanPaymentViewSet(
     mixins.ListModelMixin,
-    viewsets.GenericViewSet
+    AddPortalMixin
 ):
     """User view set.
 
@@ -62,9 +63,7 @@ class PlanPaymentViewSet(
 
     def get_queryset(self):
         """Restrict list to public-only."""
-        subdomain = tldextract.extract(self.request.META['HTTP_ORIGIN']).subdomain
-        portal = get_object_or_404(Portal, url=subdomain)
 
-        queryset = PlanPayment.objects.filter(portal=portal)
+        queryset = PlanPayment.objects.filter(portal=self.portal)
 
         return queryset
