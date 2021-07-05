@@ -34,6 +34,11 @@ CORS_ALLOWED_ORIGINS = ["https://talendy.com", "https://www.talendy.com",
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://\w+\.talendy\.com",
     r"^http://\w+\.localhost:3000",
+    r"^http://\w+\.localhost:5400",
+    r"^http://\w+\.localhost:5500",
+    r"^http://localhost:5400",
+    r"^http://localhost:5500",
+
 ]
 if DEBUG:
     ALLOWED_HOSTS.append("localhost")
@@ -46,7 +51,7 @@ if DEBUG:
     CORS_ALLOWED_ORIGINS.append("http://collaboraterooms:5500")
     CORS_ALLOWED_ORIGINS.append("http://django:8000")
     CORS_ALLOWED_ORIGINS.append("http://django")
-    CORS_ALLOWED_ORIGINS.append("http://hola.localhost:3000")
+    CORS_ALLOWED_ORIGINS.append("http://cesf.localhost:3000")
 
 CORS_ORIGIN_WHITELIST = env.list('CORS_ORIGIN_WHITELIST', default=('localhost:3000',))
 
