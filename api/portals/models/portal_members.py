@@ -17,6 +17,7 @@ class PortalMember(CModel):
     # Member info \ This info will be traspased to the user model
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
+
     email = models.EmailField(
         'email address',
         unique=False,

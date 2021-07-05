@@ -54,6 +54,8 @@ class PortalMemberViewSet(
     queryset = PortalMember.objects.all()
     lookup_field = "id"
     serializer_class = PortalMemberModelSerializer
+    filter_backends = (SearchFilter,  DjangoFilterBackend)
+    search_fields = ('first_name', 'last_name')
 
     def get_permissions(self):
         """Assign permissions based on action."""
