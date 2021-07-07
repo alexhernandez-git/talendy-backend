@@ -115,16 +115,29 @@ class PortalMemberViewSet(
     @action(detail=False, methods=['post'])
     def remove_members(self, request, *args, **kwargs):
         user = request.user
+        portal = self.portal
+        member_me = PortalMember.objects.get(portal=portal, user=user)
         members_ids = request.data.get('members')
         for member_id in members_ids:
             try:
                 member = PortalMember.objects.get(id=member_id)
             except PortalMember.DoesNotExist:
+                members_ids.remove(member_id)
                 break
+
             # Avoid to the owner to be deleted
-            if member == user:
+            if member.user == portal.owner:
+
+                members_ids.remove(member_id)
                 break
-            portal = self.portal
+
+            # Avoid deletion of one manager or admin from a manager and remove an admin without been the owner
+            if member.role == PortalMember.MANAGER and member_me.role == PortalMember.MANAGER or \
+                    member.role == PortalMember.ADMIN and member_me.role == PortalMember.MANAGER or member.role == PortalMember.ADMIN and user != portal.owner:
+
+                members_ids.remove(member_id)
+                break
+
             # Substract members count
 
             portal.members_count -= 1
@@ -146,4 +159,4 @@ class PortalMemberViewSet(
             portal.save()
 
             self.perform_destroy(member)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(data=members_ids, status=status.HTTP_200_OK)
