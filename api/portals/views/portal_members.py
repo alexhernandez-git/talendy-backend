@@ -22,7 +22,7 @@ from django.http import HttpResponse
 
 # Permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
-from api.users.permissions import IsAccountOwner
+from api.portals.permissions import IsAdminOrManager
 
 # Models
 from api.portals.models import PortalMember, Portal
@@ -44,6 +44,7 @@ import tldextract
 
 class PortalMemberViewSet(
     mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
     AddPortalMixin
 ):
     """User view set.
@@ -59,8 +60,10 @@ class PortalMemberViewSet(
 
     def get_permissions(self):
         """Assign permissions based on action."""
-
-        permissions = [IsAuthenticated]
+        if self.action in ['destroy']:
+            permissions = IsAdminOrManager
+        else:
+            permissions = [IsAuthenticated]
         return [p() for p in permissions]
 
     def get_serializer_class(self):
@@ -108,3 +111,35 @@ class PortalMemberViewSet(
         data = PortalMemberModelSerializer(data).data
 
         return Response(data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'])
+    def remove_members(self, request, *args, **kwargs):
+        members_ids = request.data.get('members')
+        for member_id in members_ids:
+            try:
+                member = PortalMember.objects.get(id=member_id)
+            except PortalMember.DoesNotExist:
+                break
+            portal = self.portal
+            # Substract members count
+
+            portal.members_count -= 1
+            if member.role == PortalMember.BASIC:
+                portal.basic_members_count -= 1
+            elif member.role == PortalMember.MANAGER:
+                portal.manager_members_count -= 1
+            elif member.role == PortalMember.ADMIN:
+                portal.admin_members_count -= 1
+
+            if member.is_active:
+                portal.active_members_count -= 1
+                if member.role == PortalMember.BASIC:
+                    portal.active_basic_members_count -= 1
+                elif member.role == PortalMember.MANAGER:
+                    portal.active_manager_members_count -= 1
+                elif member.role == PortalMember.ADMIN:
+                    portal.active_admin_members_count -= 1
+            portal.save()
+
+            self.perform_destroy(member)
+        return Response(status=status.HTTP_204_NO_CONTENT)
