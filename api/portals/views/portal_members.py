@@ -173,6 +173,11 @@ class PortalMemberViewSet(
             except PortalMember.DoesNotExist:
                 break
 
+            # Check if user is not active
+            if member.is_active:
+
+                break
+
             # Send access email
             send_portal_access(member, portal)
 
