@@ -4,6 +4,8 @@
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
+# Celery
+from api.taskapp.tasks import send_portal_access
 
 # Django REST Framework
 from api.users.models import User
@@ -160,3 +162,18 @@ class PortalMemberViewSet(
 
             self.perform_destroy(member)
         return Response(data=members_ids, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
+    def resend_access(self, request, *args, **kwargs):
+        portal = self.portal
+        members_ids = request.data.get('members')
+        for member_id in members_ids:
+            try:
+                member = PortalMember.objects.get(id=member_id)
+            except PortalMember.DoesNotExist:
+                break
+
+            # Send access email
+            send_portal_access(member, portal)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
