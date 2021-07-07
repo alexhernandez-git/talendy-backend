@@ -36,6 +36,7 @@ from api.utils import helpers
 
 class PortalMemberModelSerializer(serializers.ModelSerializer):
     """User model serializer."""
+    user = UserModelSerializer(read_only=True)
 
     class Meta:
         """Meta class."""
