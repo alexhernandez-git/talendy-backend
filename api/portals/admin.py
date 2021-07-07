@@ -2,10 +2,9 @@
 
 # Django
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
 
 # Models
-from api.portals.models import Portal
+from api.portals.models import Portal, PortalMember
 
 
 @admin.register(Portal)
@@ -33,3 +32,17 @@ class PortalAdmin(admin.ModelAdmin):
                     "passed_free_trial_once",
                     "free_trial_expiration",
                     "is_oficial")
+
+
+@admin.register(PortalMember)
+class PortalMemberAdmin(admin.ModelAdmin):
+    """PortalMember model admin."""
+
+    list_display = ("id",
+                    "portal",
+                    "is_active",
+                    "first_name",
+                    "last_name",
+                    "email",
+                    "picture",
+                    "password",)

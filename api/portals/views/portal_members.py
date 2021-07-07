@@ -114,11 +114,15 @@ class PortalMemberViewSet(
 
     @action(detail=False, methods=['post'])
     def remove_members(self, request, *args, **kwargs):
+        user = request.user
         members_ids = request.data.get('members')
         for member_id in members_ids:
             try:
                 member = PortalMember.objects.get(id=member_id)
             except PortalMember.DoesNotExist:
+                break
+            # Avoid to the owner to be deleted
+            if member == user:
                 break
             portal = self.portal
             # Substract members count

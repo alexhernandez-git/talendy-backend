@@ -87,3 +87,7 @@ class Portal(CModel):
     )
 
     is_oficial = models.BooleanField(default=False)
+
+    def __str__(self):
+        """Return username."""
+        return '{}'.format(self.name)
