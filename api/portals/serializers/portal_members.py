@@ -107,6 +107,7 @@ class CreatePortalMemberSerializer(serializers.Serializer):
         first_name = validated_data.get('first_name', None)
         last_name = validated_data.get('last_name', None)
         email = validated_data.get('email', None)
+        password = validated_data.get('password', None)
         initial_karma_amount = validated_data.get('initial_karma_amount', None)
         role = validated_data.get('role', None)
         # Create member
@@ -115,6 +116,7 @@ class CreatePortalMemberSerializer(serializers.Serializer):
             first_name=first_name,
             last_name=last_name,
             email=email,
+            password=password,
             initial_karma_amount=initial_karma_amount,
             role=role,
             creator=user
