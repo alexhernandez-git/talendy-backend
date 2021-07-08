@@ -467,17 +467,23 @@ class UserLoginSerializer(serializers.Serializer):
                 # Get the random username
                 username = helpers.get_random_username()
 
-                # Create the user
-                user = User.objects.create_user(
-                    first_name=new_member.first_name,
-                    last_name=new_member.last_name,
-                    email=new_member.email,
-                    username=username,
-                    password=new_member.password,
-                    is_verified=False,
-                    is_client=True,
-                    karma_amount=new_member.initial_karma_amount,
-                )
+                user = None
+                # Check if the user exists
+                users = User.objects.filter(email=email)
+                if users.exists():
+                    user = users.first()
+                else:
+                    # Create the user
+                    user = User.objects.create_user(
+                        first_name=new_member.first_name,
+                        last_name=new_member.last_name,
+                        email=new_member.email,
+                        username=username,
+                        password=new_member.password,
+                        is_verified=False,
+                        is_client=True,
+                        karma_amount=new_member.initial_karma_amount,
+                    )
 
                 # Add the new user to the membership
                 new_member.user = user
