@@ -14,9 +14,9 @@ from api.users.models import User
 class NoseyConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         await self.accept()
-        self.user_id = self.scope["url_route"]["kwargs"]["user_id"]
+        self.room_id = self.scope["url_route"]["kwargs"]["room_id"]
 
-        self.room_group_name = "user-%s" % self.user_id
+        self.room_group_name = self.room_id
         await self.update_user_status(True)
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
 
@@ -35,4 +35,4 @@ class NoseyConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def update_user_status(self, is_online):
-        return User.objects.filter(id=self.user_id) .update(is_online=is_online)
+        return User.objects.filter(id=self.room_id) .update(is_online=is_online)

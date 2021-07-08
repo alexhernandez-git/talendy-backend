@@ -81,13 +81,14 @@ class RequestCollaborateSerializer(serializers.Serializer):
             collaborate_request=collaborate_request,
         )
         user_notification = NotificationUser.objects.create(
+            portal=post.portal,
             notification=notification,
             user=post.user
         )
 
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            "user-%s" % post.user.id, {
+            '{}-{}'.format(post.user.id, post.portal.url), {
                 "type": "send.notification",
                 "event": "NEW_COLLABORATE_REQUEST",
                 "notification__pk": str(user_notification.pk),
@@ -143,13 +144,14 @@ class AcceptCollaborateRequestSerializer(serializers.Serializer):
         )
 
         user_notification = NotificationUser.objects.create(
+            portal=post.portal,
             notification=notification,
             user=post.user
         )
 
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            "user-%s" % post.user.id, {
+            '{}-{}'.format(post.user.id, post.portal.url), {
                 "type": "send.notification",
                 "event": "JOINED_MEMBERSHIP",
                 "notification__pk": str(user_notification.pk),
@@ -163,13 +165,14 @@ class AcceptCollaborateRequestSerializer(serializers.Serializer):
         )
 
         user_notification = NotificationUser.objects.create(
+            portal=post.portal,
             notification=notification,
             user=requester_user
         )
 
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            "user-%s" % requester_user.id, {
+            '{}-{}'.format(requester_user.id, post.portal.url), {
                 "type": "send.notification",
                 "event": "COLLABORATE_REQUEST_ACCEPTED",
                 "notification__pk": str(user_notification.pk),

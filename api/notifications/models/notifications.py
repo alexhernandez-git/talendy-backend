@@ -5,6 +5,7 @@ from django.contrib.gis.db import models
 class NotificationUser(CModel):
 
     user = models.ForeignKey("users.User", on_delete=models.CASCADE)
+    portal = models.ForeignKey("portals.Portal", on_delete=models.CASCADE, null=True)
     notification = models.ForeignKey("notifications.Notification", on_delete=models.CASCADE)
     is_read = models.BooleanField(default=False)
 

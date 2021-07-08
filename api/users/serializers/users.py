@@ -333,6 +333,7 @@ class UserSignUpSerializer(serializers.Serializer):
     def create(self, data):
         """Handle user and profile creation."""
         request = self.context['request']
+        portal = self.context['portal']
 
         # Create the free trial expiration date
 
@@ -357,10 +358,35 @@ class UserSignUpSerializer(serializers.Serializer):
                                         )
         # Add this user to oficial portal and update the statistics
         # (
+        # Add user to users in portal
+        member = PortalMember.objects.create(portal=portal, user=user, is_active=True, role=PortalMember.BASIC)
+
+        # Update portal statistics
+        portal.members_count += 1
+        portal.active_members_count += 1
+        portal.basic_members_count += 1
+        portal.active_basic_members_count += 1
+        portal.save()
 
         # )
         # Set the 1000 karma earned
-        KarmaEarning.objects.create(user=user, amount=karma_amount, type=KarmaEarning.EARNED)
+        KarmaEarning.objects.create(user=user, amount=karma_amount, type=KarmaEarning.EARNED, portal=portal)
+
+        # Update member statistics
+        member.karma_earned += karma_amount
+        member.karma_earned_by_join_portal += karma_amount
+        # Calc karma ratio
+        karma_earned = 1
+        karma_spent = 1
+
+        if member.karma_earned > 1:
+            karma_earned = member.karma_earned
+        if member.karma_spent > 1:
+            karma_spent = member.karma_spent
+        member.karma_ratio = karma_earned / karma_spent
+        member.save()
+
+        # Update user statistics
         user.karma_earned += karma_amount
         user.karma_earned_by_join_portal += karma_amount
         # Calc karma ratio
@@ -1145,6 +1171,11 @@ class CreateDonationSerializer(serializers.Serializer):
         )
 
         # Add donations_received_count to to_user
+
+        to_user_member = PortalMember.objects.get(user=to_user, portal=portal)
+        to_user_member.donations_received_count += 1
+        to_user_member.save()
+
         to_user.donations_received_count += 1
         to_user.net_income = to_user.net_income + Money(amount=net_amount, currency="USD")
 
@@ -1156,13 +1187,14 @@ class CreateDonationSerializer(serializers.Serializer):
             donation=donation,
         )
         user_notification = NotificationUser.objects.create(
+            portal=portal,
             notification=notification,
             user=to_user
         )
 
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            "user-%s" % to_user.id, {
+            '{}-{}'.format(to_user.id, portal.id), {
                 "type": "send.notification",
                 "event": "NEW_DONATION",
                 "notification__pk": str(user_notification.pk),
@@ -1171,40 +1203,44 @@ class CreateDonationSerializer(serializers.Serializer):
         if not to_user.is_online and to_user.email_notifications_allowed:
             send_new_donation(user, to_user, is_anonymous)
         if not is_anonymous and user:
-            KarmaEarning.objects.create(user=user, amount=paid_karma, type=KarmaEarning.EARNED_BY_DONATION)
+            KarmaEarning.objects.create(user=user, amount=paid_karma,
+                                        type=KarmaEarning.EARNED_BY_DONATION, portal=portal)
 
             # Update member statistics
             member = PortalMember.objects.get(user=user, portal=portal)
-            member.karma_amount += paid_karma
-            member.karma_earned += paid_karma
-            member.karma_earned_by_donations += paid_karma
-            # Calc member karma ratio
-            karma_earned = 1
-            karma_spent = 1
+            if member.role == PortalMember.BASIC:
 
-            if member.karma_earned > 1:
-                karma_earned = member.karma_earned
-            if member.karma_spent > 1:
-                karma_spent = member.karma_spent
+                member.karma_amount += paid_karma
+                member.karma_earned += paid_karma
+                member.karma_earned_by_donations += paid_karma
+                # Calc member karma ratio
+                karma_earned = 1
+                karma_spent = 1
 
-            member.karma_ratio = karma_earned / karma_spent
+                if member.karma_earned > 1:
+                    karma_earned = member.karma_earned
+                if member.karma_spent > 1:
+                    karma_spent = member.karma_spent
 
+                member.karma_ratio = karma_earned / karma_spent
+
+                # Update user statistics
+
+                user.karma_amount += paid_karma
+                user.karma_earned += paid_karma
+                user.karma_earned_by_donations += paid_karma
+                # Calc karma ratio
+                karma_earned = 1
+                karma_spent = 1
+
+                if user.karma_earned > 1:
+                    karma_earned = user.karma_earned
+                if user.karma_spent > 1:
+                    karma_spent = user.karma_spent
+                user.karma_ratio = karma_earned / karma_spent
+
+            member.donations_made_count += 1
             member.save()
-
-            # Update user statistics
-
-            user.karma_amount += paid_karma
-            user.karma_earned += paid_karma
-            user.karma_earned_by_donations += paid_karma
-            # Calc karma ratio
-            karma_earned = 1
-            karma_spent = 1
-
-            if user.karma_earned > 1:
-                karma_earned = user.karma_earned
-            if user.karma_spent > 1:
-                karma_spent = user.karma_spent
-            user.karma_ratio = karma_earned / karma_spent
 
             user.is_currency_permanent = True
             user.donations_made_count += 1

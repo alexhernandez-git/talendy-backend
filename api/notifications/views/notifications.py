@@ -13,6 +13,7 @@ import uuid
 
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status, viewsets, mixins
+from api.utils.mixins import AddPortalMixin
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -38,7 +39,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 class NotificationViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
-    viewsets.GenericViewSet,
+    AddPortalMixin,
 ):
     """User view set.
 
@@ -62,7 +63,7 @@ class NotificationViewSet(
         user.pending_notifications = False
 
         user.save()
-        queryset = NotificationUser.objects.filter(user=user, is_read=False)
+        queryset = NotificationUser.objects.filter(user=user, portal=self.portal, is_read=False)
 
         return queryset
 

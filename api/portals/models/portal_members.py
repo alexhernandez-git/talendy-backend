@@ -78,6 +78,10 @@ class PortalMember(CModel):
 
     collaborated_solved_posts_count = models.IntegerField(default=0)
 
+    donations_made_count = models.IntegerField(default=0)
+
+    donations_received_count = models.IntegerField(default=0)
+
     # Make the user active before the login invitation
     is_active = models.BooleanField(default=False)
 

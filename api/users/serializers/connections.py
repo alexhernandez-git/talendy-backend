@@ -63,6 +63,7 @@ class ConnectInvitationSerialzer(serializers.Serializer):
         return {"requester": requester, "addressee": addressee}
 
     def create(self, validated_data):
+        portal = self.context['portal']
         requester = validated_data["requester"]
         addressee = validated_data["addressee"]
         connection = Connection.objects.create(requester=requester, addressee=addressee)
@@ -74,13 +75,14 @@ class ConnectInvitationSerialzer(serializers.Serializer):
             connection=connection,
         )
         user_notification = NotificationUser.objects.create(
+            portal=portal,
             notification=notification,
             user=addressee
         )
 
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            "user-%s" % addressee.id, {
+            '{}-{}'.format(addressee.id, portal.url), {
                 "type": "send.notification",
                 "event": "NEW_INVITATION",
                 "notification__pk": str(user_notification.pk),
@@ -100,6 +102,7 @@ class AcceptConnectionSerializer(serializers.Serializer):
 
     def validate(self, data):
         request = self.context["request"]
+        portal = self.context["portal"]
         addressee = request.user
         requester = User.objects.get(id=data["requester"])
 
@@ -127,13 +130,14 @@ class AcceptConnectionSerializer(serializers.Serializer):
         )
 
         user_notification = NotificationUser.objects.create(
+            portal=portal,
             notification=notification,
             user=requester
         )
 
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            "user-%s" % requester.id, {
+            '{}-{}'.format(requester.id, portal.id), {
                 "type": "send.notification",
                 "event": "NEW_CONNECTION",
                 "notification__pk": str(user_notification.pk),
@@ -173,6 +177,7 @@ class RemoveConnectionSerializer(serializers.Serializer):
 
     def validate(self, data):
         request = self.context["request"]
+        portal = self.context["portal"]
         requester = request.user
         user = User.objects.get(id=data["user"])
 
@@ -191,7 +196,7 @@ class RemoveConnectionSerializer(serializers.Serializer):
 
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            "user-%s" % user.id, {
+            '{}-{}'.format(user.id, portal.url), {
                 "type": "send.notification",
                 "event": "CONNECTION_REMOVED",
             }

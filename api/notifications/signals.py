@@ -20,12 +20,13 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
     participants = chat.participants.all()
     sent_by = instance.sent_by
     sent_to = participants.exclude(pk=sent_by.pk).first()
-
+    portal = chat.portal
     if created:
         # Get or Create the notification user
 
         user_notification = NotificationUser.objects.filter(
             user=sent_to,
+            portal=portal,
             is_read=False,
             notification__type=Notification.MESSAGES,
             notification__chat=chat,
@@ -43,6 +44,7 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
             )
 
             user_notification = NotificationUser.objects.create(
+                portal=portal,
                 notification=notification,
                 user=sent_to
             )
@@ -55,7 +57,7 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
         # Send the event of message to user websocket
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
-            "user-%s" % sent_to.id, {
+            '{}-{}'.format(sent_to.id, portal.url), {
                 "type": "message.sent",
                 "event": "MESSAGE_RECEIVED",
                 "chat__pk": str(chat.pk),
@@ -73,6 +75,7 @@ def announce_update_on_messages_model(sender, instance, created, **kwargs):
 def announce_update_on_post_messages_model(sender, instance, created, **kwargs):
 
     post = instance.post
+    portal = post.portal
     members = post.members.all()
     sent_by = instance.sent_by
     sent_to_users = members.exclude(pk=sent_by.pk)
@@ -83,6 +86,7 @@ def announce_update_on_post_messages_model(sender, instance, created, **kwargs):
             user_notification = NotificationUser.objects.filter(
                 user=sent_to,
                 is_read=False,
+                portal=portal,
                 notification__type=Notification.POST_MESSAGES,
                 notification__post=post,
                 notification__actor=sent_by,
@@ -99,6 +103,7 @@ def announce_update_on_post_messages_model(sender, instance, created, **kwargs):
                 )
 
                 user_notification = NotificationUser.objects.create(
+                    portal=portal,
                     notification=notification,
                     user=sent_to
                 )
@@ -109,7 +114,7 @@ def announce_update_on_post_messages_model(sender, instance, created, **kwargs):
             # Send the event of message to user websocket
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
-                "user-%s" % sent_to.id, {
+                '{}-{}'.format(sent_to.id, portal.url), {
                     "type": "message.sent",
                     "event": "POST_MESSAGE_RECEIVED",
                     "post__pk": str(post.pk),

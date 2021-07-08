@@ -227,10 +227,12 @@ class CreateChatSerializer(serializers.Serializer):
 class ClearChatNotification(serializers.Serializer):
 
     def update(self, instance, validated_data):
+        chat = validated_data["chat"]
         user = self.context['request'].user
         user.pending_notifications = False
         user.pending_messages = False
-        notifications = NotificationUser.objects.filter(notification__chat=instance, is_read=False, user=user)
+        notifications = NotificationUser.objects.filter(
+            portal=chat.portal, notification__chat=instance, is_read=False, user=user)
 
         for notification in notifications:
             notification.is_read = True

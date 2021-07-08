@@ -15,6 +15,7 @@ import uuid
 
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status, viewsets, mixins
+from api.utils.mixins import AddPortalMixin
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -45,7 +46,7 @@ class ConnectionViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
+    AddPortalMixin,
 ):
     """User view set.
 
@@ -92,6 +93,17 @@ class ConnectionViewSet(
         if self.action == "remove":
             return RemoveConnectionSerializer
         return ConnectionModelSerializer
+
+    def get_serializer_context(self):
+        """
+        Extra context provided to the serializer class.
+        """
+        return {
+            "request": self.request,
+            "format": self.format_kwarg,
+            "view": self,
+            "portal": self.portal,
+        }
 
     def create(self, request, *args, **kwargs):
 

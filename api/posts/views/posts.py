@@ -533,49 +533,52 @@ class PostViewSet(
         portal.save()
         # Update member statistics
         member = PortalMember.objects.get(user=user, portal=portal)
-        member.karma_amount += instance.karma_offered
-        member.karma_refunded += instance.karma_offered
-        member.karma_spent -= instance.karma_offered
+        # Update the karma only if the role is Basic
+        if member.role == PortalMember.BASIC:
+
+            member.karma_amount += instance.karma_offered
+            member.karma_refunded += instance.karma_offered
+            member.karma_spent -= instance.karma_offered
+
+            # Calc member karma ratio
+            karma_earned = 1
+            karma_spent = 1
+
+            if member.karma_earned > 1:
+                karma_earned = member.karma_earned
+            if member.karma_spent > 1:
+                karma_spent = member.karma_spent
+
+            member.karma_ratio = karma_earned / karma_spent
+            # Update user statistics
+
+            if instance.status == Post.ACTIVE:
+                user.created_active_posts_count -= 1
+            elif instance.status == Post.SOLVED:
+                user.created_solved_posts_count -= 1
+            user.karma_amount += instance.karma_offered
+            user.karma_refunded += instance.karma_offered
+            user.karma_spent -= instance.karma_offered
+
+            # Calc karma ratio
+            karma_earned = 1
+            karma_spent = 1
+
+            if user.karma_earned > 1:
+                karma_earned = user.karma_earned
+            if user.karma_spent > 1:
+                karma_spent = user.karma_spent
+            user.karma_ratio = karma_earned / karma_spent
+
         member.posts_count -= 1
         if instance.status == Post.ACTIVE:
             member.created_active_posts_count -= 1
         elif instance.status == Post.SOLVED:
             member.created_solved_posts_count -= 1
-
-        # Calc member karma ratio
-        karma_earned = 1
-        karma_spent = 1
-
-        if member.karma_earned > 1:
-            karma_earned = member.karma_earned
-        if member.karma_spent > 1:
-            karma_spent = member.karma_spent
-
-        member.karma_ratio = karma_earned / karma_spent
-
         member.save()
 
-        # Update user statistics
         user.posts_count -= 1
         user.created_posts_count -= 1
-        if instance.status == Post.ACTIVE:
-            user.created_active_posts_count -= 1
-        elif instance.status == Post.SOLVED:
-            user.created_solved_posts_count -= 1
-        user.karma_amount += instance.karma_offered
-        user.karma_refunded += instance.karma_offered
-        user.karma_spent -= instance.karma_offered
-
-        # Calc karma ratio
-        karma_earned = 1
-        karma_spent = 1
-
-        if user.karma_earned > 1:
-            karma_earned = user.karma_earned
-        if user.karma_spent > 1:
-            karma_spent = user.karma_spent
-        user.karma_ratio = karma_earned / karma_spent
-
         user.save()
 
         for member in instance.members.all().exclude(id=user.id):

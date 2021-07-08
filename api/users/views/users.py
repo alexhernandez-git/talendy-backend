@@ -287,7 +287,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
             invitation_token = request.data['invitation_token']
         serializer = UserSignUpSerializer(
             data=request.data,
-            context={'request': request, 'seller': False, 'invitation_token': invitation_token})
+            context={'request': request, 'seller': False, 'invitation_token': invitation_token, "portal": self.portal})
         serializer.is_valid(raise_exception=True)
         user, token = serializer.save()
         user_serialized = UserModelSerializer(user).data
@@ -312,7 +312,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
         serializer = UserLoginSerializer(
             data=request.data,
-            context={'request': request}
+            context={'request': request, 'portal': self.portal}
 
         )
 

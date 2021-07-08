@@ -187,13 +187,14 @@ class PostModelSerializer(serializers.ModelSerializer):
                 post=post,
             )
             user_notification = NotificationUser.objects.create(
+                portal=post.portal,
                 notification=notification,
                 user=user_following.from_user
             )
 
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
-                "user-%s" % user_following.from_user.id, {
+                '{}-{}'.format(user_following.from_user.id, post.portal.url), {
                     "type": "send.notification",
                     "event": "POST_CREATED_BY_A_USER_FOLLOWED",
                     "notification__pk": str(user_notification.pk),
@@ -272,7 +273,9 @@ class RetrieveCollaborateRoomModelSerializer(serializers.ModelSerializer):
         if "request" in self.context and self.context["request"].user.id:
 
             user = self.context["request"].user
+            portal = self.context["portal"]
             return NotificationUser.objects.filter(
+                portal=portal,
                 notification__post=obj, notification__type=Notification.POST_MESSAGES, is_read=False,
                 user=user).exists()
         return None
@@ -282,8 +285,10 @@ class ClearPostChatNotificationSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         user = self.context['request'].user
+        portal = self.context["portal"]
+
         notifications = NotificationUser.objects.filter(
-            notification__post=instance, notification__type=Notification.POST_MESSAGES, is_read=False, user=user)
+            portal=portal, notification__post=instance, notification__type=Notification.POST_MESSAGES, is_read=False, user=user)
 
         for notification in notifications:
             notification.is_read = True
@@ -580,6 +585,7 @@ class FinalizePostSerializer(serializers.Serializer):
                     review=review,
                 )
                 user_notification = NotificationUser.objects.create(
+                    portal=post.portal,
                     notification=notification,
                     user=user
                 )
@@ -595,13 +601,14 @@ class FinalizePostSerializer(serializers.Serializer):
                 post=post,
             )
             user_notification = NotificationUser.objects.create(
+                portal=post.portal,
                 notification=notification,
                 user=user
             )
 
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
-                "user-%s" % user.id, {
+                '{}-{}'.format(user.id, portal.url), {
                     "type": "send.notification",
                     "event": "POST_FINALIZED",
                     "notification__pk": str(user_notification.pk),
