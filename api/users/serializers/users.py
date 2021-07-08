@@ -491,6 +491,8 @@ class UserLoginSerializer(serializers.Serializer):
                 elif new_member.role == PortalMember.ADMIN:
                     portal.active_admin_members_count += 1
 
+                new_member.save()
+                portal.save()
         regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
         # for custom mails use: '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$'
         if email and password:

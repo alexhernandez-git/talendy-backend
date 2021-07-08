@@ -4,6 +4,7 @@
 from api.users.models.karma_earnings import KarmaEarning
 from django.http.response import HttpResponse
 from rest_framework import status, viewsets, mixins
+from api.utils.mixins import AddPortalMixin
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.generics import get_object_or_404
@@ -52,7 +53,7 @@ class PostViewSet(
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin,
     mixins.CreateModelMixin,
-    viewsets.GenericViewSet,
+    AddPortalMixin,
 ):
     """User view set.
 
@@ -91,6 +92,17 @@ class PostViewSet(
         if self.action == "retrieve_collaborate_room":
             return RetrieveCollaborateRoomModelSerializer
         return PostModelSerializer
+
+    def get_serializer_context(self):
+        """
+        Extra context provided to the serializer class.
+        """
+        return {
+            "request": self.request,
+            "format": self.format_kwarg,
+            "view": self,
+            "portal": self.portal,
+        }
 
     def get_queryset(self):
         """Restrict list to public-only."""
@@ -306,7 +318,7 @@ class PostViewSet(
         instance = self.get_object()
         # Create seen by
         createSeenSerializer = CreatePostSeenBySerializer(
-            data={}, context={"request": request, "post": instance}
+            data={}, context={"request": request, "post": instance, "portal": self.portal}
         )
         is_valid = createSeenSerializer.is_valid(raise_exception=False)
         if is_valid:
@@ -316,7 +328,7 @@ class PostViewSet(
         clearChatNotification = ClearPostChatNotificationSerializer(
             instance,
             data={},
-            context={"request": request, "post": instance},
+            context={"request": request, "post": instance, "portal": self.portal},
             partial=True
         )
         is_valid = clearChatNotification.is_valid(raise_exception=False)
@@ -326,8 +338,10 @@ class PostViewSet(
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
-        serializer = PostModelSerializer(data=request.data, context={
-                                         "request": request, "images": request.data.getlist('images')})
+        serializer = PostModelSerializer(
+            data=request.data,
+            context={"request": request, "images": request.data.getlist('images'),
+                     "portal": self.portal})
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
@@ -341,7 +355,7 @@ class PostViewSet(
         serializer = PostModelSerializer(
             post, data=request.data,
             context={"request": request, "images": request.data.getlist('images'),
-                     "current_images": request.data['current_images']},
+                     "current_images": request.data['current_images'], "portal": self.portal},
             partial=partial)
 
         serializer.is_valid(raise_exception=True)
@@ -357,7 +371,7 @@ class PostViewSet(
         serializer = UpdatePostSharedNotesSerializer(
             post,
             data=request.data,
-            context={"request": request},
+            context={"request": request, "portal": self.portal},
             partial=partial)
 
         serializer.is_valid(raise_exception=True)
@@ -373,7 +387,7 @@ class PostViewSet(
         serializer = UpdatePostDrawingSerializer(
             post,
             data=request.data,
-            context={"request": request},
+            context={"request": request, "portal": self.portal},
             partial=partial)
 
         serializer.is_valid(raise_exception=True)
@@ -389,7 +403,7 @@ class PostViewSet(
         serializer = ClearPostDrawingSerializer(
             post,
             data=request.data,
-            context={"request": request},
+            context={"request": request, "portal": self.portal},
             partial=partial)
 
         serializer.is_valid(raise_exception=True)
@@ -405,7 +419,7 @@ class PostViewSet(
         serializer = UpdateKanbanListOrderSerializer(
             post,
             data=request.data,
-            context={"request": request},
+            context={"request": request, "portal": self.portal},
             partial=partial)
 
         serializer.is_valid(raise_exception=True)
@@ -421,7 +435,7 @@ class PostViewSet(
         serializer = UpdateKanbanCardOrderSerializer(
             post,
             data=request.data,
-            context={"request": request},
+            context={"request": request, "portal": self.portal},
             partial=partial)
 
         serializer.is_valid(raise_exception=True)
@@ -437,7 +451,7 @@ class PostViewSet(
         serializer = UpdateKanbanCardOrderBetweenListsSerializer(
             post,
             data=request.data,
-            context={"request": request},
+            context={"request": request, "portal": self.portal},
             partial=partial)
 
         serializer.is_valid(raise_exception=True)
@@ -453,7 +467,7 @@ class PostViewSet(
         serializer = UpdatePostSolutionSerializer(
             post,
             data=request.data,
-            context={"request": request},
+            context={"request": request, "portal": self.portal},
             partial=partial)
 
         serializer.is_valid(raise_exception=True)
@@ -469,7 +483,7 @@ class PostViewSet(
         serializer = UpdatePostWinnerKarmaSerializer(
             post,
             data=request.data,
-            context={"request": request},
+            context={"request": request, "portal": self.portal},
             partial=partial)
 
         serializer.is_valid(raise_exception=True)
@@ -485,7 +499,7 @@ class PostViewSet(
         serializer = StopCollaboratingSerializer(
             post,
             data=request.data,
-            context={"request": request},
+            context={"request": request, "portal": self.portal},
             partial=partial)
 
         serializer.is_valid(raise_exception=True)
@@ -502,7 +516,7 @@ class PostViewSet(
         serializer = FinalizePostSerializer(
             post,
             data=request.data,
-            context={"request": request},
+            context={"request": request, "portal": self.portal},
             partial=partial)
 
         serializer.is_valid(raise_exception=True)
