@@ -185,9 +185,7 @@ class CreatePortalSerializer(serializers.Serializer):
 
             if not 'currency' in validated_data or not validated_data['currency'] and currency:
                 validated_data['currency'] = currency
-
-            karma_amount = 1000
-
+            # Don't set the karma to this user because is a admin
             user = User.objects.create_user(
                 email=validated_data['email'],
                 username=validated_data['username'],
@@ -204,25 +202,9 @@ class CreatePortalSerializer(serializers.Serializer):
                 city=city,
                 zip=zip,
                 geolocation=Point(lon, lat),
-                karma_amount=karma_amount,
             )
             # Set the 1000 karma earned
-            # Add oficial portal later
-            KarmaEarning.objects.create(user=user, amount=karma_amount,
-                                        type=KarmaEarning.EARNED_BY_JOIN_PORTAL)
-            user.karma_earned += karma_amount
-            user.karma_by_join_portal += karma_amount
 
-            # Calc karma ratio
-            karma_earned = 1
-            karma_spent = 1
-
-            if user.karma_earned > 1:
-                karma_earned = user.karma_earned
-            if user.karma_spent > 1:
-                karma_spent = user.karma_spent
-            user.karma_ratio = karma_earned / karma_spent
-            user.save()
             token, created = Token.objects.get_or_create(
                 user=user)
 
@@ -306,17 +288,19 @@ class CreatePortalSerializer(serializers.Serializer):
             have_active_plan=True
         )
 
+        user.portals_count += 1
+        user.is_currency_permanent = True
+        user.save()
+
         # Add user to users in portal
         PortalMember.objects.create(portal=portal, user=user, is_active=True, role=PortalMember.ADMIN)
+
+        # Update portal statistics
         portal.members_count += 1
         portal.active_members_count += 1
         portal.admin_members_count += 1
         portal.active_admin_members_count += 1
         portal.save()
-
-        user.portals_count += 1
-        user.is_currency_permanent = True
-        user.save()
 
         # Create plan subscription
         PlanSubscription.objects.create(

@@ -430,6 +430,41 @@ class UserLoginSerializer(serializers.Serializer):
         except Portal.DoesNotExist:
             pass
 
+        if portal:
+            # Check if have a inactive member of this portal
+            members = PortalMember.objects.filter(is_active=False, email=email, password=password)
+            if members.exists():
+
+                # Get the member
+                new_member = members.first()
+
+                # Get the random username
+                username = helpers.get_random_username()
+
+                # Create the user
+                user = User.objects.create_user(
+                    first_name=new_member.first_name,
+                    last_name=new_member.last_name,
+                    email=new_member.email,
+                    username=username,
+                    password=new_member.password,
+                    is_verified=False,
+                    is_client=True,
+                    karma_amount=new_member.initial_karma_amount,
+                )
+
+                # Add the new user to the membership
+                new_member.user = user
+
+                # Update the portal statistics
+                portal.active_members_count += 1
+                if new_member.role == PortalMember.BASIC:
+                    portal.active_basic_members_count += 1
+                elif new_member.role == PortalMember.MANAGER:
+                    portal.active_manager_members_count += 1
+                elif new_member.role == PortalMember.ADMIN:
+                    portal.active_admin_members_count += 1
+
         regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
         # for custom mails use: '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$'
         if email and password:

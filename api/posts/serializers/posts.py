@@ -121,46 +121,48 @@ class PostModelSerializer(serializers.ModelSerializer):
         portal.save()
 
         # Update member statistics
-        KarmaEarning.objects.create(user=user, amount=post.karma_offered, type=KarmaEarning.SPENT, portal=portal)
+
+        # Set the karma only if the role is Basic user
         member = PortalMember.objects.get(user=user, portal=portal)
-        member.karma_amount -= post.karma_offered
-        member.karma_spent -= post.karma_offered
+        if member.role == PortalMember.BASIC:
+            KarmaEarning.objects.create(user=user, amount=post.karma_offered, type=KarmaEarning.SPENT, portal=portal)
+            member.karma_amount -= post.karma_offered
+            member.karma_spent -= post.karma_offered
+            # Calc member karma ratio
+            karma_earned = 1
+            karma_spent = 1
+
+            if member.karma_earned > 1:
+                karma_earned = member.karma_earned
+            if member.karma_spent > 1:
+                karma_spent = member.karma_spent
+
+            member.karma_ratio = karma_earned / karma_spent
+
+            # Update user statistics
+            user.karma_amount -= post.karma_offered
+            user.karma_spent += post.karma_offered
+
+            # Calc karma ratio
+            karma_earned = 1
+            karma_spent = 1
+
+            if user.karma_earned > 1:
+                karma_earned = user.karma_earned
+            if user.karma_spent > 1:
+                karma_spent = user.karma_spent
+            user.karma_ratio = karma_earned / karma_spent
+
+            user.posts_count += 1
+            user.created_posts_count += 1
+            user.created_active_posts_count += 1
+
+            user.save()
         member.posts_count += 1
         member.created_posts_count += 1
         member.created_active_posts_count += 1
 
-        # Calc member karma ratio
-        karma_earned = 1
-        karma_spent = 1
-
-        if member.karma_earned > 1:
-            karma_earned = member.karma_earned
-        if member.karma_spent > 1:
-            karma_spent = member.karma_spent
-
-        member.karma_ratio = karma_earned / karma_spent
-
         member.save()
-
-        # Update user statistics
-        user.karma_amount -= post.karma_offered
-        user.karma_spent += post.karma_offered
-
-        # Calc karma ratio
-        karma_earned = 1
-        karma_spent = 1
-
-        if user.karma_earned > 1:
-            karma_earned = user.karma_earned
-        if user.karma_spent > 1:
-            karma_spent = user.karma_spent
-        user.karma_ratio = karma_earned / karma_spent
-
-        user.posts_count += 1
-        user.created_posts_count += 1
-        user.created_active_posts_count += 1
-
-        user.save()
 
         for image in images:
 
@@ -502,11 +504,43 @@ class FinalizePostSerializer(serializers.Serializer):
 
         # Give the karma to the winner
         if post.karma_winner:
-            karma_winner = post.karma_winner.user
-            karma_winner.karma_amount += post.karma_offered
-            KarmaEarning.objects.create(user=karma_winner, amount=post.karma_offered, type=KarmaEarning.EARNED)
             subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
             portal = get_object_or_404(Portal, url=subdomain)
+            karma_winner = post.karma_winner.user
+
+            # Set the karma only if the role is Basic user
+            member = PortalMember.objects.get(user=karma_winner, portal=portal)
+            if member.role == PortalMember.BASIC:
+
+                karma_winner.karma_amount += post.karma_offered
+                KarmaEarning.objects.create(user=karma_winner, amount=post.karma_offered,
+                                            type=KarmaEarning.EARNED, portal=portal)
+                # Calc member karma ratio
+                karma_earned = 1
+                karma_spent = 1
+
+                if member.karma_earned > 1:
+                    karma_earned = member.karma_earned
+                if member.karma_spent > 1:
+                    karma_spent = member.karma_spent
+
+                member.karma_ratio = karma_earned / karma_spent
+                member.karma_earned += post.karma_offered
+                member.earned_by_post += post.karma_offered
+                # Update karma winner statistics
+
+                karma_winner.karma_earned += post.karma_offered
+                karma_winner.earned_by_post += post.karma_offered
+                # Calc karma ratio
+                karma_earned = 1
+                karma_spent = 1
+
+                if karma_winner.karma_earned > 1:
+                    karma_earned = karma_winner.karma_earned
+                if karma_winner.karma_spent > 1:
+                    karma_spent = karma_winner.karma_spent
+                karma_winner.karma_ratio = karma_earned / karma_spent
+                karma_winner.save()
 
             # Substract portal created_active_posts_count
             portal.created_active_posts_count -= 1
@@ -516,40 +550,10 @@ class FinalizePostSerializer(serializers.Serializer):
 
             portal.save()
             # Update member statistics
-            member = PortalMember.objects.get(user=karma_winner, portal=portal)
 
-            member.karma_earned += post.karma_offered
-            member.earned_by_post += post.karma_offered
             member.created_active_posts_count -= 1
             member.created_solved_posts_count += 1
-
-            # Calc member karma ratio
-            karma_earned = 1
-            karma_spent = 1
-
-            if member.karma_earned > 1:
-                karma_earned = member.karma_earned
-            if member.karma_spent > 1:
-                karma_spent = member.karma_spent
-
-            member.karma_ratio = karma_earned / karma_spent
-
             member.save()
-
-            # Update karma winner statistics
-
-            karma_winner.karma_earned += post.karma_offered
-            karma_winner.earned_by_post += post.karma_offered
-            # Calc karma ratio
-            karma_earned = 1
-            karma_spent = 1
-
-            if karma_winner.karma_earned > 1:
-                karma_earned = karma_winner.karma_earned
-            if karma_winner.karma_spent > 1:
-                karma_spent = karma_winner.karma_spent
-            karma_winner.karma_ratio = karma_earned / karma_spent
-            karma_winner.save()
 
         # Update the post finalized to members
         members = PostMember.objects.filter(post=post).exclude(user=admin)
