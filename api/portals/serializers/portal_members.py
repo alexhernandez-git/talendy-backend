@@ -90,6 +90,8 @@ class CreatePortalMemberSerializer(serializers.Serializer):
 
     role = serializers.CharField(min_length=2, max_length=2)
 
+    password = serializers.CharField()
+
     def validate(self, data):
         portal = self.context['portal']
 

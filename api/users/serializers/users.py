@@ -496,7 +496,7 @@ class UserLoginSerializer(serializers.Serializer):
                     portal.active_manager_members_count += 1
                 elif new_member.role == PortalMember.ADMIN:
                     portal.active_admin_members_count += 1
-
+                new_member.is_active = True
                 new_member.save()
                 portal.save()
         regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
