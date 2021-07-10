@@ -153,3 +153,56 @@ class IsMemberEmailAvailableSerializer(serializers.Serializer):
             raise serializers.ValidationError('This email is already in use')
 
         return {"email": email}
+
+
+class UpdateMemberRoleSerializer(serializers.Serializer):
+    """Acount verification serializer."""
+
+    role = serializers.CharField()
+
+    def validate(self, data):
+        """Update user's verified status."""
+        portal = self.instance.portal
+        request = self.context['request']
+        user = request.user
+        member = get_object_or_404(PortalMember, user=user, portal=portal)
+        # Check if im a admin
+        if member.role != PortalMember.ADMIN:
+            raise serializers.ValidationError('You must be admin to do this action')
+
+        return data
+
+    def update(self, instance, validated_data):
+        role = validated_data.get('role', None)
+        member = instance
+        portal = member.portal
+        if member.role == PortalMember.BASIC:
+            portal.basic_members_count -= 1
+            if member.is_active:
+                portal.active_basic_members_count -= 1
+        elif member.role == PortalMember.MANAGER:
+            portal.manager_members_count -= 1
+            if member.is_active:
+                portal.active_manager_members_count -= 1
+        elif member.role == PortalMember.ADMIN:
+            portal.admin_members_count -= 1
+            if member.is_active:
+                portal.active_admin_members_count -= 1
+        if role == PortalMember.BASIC:
+            portal.basic_members_count += 1
+            if member.is_active:
+                portal.active_basic_members_count += 1
+            member.role = role
+        elif role == PortalMember.MANAGER:
+            portal.manager_members_count += 1
+            if member.is_active:
+                portal.active_manager_members_count += 1
+            member.role = role
+        elif role == PortalMember.ADMIN:
+            portal.admin_members_count += 1
+            if member.is_active:
+                portal.active_admin_members_count += 1
+            member.role = role
+        portal.save()
+        member.save()
+        return instance

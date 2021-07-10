@@ -30,7 +30,7 @@ from api.portals.permissions import IsAdminOrManager
 from api.portals.models import PortalMember, Portal
 
 # Serializers
-from api.portals.serializers import PortalMemberModelSerializer, CreatePortalMemberSerializer, IsMemberEmailAvailableSerializer
+from api.portals.serializers import PortalMemberModelSerializer, CreatePortalMemberSerializer, IsMemberEmailAvailableSerializer, UpdateMemberRoleSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -75,6 +75,8 @@ class PortalMemberViewSet(
             return CreatePortalMemberSerializer
         elif self.action in ['is_member_email_available']:
             return IsMemberEmailAvailableSerializer
+        elif self.action in ['update_member_role']:
+            return UpdateMemberRoleSerializer
         return PortalMemberModelSerializer
 
     def get_queryset(self):
@@ -182,3 +184,21 @@ class PortalMemberViewSet(
             send_portal_access(member, portal)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['patch'])
+    def update_member_role(self, request, *args, **kwargs):
+
+        member = self.get_object()
+        partial = request.method == 'PATCH'
+
+        serializer = self.get_serializer(
+            member,
+            data=request.data,
+            partial=partial)
+
+        serializer.is_valid(raise_exception=True)
+        data = serializer.save()
+
+        data = PortalMemberModelSerializer(data).data
+
+        return Response(data, status=status.HTTP_200_OK)
