@@ -165,10 +165,16 @@ class UpdateMemberRoleSerializer(serializers.Serializer):
         portal = self.instance.portal
         request = self.context['request']
         user = request.user
-        member = get_object_or_404(PortalMember, user=user, portal=portal)
+        member = self.instance
         # Check if im a admin
         if member.role != PortalMember.ADMIN:
             raise serializers.ValidationError('You must be admin to do this action')
+
+        if member.user == user:
+            raise serializers.ValidationError('You cannot change your role')
+
+        if member.user == portal.owner:
+            raise serializers.ValidationError('You cannot change the owner role')
 
         return data
 

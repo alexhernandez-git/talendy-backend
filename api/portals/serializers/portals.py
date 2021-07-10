@@ -68,6 +68,7 @@ class PortalModelSerializer(serializers.ModelSerializer):
             "passed_free_trial_once",
             "free_trial_expiration",
             "plan",
+            "owner",
             "created"
         )
 
