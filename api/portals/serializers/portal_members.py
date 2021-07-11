@@ -167,6 +167,7 @@ class UpdateMemberRoleSerializer(serializers.Serializer):
         user = request.user
         member_me = get_object_or_404(PortalMember, user=user, portal=portal)
         member = self.instance
+
         # Check if im a admin
         if member_me.role != PortalMember.ADMIN:
             raise serializers.ValidationError('You must be admin to do this action')

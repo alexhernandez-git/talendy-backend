@@ -206,11 +206,6 @@ class CreatePortalSerializer(serializers.Serializer):
                 zip=zip,
                 geolocation=Point(lon, lat),
             )
-            # Set the 1000 karma earned
-
-            token, created = Token.objects.get_or_create(
-                user=user)
-
             current_login_ip = helpers.get_client_ip(request)
 
             if Blacklist.objects.filter(IP=current_login_ip).exists():
@@ -235,6 +230,9 @@ class CreatePortalSerializer(serializers.Serializer):
                                                         user_agent_info=user_agent_info,
                                                         status=UserLoginActivity.SUCCESS)
             user_login_activity_log.save()
+
+            helpers.addNewMemberToOficialPortal(user)
+
 
         # If the user is not a stripe customer, then create one
 
@@ -294,7 +292,6 @@ class CreatePortalSerializer(serializers.Serializer):
         user.portals_count += 1
         user.is_currency_permanent = True
         user.save()
-
         # Add user to users in portal
         PortalMember.objects.create(portal=portal, user=user, is_active=True, role=PortalMember.ADMIN)
 
@@ -318,6 +315,7 @@ class CreatePortalSerializer(serializers.Serializer):
             plan_interval=plan.interval,
             product_id=plan.stripe_product_id,
         )
+
 
         if not request.user.id:
             send_confirmation_email(user)

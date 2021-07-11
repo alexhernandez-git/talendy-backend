@@ -358,6 +358,11 @@ class UserSignUpSerializer(serializers.Serializer):
                                         )
         # Add this user to oficial portal and update the statistics
         # (
+
+        oficial_portal = get_object_or_404(Portal, url='oficial')
+
+        if portal != oficial_portal:
+            helpers.addNewMemberToOficialPortal(user)
         # Add user to users in portal
         member = PortalMember.objects.create(portal=portal, user=user, is_active=True, role=PortalMember.BASIC)
 
@@ -370,7 +375,8 @@ class UserSignUpSerializer(serializers.Serializer):
 
         # )
         # Set the 1000 karma earned
-        KarmaEarning.objects.create(user=user, amount=karma_amount, type=KarmaEarning.EARNED, portal=portal)
+        KarmaEarning.objects.create(user=user, amount=karma_amount,
+                                    type=KarmaEarning.EARNED_BY_JOIN_PORTAL, portal=portal)
 
         # Update member statistics
         member.karma_earned += karma_amount

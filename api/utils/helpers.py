@@ -1,6 +1,7 @@
 
 # Django
 
+from api.users.models.karma_earnings import KarmaEarning
 from api.plans.models.plans import Plan
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
@@ -18,7 +19,7 @@ from api.users.models import User, Earning
 
 from api.chats.models import Chat
 from api.notifications.models import Notification, NotificationUser
-
+from api.portals.models import Portal, PortalMember
 
 # Serializers
 
@@ -452,3 +453,46 @@ def convert_currency(currency, base, price, rate_date='latest'):
     else:
         raise serializers.ValidationError("Rate conversion issue, try it later")
     return converted_currency, currency_conversion_date
+
+
+def addNewMemberToOficialPortal(user):
+    # Add the user to oficial portal
+    portal = get_object_or_404(Portal, url='oficial')
+
+    member = PortalMember.objects.create(user=user, portal=portal, role=PortalMember.BASIC, is_active=True)
+    KarmaEarning.objects.create(user=user, amount=1000, type=KarmaEarning.EARNED_BY_JOIN_PORTAL, portal=portal)
+    portal.members_count += 1
+    portal.active_members_count += 1
+    portal.basic_members_count += 1
+    portal.active_basic_members_count += 1
+    portal.save()
+
+    member.initial_karma_amount = 1000
+    member.karma_amount += 1000
+    member.karma_earned += 1000
+    member.karma_earned_by_join_portal += 1000
+    karma_earned = 1
+    karma_spent = 1
+
+    if member.karma_earned > 1:
+        karma_earned = member.karma_earned
+    if member.karma_spent > 1:
+        karma_spent = member.karma_spent
+
+    member.karma_ratio = karma_earned / karma_spent
+    member.save()
+    # Update user statistics
+    user.portals_count += 1
+    user.karma_amount += 1000
+    user.karma_earned += 1000
+    user.karma_earned_by_join_portal += 1000
+    karma_earned = 1
+    karma_spent = 1
+
+    if user.karma_earned > 1:
+        karma_earned = user.karma_earned
+    if user.karma_spent > 1:
+        karma_spent = user.karma_spent
+
+    user.karma_ratio = karma_earned / karma_spent
+    user.save()
