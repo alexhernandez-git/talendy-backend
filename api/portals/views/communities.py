@@ -13,6 +13,7 @@ import uuid
 
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status, viewsets, mixins
+from api.utils.mixins import AddPortalMixin
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -25,10 +26,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from api.users.permissions import IsAccountOwner
 
 # Models
-from api.communities.models import Community
+from api.portals.models import Community
 
 # Serializers
-from api.communities.serializers import CommunityModelSerializer
+from api.portals.serializers import CommunityModelSerializer
 
 # Filters
 from rest_framework.filters import SearchFilter
@@ -42,7 +43,7 @@ from api.utils import helpers
 class CommunityViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
-    viewsets.GenericViewSet,
+    AddPortalMixin,
 ):
     """User view set.
 
@@ -56,7 +57,7 @@ class CommunityViewSet(
     pagination_class = None
 
     def get_queryset(self):
-        
-        queryset = Community.objects.all().order_by('created')
+
+        queryset = Community.objects.filter(portal=self.portal).order_by('created')
 
         return queryset

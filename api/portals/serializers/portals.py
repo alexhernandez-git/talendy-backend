@@ -75,6 +75,8 @@ class PortalModelSerializer(serializers.ModelSerializer):
         read_only_fields = ("id",)
 
     def get_plan(self, obj):
+        if obj.is_oficial:
+            return None
         plan = PlanSubscription.objects.get(portal=obj, cancelled=False)
         return PlanSubscriptionModelSerializer(plan, many=False).data
 

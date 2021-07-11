@@ -90,7 +90,6 @@ INSTALLED_APPS = [
     "api.donations.apps.DonationsAppConfig",
     "api.posts.apps.PostsAppConfig",
     "api.plans.apps.PlansAppConfig",
-    "api.communities.apps.CommunitiesAppConfig",
     "api.portals.apps.PortalsAppConfig",
     "api.chats",
     # THIRD_PARTY_APPS

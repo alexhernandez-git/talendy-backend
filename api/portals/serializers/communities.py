@@ -10,7 +10,7 @@ from rest_framework import serializers
 
 
 # Models
-from api.communities.models import Community
+from api.portals.models import Community
 
 
 class CommunityModelSerializer(serializers.ModelSerializer):

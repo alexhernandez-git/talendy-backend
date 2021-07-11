@@ -34,7 +34,7 @@ class Post(CModel):
         default=ANYONE
     )
 
-    community = models.ForeignKey("communities.Community", on_delete=models.SET_NULL, null=True, blank=True)
+    community = models.ForeignKey("portals.Community", on_delete=models.SET_NULL, null=True, blank=True)
 
     ACTIVE = 'AC'
     SOLVED = 'SO'
