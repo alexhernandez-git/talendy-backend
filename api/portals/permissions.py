@@ -14,15 +14,14 @@ class IsAdminOrManagerPortal(BasePermission):
     def has_object_permission(self, request, view, obj):
 
         member = get_object_or_404(PortalMember, user=request.user, portal=obj)
-        return member.role == PortalMember.ADMINISTRATOR or member.role == PortalMember.MANAGER
+        return member.role == PortalMember.ADMIN or member.role == PortalMember.MANAGER
 
 
 class IsAdminOrManager(BasePermission):
 
     def has_object_permission(self, request, view, obj):
-
-        member = get_object_or_404(PortalMember, user=request.user, portal=self.portal)
-        return member.role == PortalMember.ADMINISTRATOR or member.role == PortalMember.MANAGER
+        member = get_object_or_404(PortalMember, user=request.user, portal=view.portal)
+        return member.role == PortalMember.ADMIN or member.role == PortalMember.MANAGER
 
 
 class IsAdmin(BasePermission):
@@ -30,4 +29,4 @@ class IsAdmin(BasePermission):
     def has_object_permission(self, request, view, obj):
 
         member = get_object_or_404(PortalMember, user=request.user, portal=obj)
-        return member.role == PortalMember.ADMINISTRATOR
+        return member.role == PortalMember.ADMIN
