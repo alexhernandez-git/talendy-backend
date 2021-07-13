@@ -25,7 +25,7 @@ from .post_members import PostMemberModelSerializer
 from api.users.models import User, Review, Follow, Connection, KarmaEarning
 from api.posts.models import Post, PostImage, PostMember, CollaborateRequest, PostSeenBy, KanbanList, KanbanCard, PostFile
 from api.notifications.models import Notification, NotificationUser
-from api.portals.models import Portal, PortalMember
+from api.portals.models import Portal, PortalMember, Community
 from api.posts.serializers.post_kanbans import KanbanListModelSerializer
 
 # Utils
@@ -115,6 +115,14 @@ class PostModelSerializer(serializers.ModelSerializer):
         portal.created_posts_count += 1
         portal.created_active_posts_count += 1
         portal.save()
+
+        # Update community statistics
+
+        if post.community:
+            community = post.community
+            community.posts_count += 1
+            community.active_posts_count += 1
+            community.save()
 
         # Update member statistics
 
@@ -616,6 +624,13 @@ class FinalizePostSerializer(serializers.Serializer):
         admin.save()
         post.status = Post.SOLVED
         post.save()
+        # Update community statistics
+
+        if post.community:
+            community = post.community
+            community.active_posts_count -= 1
+            community.solved_posts_count += 1
+            community.save()
         # Remove files
         PostFile.objects.filter(post=post).update(file=None)
         return instance

@@ -609,4 +609,16 @@ class PostViewSet(
             member.save()
 
         instance.delete()
+
+        # Update community statistics
+
+        if instance.community:
+            community = instance.community
+            community.posts_count -= 1
+            if instance.status == Post.ACTIVE:
+                community.active_posts_count -= 1
+            elif instance.status == Post.SOLVED:
+                community.solved_posts_count -= 1
+            community.save()
+
         return Response(status=status.HTTP_204_NO_CONTENT)

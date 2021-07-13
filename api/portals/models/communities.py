@@ -9,14 +9,6 @@ class Community(CModel):
 
     posts_count = models.IntegerField(default=0)
 
-    created_posts_count = models.IntegerField(default=0)
+    active_posts_count = models.IntegerField(default=0)
 
-    created_active_posts_count = models.IntegerField(default=0)
-
-    created_solved_posts_count = models.IntegerField(default=0)
-
-    collaborated_posts_count = models.IntegerField(default=0)
-
-    collaborated_active_posts_count = models.IntegerField(default=0)
-
-    collaborated_solved_posts_count = models.IntegerField(default=0)
+    solved_posts_count = models.IntegerField(default=0)
