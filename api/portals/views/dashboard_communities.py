@@ -57,7 +57,7 @@ class CommunityViewSet(
 
     def get_queryset(self):
 
-        queryset = Community.objects.filter(portal=self.portal).order_by('created')
+        queryset = Community.objects.filter(portal=self.portal)
 
         return queryset
 
