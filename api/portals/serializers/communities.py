@@ -20,10 +20,13 @@ class CommunityModelSerializer(serializers.ModelSerializer):
         model = Community
         fields = (
             "id",
-            "name"
+            "name",
+            "posts_count",
+            "active_posts_count",
+            "solved_posts_count",
         )
 
-        read_only_fields = ("id",)
+        read_only_fields = ("id", "posts_count", "active_posts_count", "solved_posts_count")
 
     def validate(self, data):
         return data
