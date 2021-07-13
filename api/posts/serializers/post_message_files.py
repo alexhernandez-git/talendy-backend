@@ -8,10 +8,8 @@ from api.posts.models import PostMessage, PostMessageFile
 
 
 class PostMessageFileModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     class Meta:
-        """Meta class."""
 
         model = PostMessageFile
         fields = ("id", "file", "name")

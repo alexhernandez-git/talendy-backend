@@ -1,4 +1,4 @@
-"""Users serializers."""
+
 
 # Django REST Framework
 
@@ -34,10 +34,8 @@ from api.utils import helpers
 
 
 class PlanSubscriptionModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     class Meta:
-        """Meta class."""
 
         model = PlanSubscription
         fields = (

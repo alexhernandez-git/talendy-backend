@@ -36,6 +36,5 @@ class Plan(CModel):
     stripe_product_id = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
-        """Meta option."""
 
         ordering = ['unit_amount']

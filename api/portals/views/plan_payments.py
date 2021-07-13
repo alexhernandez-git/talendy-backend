@@ -1,4 +1,4 @@
-"""Users views."""
+
 
 # Django
 from django.core.mail import EmailMultiAlternatives
@@ -46,23 +46,17 @@ class PlanPaymentViewSet(
     mixins.ListModelMixin,
     AddPortalMixin
 ):
-    """User view set.
-
-    Handle sign up, login and account verification.
-    """
 
     queryset = PlanPayment.objects.all()
     lookup_field = "id"
     serializer_class = PlanPaymentModelSerializer
 
     def get_permissions(self):
-        """Assign permissions based on action."""
 
         permissions = [IsAuthenticated]
         return [p() for p in permissions]
 
     def get_queryset(self):
-        """Restrict list to public-only."""
 
         queryset = PlanPayment.objects.filter(portal=self.portal)
 

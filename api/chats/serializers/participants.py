@@ -9,10 +9,8 @@ from api.users.serializers import UserModelSerializer
 
 
 class ParticipantModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     class Meta:
-        """Meta class."""
 
         model = Participant
         fields = (

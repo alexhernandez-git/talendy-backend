@@ -9,10 +9,8 @@ from api.users.serializers import UserModelSerializer
 
 
 class PostSeenByModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     class Meta:
-        """Meta class."""
 
         model = PostSeenBy
         fields = ("id", "post", "message", "user", "modified")

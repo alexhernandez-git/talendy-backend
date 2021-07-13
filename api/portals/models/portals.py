@@ -58,6 +58,8 @@ class Portal(CModel):
 
     collaborated_solved_posts_count = models.IntegerField(default=0)
 
+    communities_count = models.IntegerField(default=0)
+
     plan_default_payment_method = models.CharField(max_length=100, blank=True, null=True)
 
     free_trial_invoiced = models.BooleanField(default=False)
@@ -89,5 +91,5 @@ class Portal(CModel):
     is_oficial = models.BooleanField(default=False)
 
     def __str__(self):
-        """Return username."""
+
         return '{}'.format(self.name)

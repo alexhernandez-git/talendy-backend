@@ -1,4 +1,4 @@
-"""Users views."""
+
 
 # Django
 import pdb
@@ -51,7 +51,6 @@ class ChatViewSet(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
-    """Chats view set."""
 
     queryset = Chat.objects.all()
     lookup_field = "id"
@@ -64,13 +63,12 @@ class ChatViewSet(
     )
 
     def get_permissions(self):
-        """Assign permissions based on action."""
 
         permissions = [IsAuthenticated]
         return [p() for p in permissions]
 
     def get_serializer_class(self):
-        """Return serializer based on action."""
+
         if self.action == "create":
             return CreateChatSerializer
         elif self.action == "retrieve":

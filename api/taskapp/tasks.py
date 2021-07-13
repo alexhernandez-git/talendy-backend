@@ -1,4 +1,4 @@
-"""Celery tasks."""
+
 
 # Django
 from django.conf import settings
@@ -27,7 +27,6 @@ import re
 
 @task(name='send_feedback_email', max_retries=3)
 def send_feedback_email(data):
-    """Send account verification link to given user."""
 
     subject = 'Feedback from'.format(
         data['email'])
@@ -43,7 +42,6 @@ def send_feedback_email(data):
 
 @task(name='send_confirmation_email', max_retries=3)
 def send_confirmation_email(user):
-    """Send account verification link to given user."""
 
     verification_token = helpers.gen_verification_token(user)
     subject = 'Welcome @{}! Verify your account to start using Talendy'.format(
@@ -60,7 +58,6 @@ def send_confirmation_email(user):
 
 @task(name='send_change_email_email', max_retries=3)
 def send_change_email_email(user, new_email):
-    """Send account verification link to given user."""
 
     verification_token = helpers.gen_new_email_token(user, new_email)
     subject = 'Welcome @{}! Change your email'.format(
@@ -77,7 +74,7 @@ def send_change_email_email(user, new_email):
 
 @task(name='send_reset_password', max_retries=3)
 def send_reset_password_email(user_email):
-    """Send account verification link to given user."""
+
     user = User.objects.get(email=user_email)
     verification_token = helpers.gen_verification_token(user)
 
@@ -94,7 +91,6 @@ def send_reset_password_email(user_email):
 
 @task(name='send_invitation_email', max_retries=3)
 def send_invitation_email(user, to_user):
-    """Send account verification link to given user."""
 
     subject = 'Welcome! @{} has invited you '.format(
         user.username)
@@ -111,7 +107,6 @@ def send_invitation_email(user, to_user):
 
 @task(name='send_post_to_followers', max_retries=3)
 def send_post_to_followers(user, to_user, post):
-    """Send account verification link to given user."""
 
     subject = '@{} has just created new post'.format(
         user.username)
@@ -128,7 +123,6 @@ def send_post_to_followers(user, to_user, post):
 
 @task(name='send_have_messages_from_email', max_retries=3)
 def send_have_messages_from_email(sent_to, sent_by):
-    """Check if the free trial has ended and turn off"""
 
     subject = 'New messages from @{}'.format(
         sent_by.username)
@@ -145,7 +139,6 @@ def send_have_messages_from_email(sent_to, sent_by):
 
 @task(name='send_have_collaborate_room_messages_from_email', max_retries=3)
 def send_have_collaborate_room_messages_from_email(sent_to, sent_by, post):
-    """Check if the free trial has ended and turn off"""
 
     subject = 'New collaborate room messages from @{}'.format(
         sent_by.username)
@@ -162,7 +155,6 @@ def send_have_collaborate_room_messages_from_email(sent_to, sent_by, post):
 
 @task(name='send_connection_accepted', max_retries=3)
 def send_connection_accepted(user, sent_to):
-    """Check if the free trial has ended and turn off"""
 
     subject = '@{} is your new connection'.format(
         user.username)
@@ -179,7 +171,6 @@ def send_connection_accepted(user, sent_to):
 
 @task(name='send_collaborate_request', max_retries=3)
 def send_collaborate_request(user, sent_to):
-    """Check if the free trial has ended and turn off"""
 
     subject = 'New collaborate request from @{}'.format(
         user.username)
@@ -196,7 +187,6 @@ def send_collaborate_request(user, sent_to):
 
 @task(name='send_collaborate_request_accepted', max_retries=3)
 def send_collaborate_request_accepted(post, sent_to):
-    """Check if the free trial has ended and turn off"""
 
     subject = 'Collaborate request accepted by @{}'.format(
         post.user.username)
@@ -213,7 +203,6 @@ def send_collaborate_request_accepted(post, sent_to):
 
 @task(name='send_post_finalized', max_retries=3)
 def send_post_finalized(user, sent_to, post):
-    """Check if the free trial has ended and turn off"""
 
     subject = '@{} has finalized the post'.format(
         user.username)
@@ -230,7 +219,6 @@ def send_post_finalized(user, sent_to, post):
 
 @task(name='send_new_donation', max_retries=3)
 def send_new_donation(user, sent_to, is_anonymous):
-    """Check if the free trial has ended and turn off"""
 
     if is_anonymous:
         subject = 'You recieved new donation from anonymous user'
@@ -249,7 +237,6 @@ def send_new_donation(user, sent_to, is_anonymous):
 
 @task(name='send_portal_access', max_retries=3)
 def send_portal_access(member, portal):
-    """Check if the free trial has ended and turn off"""
 
     subject = '@{} access to portal of the'.format(
         portal.name)
@@ -277,7 +264,7 @@ def send_portal_access(member, portal):
 
 @task(name='check_if_pending_clearance_has_ended', max_retries=3)
 def check_if_pending_clearance_has_ended():
-    """Check if pending clearance has ended."""
+
     today = timezone.now()
 
     earnings = Earning.objects.filter(

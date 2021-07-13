@@ -1,4 +1,4 @@
-"""Users views."""
+
 
 # Django
 from typing import OrderedDict
@@ -19,7 +19,7 @@ from django.http import HttpResponse
 
 # Permissions
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
-from api.portals.permissions import IsAdminOrManager
+from api.portals.permissions import IsAdminOrManagerPortal
 
 # Models
 from api.portals.models import Portal, PlanSubscription, PlanPayment
@@ -53,10 +53,6 @@ class PortalViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet
 ):
-    """User view set.
-
-    Handle sign up, login and account verification.
-    """
 
     queryset = Portal.objects.all()
     lookup_field = "url"
@@ -69,7 +65,7 @@ class PortalViewSet(
     )
 
     def get_permissions(self):
-        """Assign permissions based on action."""
+
         permissions = []
 
         if self.action in ['create', 'is_name_available', 'is_url_available', 'retrieve']:
@@ -77,12 +73,11 @@ class PortalViewSet(
         elif self.action in ['list']:
             permissions = [IsAuthenticated]
         elif self.action in ['update']:
-            permissions = [IsAdminOrManager]
+            permissions = [IsAdminOrManagerPortal]
 
         return [p() for p in permissions]
 
     def get_serializer_class(self):
-        """Return serializer based on action."""
 
         if self.action in ['create']:
             return CreatePortalSerializer
@@ -108,9 +103,7 @@ class PortalViewSet(
         return queryset
 
     def get_serializer_context(self):
-        """
-        Extra context provided to the serializer class.
-        """
+
         if 'STRIPE_API_KEY' in env:
             stripe.api_key = env('STRIPE_API_KEY')
         else:
@@ -192,7 +185,7 @@ class PortalViewSet(
 
     @action(detail=False, methods=['post'])
     def is_name_available(self, request, *args, **kwargs):
-        """Check if name passed is correct."""
+
         serializer = IsNameAvailableSerializer(
             data=request.data,
         )
@@ -203,7 +196,7 @@ class PortalViewSet(
 
     @action(detail=False, methods=['post'])
     def is_url_available(self, request, *args, **kwargs):
-        """Check if url passed is correct."""
+
         serializer = IsUrlAvailableSerializer(
             data=request.data,
         )
@@ -233,7 +226,6 @@ class PortalViewSet(
 
     @action(detail=False, methods=['patch'])
     def cancel_subscription(self, request, *args, **kwargs):
-        """Process stripe connect auth flow."""
 
         subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
 
@@ -253,7 +245,6 @@ class PortalViewSet(
 
     @action(detail=False, methods=['patch'])
     def reactivate_subscription(self, request, *args, **kwargs):
-        """Process stripe connect auth flow."""
 
         subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
 
@@ -273,7 +264,7 @@ class PortalViewSet(
 
     @action(detail=False, methods=['post'])
     def stripe_webhooks_invoice_payment_succeeded(self, request, *args, **kwargs):
-        """Process stripe webhook notification for subscription cancellation"""
+
         payload = request.body
         event = None
         if 'STRIPE_API_KEY' in env:
@@ -381,7 +372,7 @@ class PortalViewSet(
 
     @action(detail=False, methods=['post'])
     def stripe_webhook_subscription_deleted(self, request, *args, **kwargs):
-        """Process stripe webhook notification for subscription cancellation"""
+
         payload = request.body
         event = None
         if 'STRIPE_API_KEY' in env:
@@ -414,7 +405,7 @@ class PortalViewSet(
 
     @action(detail=False, methods=['post'])
     def stripe_webhook_subscription_updated(self, request, *args, **kwargs):
-        """Process stripe webhook notification for subscription cancellation"""
+
         payload = request.body
         event = None
         if 'STRIPE_API_KEY' in env:

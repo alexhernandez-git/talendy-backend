@@ -1,4 +1,4 @@
-"""Notifications serializers."""
+
 
 # Django REST Framework
 from api.taskapp.tasks import send_post_finalized, send_post_to_followers
@@ -29,10 +29,8 @@ import json
 
 
 class KanbanCardModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     class Meta:
-        """Meta class."""
 
         model = KanbanCard
         fields = (
@@ -68,12 +66,10 @@ class KanbanCardModelSerializer(serializers.ModelSerializer):
 
 
 class KanbanListModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     cards = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = KanbanList
         fields = (

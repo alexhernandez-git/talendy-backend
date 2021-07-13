@@ -1,4 +1,4 @@
-"""Add circle mixin abstract."""
+
 
 # Django REST Framework
 from rest_framework import mixins, viewsets
@@ -14,14 +14,9 @@ from urllib.parse import urlparse
 
 
 class AddPortalMixin(viewsets.GenericViewSet):
-    """Add circle mixin
-
-    Manages adding a circle object to views
-    that require it.
-    """
 
     def dispatch(self, request, *args, **kwargs):
-        """Return the normal dispatch but adds the circle model."""
+
         url = self.kwargs["portal_url"]
 
         try:
@@ -33,14 +28,8 @@ class AddPortalMixin(viewsets.GenericViewSet):
 
 
 class AddListMixin(viewsets.GenericViewSet):
-    """Add circle mixin
-
-    Manages adding a circle object to views
-    that require it.
-    """
 
     def dispatch(self, request, *args, **kwargs):
-        """Return the normal dispatch but adds the circle model."""
 
         id = self.kwargs["slug_id"]
 
@@ -54,14 +43,8 @@ class AddListMixin(viewsets.GenericViewSet):
 
 
 class AddPostMixin(viewsets.GenericViewSet):
-    """Add circle mixin
-
-    Manages adding a circle object to views
-    that require it.
-    """
 
     def dispatch(self, request, *args, **kwargs):
-        """Return the normal dispatch but adds the circle model."""
 
         id = self.kwargs["slug_id"]
 
@@ -71,14 +54,8 @@ class AddPostMixin(viewsets.GenericViewSet):
 
 
 class AddChatMixin(viewsets.GenericViewSet):
-    """Add circle mixin
-
-    Manages adding a circle object to views
-    that require it.
-    """
 
     def dispatch(self, request, *args, **kwargs):
-        """Return the normal dispatch but adds the circle model."""
 
         id = self.kwargs["slug_id"]
 

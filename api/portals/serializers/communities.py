@@ -1,4 +1,4 @@
-"""Notifications serializers."""
+
 
 # Django REST Framework
 from rest_framework import serializers
@@ -16,7 +16,6 @@ from api.portals.models import Community
 class CommunityModelSerializer(serializers.ModelSerializer):
 
     class Meta:
-        """Meta class."""
 
         model = Community
         fields = (
@@ -25,3 +24,16 @@ class CommunityModelSerializer(serializers.ModelSerializer):
         )
 
         read_only_fields = ("id",)
+
+    def validate(self, data):
+        return data
+
+    def create(self, validated_data):
+        portal = self.context['portal']
+
+        community = Community.objects.create(**validated_data, portal=portal)
+
+        portal.communities_count += 1
+        portal.save()
+
+        return community

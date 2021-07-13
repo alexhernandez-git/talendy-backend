@@ -1,5 +1,4 @@
 
-"""Users serializers."""
 
 # Django REST Framework
 from rest_framework import serializers
@@ -16,10 +15,8 @@ from api.users.models import KarmaEarning, User
 
 
 class KarmaEarningModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     class Meta:
-        """Meta class."""
 
         model = KarmaEarning
         fields = (

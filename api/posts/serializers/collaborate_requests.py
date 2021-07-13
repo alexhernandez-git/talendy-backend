@@ -1,4 +1,4 @@
-"""Notifications serializers."""
+
 
 # Django REST Framework
 from rest_framework import serializers
@@ -28,13 +28,11 @@ from api.taskapp.tasks import send_collaborate_request, send_collaborate_request
 
 
 class CollaborateRequestModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     user = UserModelSerializer(read_only=True)
     post = PostModelSerializer(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = CollaborateRequest
         fields = (
@@ -102,7 +100,6 @@ class RequestCollaborateSerializer(serializers.Serializer):
 
 
 class AcceptCollaborateRequestSerializer(serializers.Serializer):
-    """User model serializer."""
 
     def validate(self, data):
         collaborate_request = self.instance

@@ -1,4 +1,4 @@
-"""Users serializers."""
+
 
 # Django REST Framework
 from rest_framework import serializers
@@ -18,12 +18,10 @@ from api.users.models import Review, User
 
 
 class ReviewModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     review_user = UserModelSerializer(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = Review
         fields = (

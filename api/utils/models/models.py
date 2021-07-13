@@ -1,4 +1,4 @@
-"""Django models utilities."""
+
 
 # Django
 from django.contrib.gis.db import models
@@ -8,13 +8,7 @@ import uuid
 
 
 class CModel(models.Model):
-    """Comparte Ride base model.
-    MRideModel acts as an abstract base class from which every
-    other model in the project will inherit. This class provides
-    every table with the follow attributes:
-        + created (DateTime): Store the datetime the object was created.
-        + modified (DateTime): Store the last datetime the object was modified.
-    """
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     created = models.DateTimeField(
@@ -29,7 +23,6 @@ class CModel(models.Model):
     )
 
     class Meta:
-        """Meta option."""
 
         abstract = True
 

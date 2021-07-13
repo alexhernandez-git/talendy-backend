@@ -9,10 +9,8 @@ from api.users.serializers import UserModelSerializer
 
 
 class SeenByModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     class Meta:
-        """Meta class."""
 
         model = SeenBy
         fields = ("id", "chat", "message", "user", "modified")

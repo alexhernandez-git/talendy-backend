@@ -1,4 +1,4 @@
-"""Users views."""
+
 
 # Django
 import pdb
@@ -45,10 +45,6 @@ class PostMemberViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
-    """User view set.
-
-    Handle sign up, login and account verification.
-    """
 
     queryset = PostMember.objects.all()
     lookup_field = "id"
@@ -56,7 +52,7 @@ class PostMemberViewSet(
     filter_backends = (SearchFilter, DjangoFilterBackend)
 
     def get_permissions(self):
-        """Assign permissions based on action."""
+
         if self.action in ['update']:
             permissions = [IsAuthenticated, IsPostOwnerPostMembers]
         else:

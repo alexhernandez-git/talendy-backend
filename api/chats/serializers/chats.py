@@ -18,7 +18,6 @@ from api.utils import helpers
 
 
 class ChatModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     room_name = serializers.SerializerMethodField(read_only=True)
     picture = serializers.SerializerMethodField(read_only=True)
@@ -29,7 +28,6 @@ class ChatModelSerializer(serializers.ModelSerializer):
     last_message_created = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = Chat
         fields = (
@@ -107,7 +105,6 @@ class ChatModelSerializer(serializers.ModelSerializer):
 
 
 class RetrieveChatModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     room_name = serializers.SerializerMethodField(read_only=True)
     to_user = serializers.SerializerMethodField(read_only=True)
@@ -118,7 +115,6 @@ class RetrieveChatModelSerializer(serializers.ModelSerializer):
     last_message_created = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = Chat
         fields = (

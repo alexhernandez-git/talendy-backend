@@ -1,4 +1,4 @@
-"""Users views."""
+
 # Django
 from api.portals.models.portal_members import PortalMember
 from api.portals.models.portals import Portal
@@ -81,10 +81,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
                   mixins.UpdateModelMixin,
                   mixins.DestroyModelMixin,
                   AddPortalMixin):
-    """User view set.
-
-    Handle sign up, login and account verification.
-    """
 
     queryset = User.objects.filter(account_deactivated=False, is_staff=False)
     serializer_class = UserModelSerializer
@@ -93,7 +89,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
     search_fields = ('first_name', 'last_name', 'username')
 
     def get_permissions(self):
-        """Assign permissions based on action."""
+
         if self.action in [
             'signup',
             'login',
@@ -116,7 +112,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return [p() for p in permissions]
 
     def get_serializer_class(self):
-        """Return serializer based on action."""
 
         if self.action in ['partial_update', 'get_user', 'login', 'register']:
             return DetailedUserModelSerializer
@@ -193,7 +188,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @action(detail=False, methods=['post'])
     def leave_feedback(self, request, *args, **kwargs):
-        """Check if email passed is correct."""
 
         send_feedback_email(request.data)
         return Response(status=status.HTTP_200_OK)
@@ -238,7 +232,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @ action(detail=False, methods=['get'])
     def get_currency(self, request, *args, **kwargs):
-        """Check if email passed is correct."""
+
         serializer = self.get_serializer(data=self.request.data)
 
         serializer.is_valid(raise_exception=True)
@@ -248,7 +242,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @ action(detail=False, methods=['post'])
     def confirm_user(self, request, *args, **kwargs):
-        """Check if email passed is correct."""
+
         serializer = ConfirmUserSerializer(
             data=request.data,
             context={'request': request}
@@ -259,7 +253,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @ action(detail=False, methods=['post'])
     def is_email_available(self, request, *args, **kwargs):
-        """Check if email passed is correct."""
+
         serializer = IsEmailAvailableSerializer(
             data=request.data,
         )
@@ -270,7 +264,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @ action(detail=False, methods=['post'])
     def is_username_available(self, request, *args, **kwargs):
-        """Check if email passed is correct."""
+
         serializer = IsUsernameAvailableSerializer(
             data=request.data,
         )
@@ -280,7 +274,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @ action(detail=False, methods=['post'])
     def signup(self, request, *args, **kwargs):
-        """User sign up."""
+
         request.data['username'] = helpers.get_random_username()
         invitation_token = None
         if 'invitation_token' in request.data:
@@ -299,7 +293,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @ action(detail=False, methods=['get'])
     def send_verification_email(self, request, *args, **kwargs):
-        """Send the email confirmation."""
+
         if request.user.id:
             user = request.user
             send_confirmation_email(user)
@@ -308,7 +302,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @ action(detail=False, methods=['post'])
     def login(self, request, *args, **kwargs):
-        """User login."""
 
         serializer = UserLoginSerializer(
             data=request.data,
@@ -338,7 +331,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @ action(detail=False, methods=['post'])
     def change_password(self, request, *args, **kwargs):
-        """User login."""
+
         serializer = ChangePasswordSerializer(
             data=request.data,
             context={'request': request}
@@ -350,7 +343,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @ action(detail=False, methods=['post'])
     def change_email(self, request, *args, **kwargs):
-        """Account verification."""
+
         serializer = ChangeEmailSerializer(
             data=request.data, context={'user': request.user})
         serializer.is_valid(raise_exception=True)
@@ -358,7 +351,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @ action(detail=False, methods=['post'])
     def validate_change_email(self, request, *args, **kwargs):
-        """Account verification."""
+
         serializer = ValidateChangeEmail(
             data=request.data, context={'user': request.user})
         serializer.is_valid(raise_exception=True)
@@ -368,7 +361,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @ action(detail=False, methods=['post'])
     def forget_password(self, request, *args, **kwargs):
-        """User login."""
+
         serializer = ForgetPasswordSerializer(
             data=request.data,
         )
@@ -379,7 +372,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @ action(detail=False, methods=['post'])
     def reset_password(self, request, *args, **kwargs):
-        """Account verification."""
+
         serializer = ResetPasswordSerializer(
             data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -388,7 +381,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @ action(detail=False, methods=['post'])
     def verify(self, request, *args, **kwargs):
-        """Account verification."""
+
         serializer = AccountVerificationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -397,7 +390,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @ action(detail=False, methods=['patch'])
     def remove_card(self, request, *args, **kwargs):
-        """Remove payment method"""
+
         user = request.user
         if 'STRIPE_API_KEY' in env:
             stripe.api_key = env('STRIPE_API_KEY')
@@ -411,7 +404,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @ action(detail=False, methods=['post'])
     def paypal_connect(self, request, *args, **kwargs):
-        """Process stripe connect auth flow."""
+
         user = request.user
 
         partial = request.method == 'PATCH'
@@ -499,7 +492,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @ action(detail=False, methods=['patch'])
     def attach_payment_method(self, request, *args, **kwargs):
-        """Process stripe connect auth flow."""
 
         user = request.user
         if 'STRIPE_API_KEY' in env:
@@ -527,7 +519,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     @ action(detail=False, methods=['patch'])
     def detach_payment_method(self, request, *args, **kwargs):
-        """Process stripe connect auth flow."""
 
         user = request.user
         if 'STRIPE_API_KEY' in env:

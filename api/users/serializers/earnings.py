@@ -1,5 +1,4 @@
 
-"""Users serializers."""
 
 # Django REST Framework
 from rest_framework import serializers
@@ -32,10 +31,8 @@ env = environ.Env()
 
 
 class EarningModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     class Meta:
-        """Meta class."""
 
         model = Earning
         fields = (
@@ -50,10 +47,8 @@ class EarningModelSerializer(serializers.ModelSerializer):
 
 
 class WithdrawFundsModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     class Meta:
-        """Meta class."""
 
         model = Earning
         fields = (

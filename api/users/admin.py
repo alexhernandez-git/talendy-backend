@@ -1,4 +1,4 @@
-"""User models admin."""
+
 
 # Django
 from django.contrib import admin
@@ -10,20 +10,17 @@ from api.users.models import User, Earning, Follow, UserLoginActivity, Connectio
 
 @admin.register(Follow)
 class FollowAdmin(admin.ModelAdmin):
-    """Follow model admin."""
 
     list_display = ("id", "from_user", "followed_user")
 
 
 @admin.register(Connection)
 class ConnectionAdmin(admin.ModelAdmin):
-    """Connection model admin."""
 
     list_display = ("id", "requester", "addressee")
 
 
 class CustomUserAdmin(UserAdmin):
-    """User model admin."""
 
     fieldsets = UserAdmin.fieldsets + ((None,
                                         {
@@ -53,18 +50,18 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(Earning)
 class EarningAdmin(admin.ModelAdmin):
-    """Earning model admin."""
+    pass
 
 
 @admin.register(UserLoginActivity)
 class UserLoginActivityAdmin(admin.ModelAdmin):
-    """UserLoginActivity model admin."""
+
     list_display = ("login_username", "created")
 
 
 @admin.register(Blacklist)
 class BlacklistAdmin(admin.ModelAdmin):
-    """Blacklist model admin."""
+
     list_display = ("IP", "created")
 
 

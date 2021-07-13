@@ -1,4 +1,4 @@
-"""Program views."""
+
 
 # Django REST Framework
 from rest_framework import mixins, viewsets, status, filters
@@ -38,7 +38,6 @@ class PostFolderViewSet(mixins.CreateModelMixin,
                         mixins.DestroyModelMixin,
                         AddPostMixin):
 
-    """Circle view set."""
     pagination_class = None
     serializer_class = PostFolderModelSerializer
     lookup_field = 'pk'
@@ -47,13 +46,13 @@ class PostFolderViewSet(mixins.CreateModelMixin,
     search_fields = ['name']
 
     def get_permissions(self):
-        """Assign permissions based on action."""
+
         permissions = [IsAuthenticated]
 
         return [permission() for permission in permissions]
 
     def get_queryset(self):
-        """Restrict list to public-only."""
+
         queryset = PostFolder.objects.filter(post=self.post_object)
         return queryset
 
@@ -74,7 +73,6 @@ class PostFolderViewSet(mixins.CreateModelMixin,
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
-        """Call by owners to finish a ride."""
 
         post = self.post_object
         if 'top_folder' in request.data:

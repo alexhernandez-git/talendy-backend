@@ -1,4 +1,4 @@
-"""User model."""
+
 
 # Django
 from django.db.models.fields.related import ManyToManyField
@@ -14,10 +14,6 @@ from api.utils.models import CModel
 
 
 class User(CModel, AbstractUser):
-    """User model.
-    Extend from Django's Abstract User, change the username field
-    to email and add some extra fields.
-    """
 
     email = models.EmailField(
         'email address',
@@ -169,7 +165,7 @@ class User(CModel, AbstractUser):
     is_online = models.BooleanField(default=False)
 
     def __str__(self):
-        """Return username."""
+
         return '{} {}'.format(self.first_name, self.last_name)
 
     def save(self, **kwargs):
@@ -184,7 +180,6 @@ class User(CModel, AbstractUser):
         super(User, self).save(**kwargs)
 
     class Meta:
-        """Meta option."""
 
         get_latest_by = 'created'
         ordering = ['-karma_amount', '-created', '-modified']

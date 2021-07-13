@@ -1,4 +1,4 @@
-"""Users views."""
+
 
 # Django
 import pdb
@@ -46,10 +46,6 @@ class FollowViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    """User view set.
-
-    Handle sign up, login and account verification.
-    """
 
     queryset = Follow.objects.all()
     lookup_field = "id"
@@ -63,13 +59,11 @@ class FollowViewSet(
     )
 
     def get_permissions(self):
-        """Assign permissions based on action."""
 
         permissions = [IsAuthenticated]
         return [p() for p in permissions]
 
     def get_queryset(self):
-        """Restrict list to public-only."""
 
         user = self.request.user
         queryset = Follow.objects.filter(from_user=user)
@@ -77,7 +71,7 @@ class FollowViewSet(
         return queryset
 
     def get_serializer_class(self):
-        """Return serializer based on action."""
+
         if self.action == "create":
             return CreateFollowSerializer
         if self.action == "unfollow":

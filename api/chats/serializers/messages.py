@@ -8,13 +8,11 @@ from api.chats.models import Message, Chat, MessageFile
 
 
 class MessageModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     sent_by = serializers.SerializerMethodField(read_only=True)
     files = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = Message
         fields = (

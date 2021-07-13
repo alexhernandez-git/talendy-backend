@@ -1,4 +1,4 @@
-"""Users serializers."""
+
 
 # Django
 from django.conf import settings
@@ -55,11 +55,10 @@ env = environ.Env()
 
 
 class DetailedUserModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
+
     member = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = User
         fields = (
@@ -129,7 +128,7 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
 
 
 class UserModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
+
     is_followed = serializers.SerializerMethodField(read_only=True)
     connection_invitation_sent = serializers.SerializerMethodField(read_only=True)
     is_connection = serializers.SerializerMethodField(read_only=True)
@@ -137,7 +136,6 @@ class UserModelSerializer(serializers.ModelSerializer):
     member = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = User
         fields = (
@@ -227,7 +225,7 @@ class GetUserByJwtSerializer(serializers.Serializer):
     token = serializers.CharField()
 
     def validate_token(self, data):
-        """Verifiy token is valid."""
+
         try:
             payload = jwt.decode(data, settings.SECRET_KEY,
                                  algorithms=['HS256'])
@@ -266,10 +264,6 @@ class GetCurrencySerializer(serializers.Serializer):
 
 
 class UserSignUpSerializer(serializers.Serializer):
-    """Useer sign up serializer.
-
-    Handle sign up data validation and user/profile creation.
-    """
 
     # Future me: filter email UniqueValidator by only public client
     email = serializers.CharField(
@@ -303,7 +297,7 @@ class UserSignUpSerializer(serializers.Serializer):
     currency = serializers.CharField(max_length=3, required=False)
 
     def validate(self, data):
-        """Verify passwords match."""
+
         passwd = data['password']
 
         password_validation.validate_password(passwd)
@@ -331,7 +325,7 @@ class UserSignUpSerializer(serializers.Serializer):
         return data
 
     def create(self, data):
-        """Handle user and profile creation."""
+
         request = self.context['request']
         portal = self.context['portal']
 
@@ -439,16 +433,12 @@ class UserSignUpSerializer(serializers.Serializer):
 
 
 class UserLoginSerializer(serializers.Serializer):
-    """User login serializer.
-
-    Handle the login request
-    """
 
     email = serializers.CharField()
     password = serializers.CharField()
 
     def validate(self, data):
-        """Check credentials."""
+
         # Validation with email or password
 
         email = data['email']
@@ -563,19 +553,17 @@ class UserLoginSerializer(serializers.Serializer):
         return data
 
     def create(self, data):
-        """Genereview or retrieve new token."""
 
         token, created = Token.objects.get_or_create(user=self.context['user'])
         return self.context['user'], token.key
 
 
 class AccountVerificationSerializer(serializers.Serializer):
-    """Acount verification serializer."""
 
     token = serializers.CharField()
 
     def validate_token(self, data):
-        """Verifiy token is valid."""
+
         try:
             payload = jwt.decode(data, settings.SECRET_KEY,
                                  algorithms=['HS256'])
@@ -589,7 +577,7 @@ class AccountVerificationSerializer(serializers.Serializer):
         return data
 
     def save(self):
-        """Update user's verified status."""
+
         payload = self.context['payload']
         user = User.objects.get(username=payload['user'])
         if user.is_verified:
@@ -600,12 +588,10 @@ class AccountVerificationSerializer(serializers.Serializer):
 
 
 class IsEmailAvailableSerializer(serializers.Serializer):
-    """Acount verification serializer."""
 
     email = serializers.CharField()
 
     def validate(self, data):
-        """Update user's verified status."""
 
         email = data['email']
 
@@ -616,12 +602,10 @@ class IsEmailAvailableSerializer(serializers.Serializer):
 
 
 class IsUsernameAvailableSerializer(serializers.Serializer):
-    """Acount verification serializer."""
 
     username = serializers.CharField()
 
     def validate(self, data):
-        """Update user's verified status."""
 
         username = data['username']
 
@@ -632,12 +616,10 @@ class IsUsernameAvailableSerializer(serializers.Serializer):
 
 
 class ChangeEmailSerializer(serializers.Serializer):
-    """Acount verification serializer."""
 
     email = serializers.CharField()
 
     def validate(self, data):
-        """Update user's verified status."""
 
         email = data['email']
         if User.objects.filter(email=email).exists():
@@ -650,12 +632,11 @@ class ChangeEmailSerializer(serializers.Serializer):
 
 
 class ValidateChangeEmail(serializers.Serializer):
-    """Acount verification serializer."""
 
     token = serializers.CharField()
 
     def validate_token(self, data):
-        """Verifiy token is valid."""
+
         try:
             payload = jwt.decode(data, settings.SECRET_KEY,
                                  algorithms=['HS256'])
@@ -669,7 +650,7 @@ class ValidateChangeEmail(serializers.Serializer):
         return data
 
     def save(self):
-        """Update user's verified status."""
+
         payload = self.context['payload']
         user = User.objects.get(username=payload['user'])
         email = payload['email']
@@ -680,12 +661,10 @@ class ValidateChangeEmail(serializers.Serializer):
 
 
 class ForgetPasswordSerializer(serializers.Serializer):
-    """Acount verification serializer."""
 
     email = serializers.CharField()
 
     def validate(self, data):
-        """Update user's verified status."""
 
         email = data['email']
 
@@ -697,14 +676,13 @@ class ForgetPasswordSerializer(serializers.Serializer):
 
 
 class ResetPasswordSerializer(serializers.Serializer):
-    """Acount verification serializer."""
 
     token = serializers.CharField()
     password = serializers.CharField(min_length=8, max_length=64)
     confirm_password = serializers.CharField(min_length=8, max_length=64)
 
     def validate_token(self, data):
-        """Verifiy token is valid."""
+
         try:
             payload = jwt.decode(data, settings.SECRET_KEY,
                                  algorithms=['HS256'])
@@ -726,7 +704,7 @@ class ResetPasswordSerializer(serializers.Serializer):
         return data
 
     def save(self):
-        """Update user's verified status."""
+
         username = self.context['payload']['user']
 
         password = self.data['password']
@@ -737,16 +715,13 @@ class ResetPasswordSerializer(serializers.Serializer):
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    """User login serializer.
 
-    Handle the login request
-    """
     password = serializers.CharField(min_length=8, max_length=64)
     new_password = serializers.CharField(min_length=8, max_length=64)
     repeat_password = serializers.CharField(min_length=8, max_length=64)
 
     def validate(self, data):
-        """Check credentials."""
+
         # Validation with email or password
         regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
         # for custom mails use: '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$'
@@ -777,14 +752,11 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 
 class ConfirmUserSerializer(serializers.Serializer):
-    """User login serializer.
 
-    Handle the login request
-    """
     password = serializers.CharField(min_length=8, max_length=64)
 
     def validate(self, data):
-        """Check credentials."""
+
         # Validation with email or password
         regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
         # for custom mails use: '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$'
@@ -808,14 +780,12 @@ class ConfirmUserSerializer(serializers.Serializer):
 
 
 class InviteUserSerializer(serializers.Serializer):
-    """Acount verification serializer."""
 
     email = serializers.CharField()
     type = serializers.CharField()
     message = serializers.CharField(allow_blank=True)
 
     def validate(self, data):
-        """Update user's verified status."""
 
         email = data['email']
         type = data['type']
@@ -833,13 +803,12 @@ class InviteUserSerializer(serializers.Serializer):
 
 
 class PaypalConnectSerializer(serializers.Serializer):
-    """Paypal connect serializer serializer."""
 
     email = serializers.CharField()
     email_confirmation = serializers.CharField()
 
     def validate(self, data):
-        """Update user's verified status."""
+
         email = data['email']
         email_confirmation = data['email_confirmation']
         if email != email_confirmation:
@@ -857,12 +826,12 @@ class PaypalConnectSerializer(serializers.Serializer):
 
 
 class AttachPaymentMethodSerializer(serializers.Serializer):
-    """Acount verification serializer."""
+
     payment_method_id = serializers.CharField(required=True)
     card_name = serializers.CharField(required=True)
 
     def validate(self, data):
-        """Update user's verified status."""
+
         stripe = self.context['stripe']
         user = self.context['request'].user
         payment_method_id = data['payment_method_id']
@@ -913,11 +882,11 @@ class AttachPaymentMethodSerializer(serializers.Serializer):
 
 
 class DetachPaymentMethodSerializer(serializers.Serializer):
-    """Acount verification serializer."""
+
     payment_method_id = serializers.CharField()
 
     def validate(self, data):
-        """Update user's verified status."""
+
         stripe = self.context['stripe']
         user = self.context['request'].user
         payment_method_id = data['payment_method_id']
@@ -1264,7 +1233,7 @@ class CreateDonationSerializer(serializers.Serializer):
 
 
 class UpdateGeolocation(serializers.Serializer):
-    """Acount verification serializer."""
+
     latitude = serializers.FloatField()
     longitude = serializers.FloatField()
 

@@ -1,5 +1,4 @@
 
-"""Users serializers."""
 
 # Django REST Framework
 from rest_framework import serializers
@@ -16,10 +15,8 @@ from api.portals.models import PlanPayment
 
 
 class PlanPaymentModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     class Meta:
-        """Meta class."""
 
         model = PlanPayment
         fields = (

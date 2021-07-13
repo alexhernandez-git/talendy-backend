@@ -1,4 +1,4 @@
-"""Notifications serializers."""
+
 
 # Django REST Framework
 from rest_framework import serializers
@@ -21,7 +21,6 @@ from api.notifications.models import NotificationUser, Notification
 
 
 class NotificationModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     actor = UserModelSerializer(read_only=True)
     messages = serializers.SerializerMethodField(read_only=True)
@@ -34,7 +33,6 @@ class NotificationModelSerializer(serializers.ModelSerializer):
     donation = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = Notification
         fields = (
@@ -92,13 +90,11 @@ class NotificationModelSerializer(serializers.ModelSerializer):
 
 
 class NotificationUserModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     user = UserModelSerializer(read_only=True)
     notification = NotificationModelSerializer(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = NotificationUser
         fields = (

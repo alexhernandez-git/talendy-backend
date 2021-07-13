@@ -45,7 +45,7 @@ def get_client_ip(request):
 
 
 def gen_verification_token(user):
-    """Create JWT token than the user can use to verify its account."""
+
     exp_date = timezone.now() + timedelta(days=3)
     payload = {
         'user': user.username,
@@ -61,7 +61,7 @@ def gen_verification_token(user):
 
 
 def gen_new_email_token(user, new_email):
-    """Create JWT token than the user change the email."""
+
     exp_date = timezone.now() + timedelta(days=3)
     payload = {
         'user': user.username,
@@ -78,7 +78,7 @@ def gen_new_email_token(user, new_email):
 
 
 def get_invitation_token(from_user, email):
-    """Create JWT token than the user change the email."""
+
     exp_date = timezone.now() + timedelta(days=7)
     payload = {
         'from_user': str(from_user.pk),
@@ -96,7 +96,7 @@ def get_invitation_token(from_user, email):
 
 
 def get_user_token(user_id):
-    """Create JWT token than the user can use to verify its account."""
+
     payload = {
         'user': str(user_id),
         'expiresIn': 0,
@@ -460,7 +460,6 @@ def addNewMemberToOficialPortal(user):
     portal = get_object_or_404(Portal, url='oficial')
 
     member = PortalMember.objects.create(user=user, portal=portal, role=PortalMember.BASIC, is_active=True)
-    KarmaEarning.objects.create(user=user, amount=1000, type=KarmaEarning.EARNED_BY_JOIN_PORTAL, portal=portal)
     portal.members_count += 1
     portal.active_members_count += 1
     portal.basic_members_count += 1
@@ -481,7 +480,10 @@ def addNewMemberToOficialPortal(user):
 
     member.karma_ratio = karma_earned / karma_spent
     member.save()
+
     # Update user statistics
+    KarmaEarning.objects.create(user=user, amount=1000, type=KarmaEarning.EARNED_BY_JOIN_PORTAL, portal=portal)
+
     user.portals_count += 1
     user.karma_amount += 1000
     user.karma_earned += 1000

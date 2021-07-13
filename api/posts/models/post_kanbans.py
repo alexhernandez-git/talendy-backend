@@ -12,7 +12,6 @@ class KanbanList(CModel):
     order = models.IntegerField()
 
     class Meta:
-        """Meta option."""
 
         ordering = ['order']
 
@@ -25,6 +24,5 @@ class KanbanCard(CModel):
     order = models.IntegerField()
 
     class Meta:
-        """Meta option."""
 
         ordering = ['order']

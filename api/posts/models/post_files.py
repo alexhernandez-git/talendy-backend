@@ -1,4 +1,4 @@
-"""Work experience model."""
+
 
 # Django
 from django.db import models
@@ -35,7 +35,7 @@ class PostFile(CModel):
     size = models.IntegerField(default=0)
 
     def __str__(self):
-        """Return description."""
+
         return '{}'.format(self.name)
 
     def save(self, **kwargs):

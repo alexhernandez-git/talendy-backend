@@ -1,4 +1,4 @@
-"""Users views."""
+
 
 # Django
 from django.core.mail import EmailMultiAlternatives
@@ -49,10 +49,6 @@ class PortalMemberViewSet(
     mixins.DestroyModelMixin,
     AddPortalMixin
 ):
-    """User view set.
-
-    Handle sign up, login and account verification.
-    """
 
     queryset = PortalMember.objects.all()
     lookup_field = "id"
@@ -61,7 +57,7 @@ class PortalMemberViewSet(
     search_fields = ('first_name', 'last_name')
 
     def get_permissions(self):
-        """Assign permissions based on action."""
+
         if self.action in ['destroy']:
             permissions = IsAdminOrManager
         else:
@@ -69,7 +65,6 @@ class PortalMemberViewSet(
         return [p() for p in permissions]
 
     def get_serializer_class(self):
-        """Return serializer based on action."""
 
         if self.action in ['create']:
             return CreatePortalMemberSerializer
@@ -80,7 +75,6 @@ class PortalMemberViewSet(
         return PortalMemberModelSerializer
 
     def get_queryset(self):
-        """Restrict list to public-only."""
 
         queryset = PortalMember.objects.filter(portal=self.portal)
 
@@ -96,7 +90,7 @@ class PortalMemberViewSet(
 
     @ action(detail=False, methods=['post'])
     def is_member_email_available(self, request, *args, **kwargs):
-        """Check if email passed is correct."""
+
         serializer = self.get_serializer(
             data=request.data,
         )

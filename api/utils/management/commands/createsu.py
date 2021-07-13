@@ -8,5 +8,5 @@ class Command(BaseCommand):
 
         if not User.objects.filter(username="alexadmin").exists():
             User.objects.create_superuser(
-                "alexadmin", "alexandrehernandez@talendy.com", "talendyAdmin321")
+                "alexadmin", "alexandrehernandez@talendy.com", "password123")
             print("Super user created")

@@ -56,9 +56,9 @@ class SetupUsersInitialData(APITestCase):
 class RegisterTestAPITestCase(SetupUsersInitialData):
 
     def test_is_seller_registered(self):
-        """Seller should be created"""
+
         self.assertEqual(self.seller_response.status_code, status.HTTP_201_CREATED)
 
     def test_is_buyer_registered(self):
-        """Buyer should be created"""
+
         self.assertEqual(self.buyer_response.status_code, status.HTTP_201_CREATED)

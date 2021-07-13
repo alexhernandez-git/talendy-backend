@@ -1,4 +1,4 @@
-"""Work experience model."""
+
 
 # Django
 from django.db import models
@@ -25,5 +25,5 @@ class PostFolder(CModel):
     color = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
-        """Return description."""
+
         return '{}'.format(self.name)

@@ -1,4 +1,4 @@
-"""Users serializers."""
+
 
 # Django REST Framework
 
@@ -35,11 +35,10 @@ from api.utils import helpers
 
 
 class PortalMemberModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
+
     user = UserModelSerializer(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = PortalMember
         fields = (
@@ -139,12 +138,10 @@ class CreatePortalMemberSerializer(serializers.Serializer):
 
 
 class IsMemberEmailAvailableSerializer(serializers.Serializer):
-    """Acount verification serializer."""
 
     email = serializers.CharField()
 
     def validate(self, data):
-        """Update user's verified status."""
 
         email = data['email']
         portal = self.context['portal']
@@ -156,12 +153,11 @@ class IsMemberEmailAvailableSerializer(serializers.Serializer):
 
 
 class UpdateMemberRoleSerializer(serializers.Serializer):
-    """Acount verification serializer."""
 
     role = serializers.CharField()
 
     def validate(self, data):
-        """Update user's verified status."""
+
         portal = self.instance.portal
         request = self.context['request']
         user = request.user

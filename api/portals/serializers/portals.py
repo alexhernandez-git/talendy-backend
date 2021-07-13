@@ -1,4 +1,4 @@
-"""Users serializers."""
+
 
 # Django REST Framework
 
@@ -38,11 +38,10 @@ import tldextract
 
 
 class PortalModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
+
     plan = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = Portal
         fields = (
@@ -82,12 +81,11 @@ class PortalModelSerializer(serializers.ModelSerializer):
 
 
 class PortalListModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
+
     owner = UserModelSerializer(read_only=True)
     members = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = Portal
         fields = (
@@ -233,7 +231,6 @@ class CreatePortalSerializer(serializers.Serializer):
 
             helpers.addNewMemberToOficialPortal(user)
 
-
         # If the user is not a stripe customer, then create one
 
         if not user.stripe_customer_id:
@@ -316,7 +313,6 @@ class CreatePortalSerializer(serializers.Serializer):
             product_id=plan.stripe_product_id,
         )
 
-
         if not request.user.id:
             send_confirmation_email(user)
 
@@ -324,12 +320,10 @@ class CreatePortalSerializer(serializers.Serializer):
 
 
 class IsNameAvailableSerializer(serializers.Serializer):
-    """Acount verification serializer."""
 
     name = serializers.CharField(allow_blank=True)
 
     def validate(self, data):
-        """Update user's verified status."""
 
         name = data['name']
 
@@ -340,12 +334,10 @@ class IsNameAvailableSerializer(serializers.Serializer):
 
 
 class IsUrlAvailableSerializer(serializers.Serializer):
-    """Acount verification serializer."""
 
     url = serializers.CharField(allow_blank=True)
 
     def validate(self, data):
-        """Update user's verified status."""
 
         url = data['url']
 
@@ -356,7 +348,6 @@ class IsUrlAvailableSerializer(serializers.Serializer):
 
 
 class AddBillingInformationSerializer(serializers.Serializer):
-    """Acount verification serializer."""
 
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
@@ -371,7 +362,7 @@ class AddBillingInformationSerializer(serializers.Serializer):
     state = serializers.CharField(required=False, allow_blank=True)
 
     def validate(self, data):
-        """Update user's verified status."""
+
         stripe = self.context['stripe']
         request = self.context['request']
         portal = self.instance
@@ -478,12 +469,11 @@ class AddBillingInformationSerializer(serializers.Serializer):
 
 
 class ChangePaymentMethodSerializer(serializers.Serializer):
-    """Acount verification serializer."""
 
     payment_method_id = serializers.CharField(required=True)
 
     def validate(self, data):
-        """Update user's verified status."""
+
         request = self.context['request']
         user = request.user
         portal = self.instance
@@ -578,10 +568,9 @@ class ChangePlanSerializer(serializers.Serializer):
 
 
 class CancelSubscriptionSerializer(serializers.Serializer):
-    """Acount verification serializer."""
 
     def validate(self, data):
-        """Update user's verified status."""
+
         stripe = self.context['stripe']
         user = self.context['request'].user
         portal = self.instance
@@ -608,10 +597,9 @@ class CancelSubscriptionSerializer(serializers.Serializer):
 
 
 class ReactivateSubscriptionSerializer(serializers.Serializer):
-    """Acount verification serializer."""
 
     def validate(self, data):
-        """Update user's verified status."""
+
         stripe = self.context['stripe']
         user = self.context['request'].user
         portal = self.instance

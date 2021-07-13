@@ -1,4 +1,4 @@
-"""PostFile serializer."""
+
 
 # Django
 from django.shortcuts import get_object_or_404
@@ -15,11 +15,10 @@ from .post_folders import TopPostFolderModelSerializer
 
 
 class PostFileModelSerializer(serializers.ModelSerializer):
-    """PostFile model serializer."""
+
     top_folder = TopPostFolderModelSerializer(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = PostFile
         fields = (
@@ -60,7 +59,7 @@ class PostFileModelSerializer(serializers.ModelSerializer):
 
 
 class MovePostFilesSerializer(serializers.Serializer):
-    """PostFolder model serializer."""
+
     top_folder = serializers.CharField()
 
     def validate(self, data):

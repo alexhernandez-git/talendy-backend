@@ -1,4 +1,4 @@
-"""Users views."""
+
 
 # Django
 from django.core.mail import EmailMultiAlternatives
@@ -45,17 +45,13 @@ class DonationViewSet(
     mixins.CreateModelMixin,
     viewsets.GenericViewSet
 ):
-    """User view set.
-
-    Handle sign up, login and account verification.
-    """
 
     queryset = Donation.objects.all()
     lookup_field = "id"
     serializer_class = DonationModelSerializer
 
     def get_permissions(self):
-        """Assign permissions based on action."""
+
         if self.action in ['list', 'retrieve']:
             permissions = [IsAuthenticated]
         else:
@@ -63,13 +59,10 @@ class DonationViewSet(
         return [p() for p in permissions]
 
     def get_serializer_class(self):
-        """Return serializer based on action."""
+
         return DonationModelSerializer
 
     def get_serializer_context(self):
-        """
-        Extra context provided to the serializer class.
-        """
 
         context = {
             "request": self.request,
@@ -80,7 +73,7 @@ class DonationViewSet(
         return context
 
     def get_queryset(self):
-        """Restrict list to public-only."""
+
         if self.action in ['list', 'retrieve']:
             user = self.request.user
 

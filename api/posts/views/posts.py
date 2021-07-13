@@ -1,4 +1,4 @@
-"""Users views."""
+
 
 # Django
 from api.users.models.karma_earnings import KarmaEarning
@@ -55,10 +55,6 @@ class PostViewSet(
     mixins.CreateModelMixin,
     AddPortalMixin,
 ):
-    """User view set.
-
-    Handle sign up, login and account verification.
-    """
 
     queryset = Post.objects.all()
     lookup_field = "id"
@@ -75,7 +71,7 @@ class PostViewSet(
     )
 
     def get_permissions(self):
-        """Assign permissions based on action."""
+
         if self.action in ['create']:
             permissions = [IsAuthenticated]
         elif self.action in ['update', 'update_solution', 'update_karma_winner', 'finalize']:
@@ -87,16 +83,13 @@ class PostViewSet(
         return [p() for p in permissions]
 
     def get_serializer_class(self):
-        """Return serializer based on action."""
 
         if self.action == "retrieve_collaborate_room":
             return RetrieveCollaborateRoomModelSerializer
         return PostModelSerializer
 
     def get_serializer_context(self):
-        """
-        Extra context provided to the serializer class.
-        """
+
         return {
             "request": self.request,
             "format": self.format_kwarg,
@@ -105,7 +98,7 @@ class PostViewSet(
         }
 
     def get_queryset(self):
-        """Restrict list to public-only."""
+
         subdomain = tldextract.extract(self.request.META['HTTP_ORIGIN']).subdomain
         portal = None
         try:

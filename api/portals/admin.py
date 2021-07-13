@@ -1,4 +1,4 @@
-"""Portals models admin."""
+
 
 # Django
 from django.contrib import admin
@@ -9,7 +9,6 @@ from api.portals.models import Portal, PortalMember
 
 @admin.register(Portal)
 class PortalAdmin(admin.ModelAdmin):
-    """Portal model admin."""
 
     list_display = ("name", "url", "owner", "about", "logo",
                     "donations_enabled", "members_count", "active_members_count", "basic_members_count",
@@ -36,7 +35,6 @@ class PortalAdmin(admin.ModelAdmin):
 
 @admin.register(PortalMember)
 class PortalMemberAdmin(admin.ModelAdmin):
-    """PortalMember model admin."""
 
     list_display = ("id",
                     "portal",

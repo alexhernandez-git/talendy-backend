@@ -1,4 +1,4 @@
-"""Users serializers."""
+
 
 # Django REST Framework
 from rest_framework import serializers
@@ -17,12 +17,10 @@ from api.users.models import Follow, User
 
 
 class FollowModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     followed_user = UserModelSerializer(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = Follow
         fields = (
@@ -34,7 +32,6 @@ class FollowModelSerializer(serializers.ModelSerializer):
 
 
 class CreateFollowSerializer(serializers.Serializer):
-    """User model serializer."""
 
     followed_user = serializers.UUIDField()
 
@@ -65,7 +62,6 @@ class CreateFollowSerializer(serializers.Serializer):
 
 
 class UnfollowSerializer(serializers.Serializer):
-    """User model serializer."""
 
     followed_user = serializers.UUIDField()
 

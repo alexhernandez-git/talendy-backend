@@ -1,4 +1,4 @@
-"""Users views."""
+
 
 # Django
 from django.core.mail import EmailMultiAlternatives
@@ -53,29 +53,24 @@ class PostMessageViewSet(
     mixins.DestroyModelMixin,
     AddPostMixin,
 ):
-    """Messages view set."""
 
     queryset = PostMessage.objects.all()
     lookup_field = "id"
     serializer_class = PostMessageModelSerializer
 
     def get_permissions(self):
-        """Assign permissions based on action."""
 
         permissions = [IsAuthenticated]
         return [p() for p in permissions]
 
     def get_serializer_class(self):
-        """Return serializer based on action."""
 
         if self.action == "create":
             return CreatePostMessageSerializer
         return PostMessageModelSerializer
 
     def get_serializer_context(self):
-        """
-        Extra context provided to the serializer class.
-        """
+
         return {
             "request": self.request,
             "format": self.format_kwarg,

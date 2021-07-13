@@ -1,4 +1,4 @@
-"""Notifications serializers."""
+
 
 # Django REST Framework
 
@@ -36,10 +36,8 @@ import tldextract
 
 
 class PostImageModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     class Meta:
-        """Meta class."""
 
         model = PostImage
         fields = (
@@ -52,7 +50,6 @@ class PostImageModelSerializer(serializers.ModelSerializer):
 
 
 class PostModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     user = UserModelSerializer(read_only=True)
     images = serializers.SerializerMethodField(read_only=True)
@@ -60,7 +57,6 @@ class PostModelSerializer(serializers.ModelSerializer):
     is_collaborate_requested = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = Post
         fields = (
@@ -224,7 +220,7 @@ class PostModelSerializer(serializers.ModelSerializer):
 
 
 class RetrieveCollaborateRoomModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
+
     user = UserModelSerializer(read_only=True)
     images = serializers.SerializerMethodField(read_only=True)
     members = serializers.SerializerMethodField(read_only=True)
@@ -232,7 +228,6 @@ class RetrieveCollaborateRoomModelSerializer(serializers.ModelSerializer):
     is_last_message_seen = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = Post
         fields = (

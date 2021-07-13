@@ -1,4 +1,4 @@
-"""Users views."""
+
 
 # Django
 from django.core.mail import EmailMultiAlternatives
@@ -43,23 +43,18 @@ class EarningViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    """User view set.
-
-    Handle sign up, login and account verification.
-    """
 
     queryset = Earning.objects.all()
     lookup_field = "id"
     serializer_class = EarningModelSerializer
 
     def get_permissions(self):
-        """Assign permissions based on action."""
 
         permissions = [IsAuthenticated]
         return [p() for p in permissions]
 
     def get_queryset(self):
-        """Restrict list to public-only."""
+
         user = self.request.user
 
         queryset = Earning.objects.filter(user=user)
@@ -67,7 +62,6 @@ class EarningViewSet(
 
     @action(detail=False, methods=['post'])
     def withdraw_funds(self, request, *args, **kwargs):
-        """Process stripe connect auth flow."""
 
         serializer = WithdrawFundsModelSerializer(
             data=request.data,

@@ -1,4 +1,4 @@
-"""Users views."""
+
 
 # Django
 import pdb
@@ -41,10 +41,6 @@ class NotificationViewSet(
     mixins.RetrieveModelMixin,
     AddPortalMixin,
 ):
-    """User view set.
-
-    Handle sign up, login and account verification.
-    """
 
     queryset = NotificationUser.objects.all()
     lookup_field = "id"
@@ -52,13 +48,12 @@ class NotificationViewSet(
     filter_backends = (SearchFilter, DjangoFilterBackend)
 
     def get_permissions(self):
-        """Assign permissions based on action."""
 
         permissions = [IsAuthenticated]
         return [p() for p in permissions]
 
     def get_queryset(self):
-        """Restrict list to public-only."""
+
         user = self.request.user
         user.pending_notifications = False
 

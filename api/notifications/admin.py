@@ -8,11 +8,11 @@ from api.notifications.models import Notification, NotificationUser
 
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
-    """Notification model admin."""
+
     pass
 
 
 @admin.register(NotificationUser)
 class NotificationUserAdmin(admin.ModelAdmin):
-    """Notification user model admin."""
+
     pass

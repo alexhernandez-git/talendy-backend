@@ -1,5 +1,4 @@
 
-"""Users serializers."""
 
 # Django REST Framework
 from rest_framework import serializers
@@ -29,13 +28,12 @@ from django.utils import timezone
 
 
 class DonationModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
+
     from_user = UserModelSerializer(read_only=True)
     donation_option = DonationOptionModelSerializer(required=False)
     donation_payment = DonationPaymentModelSerializer(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = Donation
         fields = (

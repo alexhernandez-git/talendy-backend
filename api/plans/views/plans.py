@@ -1,4 +1,4 @@
-"""Plans views."""
+
 
 # Django REST Framework
 
@@ -19,10 +19,6 @@ class PlanViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
-    """User view set.
-
-    Handle sign up, login and account verification.
-    """
 
     queryset = Plan.objects.all()
     lookup_field = "id"

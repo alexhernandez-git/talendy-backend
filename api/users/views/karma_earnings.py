@@ -1,4 +1,4 @@
-"""Users views."""
+
 
 # Django
 from django.core.mail import EmailMultiAlternatives
@@ -43,23 +43,18 @@ class KarmaEarningViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    """User view set.
-
-    Handle sign up, login and account verification.
-    """
 
     queryset = KarmaEarning.objects.all()
     lookup_field = "id"
     serializer_class = KarmaEarningModelSerializer
 
     def get_permissions(self):
-        """Assign permissions based on action."""
 
         permissions = [IsAuthenticated]
         return [p() for p in permissions]
 
     def get_queryset(self):
-        """Restrict list to public-only."""
+
         user = self.request.user
 
         queryset = KarmaEarning.objects.filter(user=user)

@@ -1,4 +1,4 @@
-"""Users views."""
+
 
 # Django
 from django.core.mail import EmailMultiAlternatives
@@ -43,23 +43,18 @@ class ReviewViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    """User view set.
-
-    Handle sign up, login and account verification.
-    """
 
     queryset = Review.objects.all()
     lookup_field = "id"
     serializer_class = ReviewModelSerializer
 
     def get_permissions(self):
-        """Assign permissions based on action."""
 
         permissions = [IsAuthenticated]
         return [p() for p in permissions]
 
     def get_queryset(self):
-        """Restrict list to public-only."""
+
         if self.action == "user":
             user = get_object_or_404(User, id=self.kwargs['id'])
             queryset = Review.objects.filter(reviewd_user=user)

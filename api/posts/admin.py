@@ -8,20 +8,17 @@ from api.posts.models import Post, KanbanList, KanbanCard
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    """Connection model admin."""
 
     list_display = ("id", "title", "user", "status")
 
 
 @admin.register(KanbanList)
 class KanbanListAdmin(admin.ModelAdmin):
-    """Connection model admin."""
 
     list_display = ("id", "title")
 
 
 @admin.register(KanbanCard)
 class KanbanCardAdmin(admin.ModelAdmin):
-    """Connection model admin."""
 
     list_display = ("id", "title")

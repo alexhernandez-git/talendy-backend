@@ -1,4 +1,4 @@
-"""Users views."""
+
 
 # Django
 import pdb
@@ -48,10 +48,6 @@ class ConnectionViewSet(
     mixins.DestroyModelMixin,
     AddPortalMixin,
 ):
-    """User view set.
-
-    Handle sign up, login and account verification.
-    """
 
     queryset = Connection.objects.all()
     lookup_field = "id"
@@ -65,13 +61,11 @@ class ConnectionViewSet(
     )
 
     def get_permissions(self):
-        """Assign permissions based on action."""
 
         permissions = [IsAuthenticated]
         return [p() for p in permissions]
 
     def get_queryset(self):
-        """Restrict list to public-only."""
 
         user = self.request.user
         if self.action == "list":
@@ -83,7 +77,7 @@ class ConnectionViewSet(
         return queryset
 
     def get_serializer_class(self):
-        """Return serializer based on action."""
+
         if self.action == "create":
             return ConnectInvitationSerialzer
         if self.action == "accept":
@@ -95,9 +89,7 @@ class ConnectionViewSet(
         return ConnectionModelSerializer
 
     def get_serializer_context(self):
-        """
-        Extra context provided to the serializer class.
-        """
+
         return {
             "request": self.request,
             "format": self.format_kwarg,

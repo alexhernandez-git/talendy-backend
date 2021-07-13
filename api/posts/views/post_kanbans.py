@@ -1,4 +1,4 @@
-"""Users views."""
+
 
 # Django
 import pdb
@@ -55,27 +55,21 @@ class KanbanListViewSet(
     mixins.DestroyModelMixin,
     AddPostMixin,
 ):
-    """Messages view set."""
 
     queryset = KanbanList.objects.all()
     lookup_field = "id"
     serializer_class = KanbanListModelSerializer
 
     def get_permissions(self):
-        """Assign permissions based on action."""
 
         permissions = [IsAuthenticated]
         return [p() for p in permissions]
 
     def get_serializer_class(self):
-        """Return serializer based on action."""
 
         return KanbanListModelSerializer
 
     def get_serializer_context(self):
-        """
-        Extra context provided to the serializer class.
-        """
 
         return {
             "request": self.request,
@@ -112,27 +106,21 @@ class KanbanCardViewSet(
     mixins.DestroyModelMixin,
     AddListMixin,
 ):
-    """Messages view set."""
 
     queryset = KanbanCard.objects.all()
     lookup_field = "id"
     serializer_class = KanbanCardModelSerializer
 
     def get_permissions(self):
-        """Assign permissions based on action."""
 
         permissions = [IsAuthenticated]
         return [p() for p in permissions]
 
     def get_serializer_class(self):
-        """Return serializer based on action."""
 
         return KanbanCardModelSerializer
 
     def get_serializer_context(self):
-        """
-        Extra context provided to the serializer class.
-        """
 
         return {
             "request": self.request,

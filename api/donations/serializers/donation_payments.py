@@ -1,5 +1,4 @@
 
-"""Users serializers."""
 
 # Django REST Framework
 from rest_framework import serializers
@@ -17,10 +16,8 @@ from api.users.models import User
 
 
 class DonationPaymentModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     class Meta:
-        """Meta class."""
 
         model = DonationPayment
         fields = (

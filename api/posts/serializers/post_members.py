@@ -1,4 +1,4 @@
-"""Notifications serializers."""
+
 
 # Django REST Framework
 from rest_framework import serializers
@@ -19,12 +19,10 @@ from api.posts.models import PostMember
 
 
 class PostMemberModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     user = UserModelSerializer(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = PostMember
         fields = (

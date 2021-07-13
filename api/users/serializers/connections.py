@@ -1,4 +1,4 @@
-"""Users serializers."""
+
 
 # Django REST Framework
 from api.taskapp.tasks import send_connection_accepted, send_invitation_email
@@ -22,13 +22,11 @@ from api.notifications.models import Notification, NotificationUser
 
 
 class ConnectionModelSerializer(serializers.ModelSerializer):
-    """User model serializer."""
 
     requester = UserModelSerializer(read_only=True)
     addressee = UserModelSerializer(read_only=True)
 
     class Meta:
-        """Meta class."""
 
         model = Connection
         fields = (
@@ -41,7 +39,6 @@ class ConnectionModelSerializer(serializers.ModelSerializer):
 
 
 class ConnectInvitationSerialzer(serializers.Serializer):
-    """User model serializer."""
 
     addressee = serializers.UUIDField()
 
@@ -96,7 +93,6 @@ class ConnectInvitationSerialzer(serializers.Serializer):
 
 
 class AcceptConnectionSerializer(serializers.Serializer):
-    """User model serializer."""
 
     requester = serializers.UUIDField()
 
@@ -149,7 +145,6 @@ class AcceptConnectionSerializer(serializers.Serializer):
 
 
 class IgnoreConnectionSerializer(serializers.Serializer):
-    """User model serializer."""
 
     requester = serializers.UUIDField()
 
@@ -171,7 +166,6 @@ class IgnoreConnectionSerializer(serializers.Serializer):
 
 
 class RemoveConnectionSerializer(serializers.Serializer):
-    """User model serializer."""
 
     user = serializers.UUIDField()
 
