@@ -479,8 +479,30 @@ class UserLoginSerializer(serializers.Serializer):
                         is_verified=False,
                         is_client=True,
                         karma_amount=new_member.initial_karma_amount,
+                        karma_earned_by_join_portal=new_member.initial_karma_amount
                     )
+                # Update the user karma statistics
+                karma_earned = 1
+                karma_spent = 1
 
+                if user.karma_earned > 1:
+                    karma_earned = user.karma_earned
+                if user.karma_spent > 1:
+                    karma_spent = user.karma_spent
+                user.karma_ratio = karma_earned / karma_spent
+                user.save()
+
+                # Update the member karma statistics
+                new_member.karma_earned += new_member.initial_karma_amount
+                new_member.karma_earned_by_join_portal += new_member.initial_karma_amount
+                karma_earned = 1
+                karma_spent = 1
+
+                if new_member.karma_earned > 1:
+                    karma_earned = new_member.karma_earned
+                if new_member.karma_spent > 1:
+                    karma_spent = new_member.karma_spent
+                new_member.karma_ratio = karma_earned / karma_spent
                 # Add the new user to the membership
                 new_member.user = user
 
