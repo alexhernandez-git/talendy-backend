@@ -54,6 +54,7 @@ class CommunityViewSet(
     lookup_field = "id"
     serializer_class = CommunityModelSerializer
     filter_backends = (SearchFilter, DjangoFilterBackend)
+    search_fields = ('name',)
 
     def get_queryset(self):
 
