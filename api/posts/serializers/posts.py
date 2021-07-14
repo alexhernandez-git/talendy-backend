@@ -95,9 +95,10 @@ class PostModelSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         user = self.context['request'].user
+
         if 'karma_offered' in data and int(data['karma_offered']) < 100:
             raise serializers.ValidationError("Not enough karma offered")
-        if 'karma_offered' in data and int(data['karma_offered']) > user.karma_amount:
+        if 'karma_offered' in data and int(data['karma_offered']) < user.karma_amount:
             raise serializers.ValidationError("You don't have enough karma")
         return data
 
