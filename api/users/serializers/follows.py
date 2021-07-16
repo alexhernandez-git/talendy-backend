@@ -1,7 +1,6 @@
 
 
 # Django REST Framework
-from api.portals.models.portal_members import PortalMember
 from rest_framework import serializers
 
 # Django
@@ -15,6 +14,7 @@ from api.users.serializers import UserModelSerializer
 
 # Models
 from api.users.models import Follow, User
+from api.portals.models import PortalMember
 
 
 class FollowModelSerializer(serializers.ModelSerializer):
