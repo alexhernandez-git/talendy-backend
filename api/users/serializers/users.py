@@ -252,13 +252,7 @@ class UserModelSerializer(serializers.ModelSerializer):
     def get_member(self, obj):
 
         if 'request' in self.context:
-            subdomain = tldextract.extract(self.context['request'].META['HTTP_ORIGIN']).subdomain
-            portal = None
-
-            try:
-                portal = Portal.objects.get(url=subdomain)
-            except Portal.DoesNotExist:
-                pass
+            portal = self.portal
 
             if portal:
                 from api.portals.serializers import PortalMemberModelSerializer
@@ -493,13 +487,7 @@ class UserLoginSerializer(serializers.Serializer):
         email = data['email']
         password = data['password']
         request = self.context['request']
-        subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
-        portal = None
-
-        try:
-            portal = Portal.objects.get(url=subdomain)
-        except Portal.DoesNotExist:
-            pass
+        portal = self.context['portal']
 
         if portal:
             # Check if have a inactive member of this portal
