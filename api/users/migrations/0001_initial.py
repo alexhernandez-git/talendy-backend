@@ -165,8 +165,8 @@ class Migration(migrations.Migration):
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('created', models.DateTimeField(auto_now_add=True, help_text='Date time on which the object was created.', verbose_name='created at')),
                 ('modified', models.DateTimeField(auto_now=True, help_text='Date time on which the object was last modified.', verbose_name='modified at')),
-                ('followed_user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='to_followed_user', to=settings.AUTH_USER_MODEL)),
-                ('from_user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='from_follow_user', to=settings.AUTH_USER_MODEL)),
+                ('followed_member', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='to_followed_member', to=settings.AUTH_USER_MODEL)),
+                ('from_member', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='from_follow_user', to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'ordering': ['-created', '-modified'],

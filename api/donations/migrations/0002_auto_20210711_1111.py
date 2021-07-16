@@ -16,13 +16,10 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name='donation',
-            name='from_user',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='from_user_donaiton', to=settings.AUTH_USER_MODEL),
-        ),
+            model_name='donation', name='from_member', field=models.ForeignKey(
+                null=True, on_delete=django.db.models.deletion.CASCADE, related_name='from_member_donaiton',
+                to=settings.AUTH_USER_MODEL),),
         migrations.AddField(
-            model_name='donation',
-            name='to_user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='to_user_donation', to=settings.AUTH_USER_MODEL),
-        ),
-    ]
+            model_name='donation', name='to_user', field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, related_name='to_user_donation',
+                to=settings.AUTH_USER_MODEL),), ]

@@ -14,6 +14,7 @@ import uuid
 
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status, viewsets, mixins
+from api.utils.mixins import AddPortalMixin, AddPostMixin
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -27,6 +28,7 @@ from api.users.permissions import IsAccountOwner
 
 # Models
 from api.users.models import Follow
+from api.portals.models import PortalMember
 
 # Serializers
 from api.users.serializers import FollowModelSerializer, CreateFollowSerializer, UnfollowSerializer
@@ -44,7 +46,7 @@ class FollowViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
+    AddPortalMixin,
 ):
 
     queryset = Follow.objects.all()
@@ -66,7 +68,9 @@ class FollowViewSet(
     def get_queryset(self):
 
         user = self.request.user
-        queryset = Follow.objects.filter(from_user=user)
+        from_member = get_object_or_404(PortalMember, user=user, portal=self.portal)
+
+        queryset = Follow.objects.filter(from_member=from_member, portal=self.portal)
 
         return queryset
 
@@ -77,6 +81,15 @@ class FollowViewSet(
         if self.action == "unfollow":
             return UnfollowSerializer
         return FollowModelSerializer
+
+    def get_serializer_context(self):
+
+        return {
+            "request": self.request,
+            "format": self.format_kwarg,
+            "view": self,
+            "portal": self.portal,
+        }
 
     def create(self, request, *args, **kwargs):
 

@@ -77,11 +77,11 @@ def gen_new_email_token(user, new_email):
     return token
 
 
-def get_invitation_token(from_user, email):
+def get_invitation_token(from_member, email):
 
     exp_date = timezone.now() + timedelta(days=7)
     payload = {
-        'from_user': str(from_user.pk),
+        'from_member': str(from_member.pk),
         'to_user_email': email,
         'exp': int(exp_date.timestamp()),
         'type': 'invitation_token'

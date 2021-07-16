@@ -178,26 +178,75 @@ class UserModelSerializer(serializers.ModelSerializer):
     def get_is_followed(self, obj):
         if 'request' in self.context and self.context['request'].user.id:
             user = self.context['request'].user
-            return Follow.objects.filter(from_user=user, followed_user=obj).exists()
+
+            portal = self.context['portal']
+            from_member = None
+            try:
+                from_member = PortalMember.objects.get(user=user, portal=portal)
+            except:
+                pass
+            followed_member = None
+            try:
+                followed_member = PortalMember.objects.get(user=obj, portal=portal)
+            except:
+                pass
+            return Follow.objects.filter(
+                from_member=from_member, followed_member=followed_member, portal=portal).exists()
         return False
 
     def get_connection_invitation_sent(self, obj):
         if 'request' in self.context and self.context['request'].user.id:
             user = self.context['request'].user
-            return Connection.objects.filter(requester=user, addressee=obj, accepted=False).exists()
+            portal = self.portal
+            requester = None
+            try:
+                requester = PortalMember.objects.get(user=user, portal=portal)
+            except:
+                pass
+            addressee = None
+            try:
+                addressee = PortalMember.objects.get(user=obj, portal=portal)
+            except:
+                pass
+            return Connection.objects.filter(
+                requester=requester, addressee=addressee, accepted=False, portal=portal).exists()
         return False
 
     def get_accept_invitation(self, obj):
         if 'request' in self.context and self.context['request'].user.id:
             user = self.context['request'].user
-            return Connection.objects.filter(requester=obj, addressee=user, accepted=False).exists()
+            portal = self.portal
+            requester = None
+            try:
+                requester = PortalMember.objects.get(user=obj, portal=portal)
+            except:
+                pass
+            addressee = None
+            try:
+                addressee = PortalMember.objects.get(user=user, portal=portal)
+            except:
+                pass
+            return Connection.objects.filter(
+                requester=requester, addressee=addressee, accepted=False, portal=portal).exists()
         return False
 
     def get_is_connection(self, obj):
         if 'request' in self.context and self.context['request'].user.id:
             user = self.context['request'].user
-            return Connection.objects.filter(Q(requester=user, addressee=obj) |
-                                             Q(requester=obj, addressee=user), accepted=True).exists()
+            portal = self.portal
+            user_1 = None
+            try:
+                user_1 = PortalMember.objects.get(user=user, portal=portal)
+            except:
+                pass
+            user_2 = None
+            try:
+                user_2 = PortalMember.objects.get(user=obj, portal=portal)
+            except:
+                pass
+            return Connection.objects.filter(Q(requester=user_1, addressee=user_2) |
+                                             Q(requester=user_2, addressee=user_1),
+                                             accepted=True, portal=portal).exists()
         return False
 
     def get_member(self, obj):
@@ -1157,7 +1206,7 @@ class CreateDonationSerializer(serializers.Serializer):
             donation_option=donation_option,
             donation_payment=donation_payment,
             is_anonymous=is_anonymous,
-            from_user=user,
+            from_member=user,
             to_user=to_user,
             gross_amount=gross_amount,
             net_amount=net_amount,

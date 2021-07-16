@@ -181,12 +181,12 @@ class PostModelSerializer(serializers.ModelSerializer):
             )
         PostMember.objects.create(post=post, user=user, role=PostMember.ADMIN)
 
-        users_following = Follow.objects.filter(followed_user=user)
+        users_following = Follow.objects.filter(followed_member=user, portal=portal)
         for user_following in users_following:
             # Create the notification for the user
             if post.privacity == Post.CONNECTIONS_ONLY and not Connection.objects.filter(
-                    Q(requester=user, addressee=user_following.from_user) |
-                    Q(requester=user_following.from_user, addressee=user),
+                    Q(requester=user, addressee=user_following.from_member) |
+                    Q(requester=user_following.from_member, addressee=user),
                     accepted=True).exists():
                 break
             notification = Notification.objects.create(
@@ -196,12 +196,12 @@ class PostModelSerializer(serializers.ModelSerializer):
             user_notification = NotificationUser.objects.create(
                 portal=post.portal,
                 notification=notification,
-                user=user_following.from_user
+                user=user_following.from_member
             )
 
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
-                '{}-{}'.format(user_following.from_user.id, post.portal.url), {
+                '{}-{}'.format(user_following.from_member.id, post.portal.url), {
                     "type": "send.notification",
                     "event": "POST_CREATED_BY_A_USER_FOLLOWED",
                     "notification__pk": str(user_notification.pk),

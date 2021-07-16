@@ -115,13 +115,13 @@ class PostViewSet(
         elif self.action == "list_most_karma_posts":
             queryset = queryset.filter(members_count__lte=5).order_by('-karma_offered')
 
-        elif self.action == "list_followed_users_posts":
+        elif self.action == "list_followed_members_posts":
             if self.request.user.id:
 
                 user = self.request.user
                 queryset = queryset.filter(
-                    user__id__in=Follow.objects.filter(from_user=user).values_list(
-                        'followed_user'), members_count__lte=5)
+                    user__id__in=Follow.objects.filter(from_member=user, portal=portal).values_list(
+                        'followed_member'), members_count__lte=5)
             else:
                 queryset = queryset.none()
         elif self.action == "list_nearest_posts":
@@ -186,7 +186,7 @@ class PostViewSet(
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
-    def list_followed_users_posts(self, request, *args, **kwargs):
+    def list_followed_members_posts(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:

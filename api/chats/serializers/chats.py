@@ -193,9 +193,9 @@ class CreateChatSerializer(serializers.Serializer):
 
     def validate(self, data):
         to_user = get_object_or_404(User, pk=data["to_user"])
-        from_user = self.context["request"].user
+        from_member = self.context["request"].user
 
-        chats = Chat.objects.filter(participants=from_user)
+        chats = Chat.objects.filter(participants=from_member)
         chats = chats.filter(participants=to_user)
 
         if chats.exists():
@@ -203,18 +203,18 @@ class CreateChatSerializer(serializers.Serializer):
                 if chat.participants.all().count() == 2:
                     return {"chat": chat}
             raise serializers.ValidationError("Chat not found")
-        return {"to_user": to_user, "from_user": from_user}
+        return {"to_user": to_user, "from_member": from_member}
 
     def create(self, validated_data):
         if "chat" in validated_data:
             return {"chat": validated_data["chat"], "status": "retrieved"}
 
         to_user = validated_data["to_user"]
-        from_user = validated_data["from_user"]
+        from_member = validated_data["from_member"]
         chat = Chat.objects.create()
 
         chat.participants.add(to_user)
-        chat.participants.add(from_user)
+        chat.participants.add(from_member)
         chat.save()
 
         return {"chat": chat, "status": "created"}

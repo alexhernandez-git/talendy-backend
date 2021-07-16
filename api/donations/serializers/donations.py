@@ -29,7 +29,7 @@ from django.utils import timezone
 
 class DonationModelSerializer(serializers.ModelSerializer):
 
-    from_user = UserModelSerializer(read_only=True)
+    from_member = UserModelSerializer(read_only=True)
     donation_option = DonationOptionModelSerializer(required=False)
     donation_payment = DonationPaymentModelSerializer(read_only=True)
 
@@ -41,7 +41,7 @@ class DonationModelSerializer(serializers.ModelSerializer):
             "is_other_amount",
             "donation_option",
             "donation_payment",
-            "from_user",
+            "from_member",
             "net_amount",
             "is_anonymous",
             "message",

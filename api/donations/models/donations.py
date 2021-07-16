@@ -15,7 +15,8 @@ class Donation(CModel):
                                          related_name="donation_payment_donation")
     is_anonymous = models.BooleanField(default=False)
     email = models.CharField(max_length=100, null=True, blank=True)
-    from_user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="from_user_donaiton", null=True)
+    from_member = models.ForeignKey("users.User", on_delete=models.CASCADE,
+                                    related_name="from_member_donaiton", null=True)
     to_user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="to_user_donation")
     message = models.TextField(null=True, blank=True)
 

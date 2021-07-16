@@ -123,14 +123,17 @@ class UserViewSet(mixins.RetrieveModelMixin,
             return GetCurrencySerializer
         return UserModelSerializer
 
-    def get_queryset(self):
-        subdomain = tldextract.extract(self.request.META['HTTP_ORIGIN']).subdomain
-        portal = None
+    def get_serializer_context(self):
 
-        try:
-            portal = Portal.objects.get(url=subdomain)
-        except Portal.DoesNotExist:
-            pass
+        return {
+            "request": self.request,
+            "format": self.format_kwarg,
+            "view": self,
+            "portal": self.portal,
+        }
+
+    def get_queryset(self):
+        portal = self.portal
 
         if portal:
             user = self.request.user
@@ -146,7 +149,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
         elif self.action == "list_users_not_followed":
             user = self.request.user
-            users = Follow.objects.filter(from_user=user).values_list('follow_user__pk')
+            users = Follow.objects.filter(from_member=user, portal=portal).values_list('follow_user__pk')
             users_list = [x[0] for x in users]
             users_list.append(user.pk)
 
@@ -178,7 +181,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         serializer = UpdateGeolocation(
             user,
             data=request.data,
-            context={"request": request},
+            context={"request": request, "portal": self.portal},
             partial=partial)
 
         serializer.is_valid(raise_exception=True)
@@ -192,7 +195,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         send_feedback_email(request.data)
         return Response(status=status.HTTP_200_OK)
 
-    @ action(detail=True, methods=['patch'])
+    @action(detail=True, methods=['patch'])
     def make_donation(self, request, *args, **kwargs):
         if 'STRIPE_API_KEY' in env:
             stripe.api_key = env('STRIPE_API_KEY')
@@ -245,7 +248,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
         serializer = ConfirmUserSerializer(
             data=request.data,
-            context={'request': request}
+            context={'request': request, "portal": self.portal}
         )
 
         serializer.is_valid(raise_exception=True)
@@ -256,6 +259,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
         serializer = IsEmailAvailableSerializer(
             data=request.data,
+            context={'request': request, "portal": self.portal}
+
         )
 
         serializer.is_valid(raise_exception=True)
@@ -267,6 +272,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
         serializer = IsUsernameAvailableSerializer(
             data=request.data,
+            context={'request': request, "portal": self.portal}
         )
 
         serializer.is_valid(raise_exception=True)
@@ -334,7 +340,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
         serializer = ChangePasswordSerializer(
             data=request.data,
-            context={'request': request}
+            context={'request': request, 'portal': self.portal}
         )
 
         serializer.is_valid(raise_exception=True)
@@ -345,7 +351,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
     def change_email(self, request, *args, **kwargs):
 
         serializer = ChangeEmailSerializer(
-            data=request.data, context={'user': request.user})
+            data=request.data, context={'user': request.user, 'portal': self.portal})
         serializer.is_valid(raise_exception=True)
         return Response(status=status.HTTP_200_OK)
 
@@ -364,6 +370,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
         serializer = ForgetPasswordSerializer(
             data=request.data,
+            context={'request': request, "portal": self.portal}
         )
 
         serializer.is_valid(raise_exception=True)
@@ -374,7 +381,9 @@ class UserViewSet(mixins.RetrieveModelMixin,
     def reset_password(self, request, *args, **kwargs):
 
         serializer = ResetPasswordSerializer(
-            data=request.data)
+            data=request.data,
+            context={'request': request, "portal": self.portal}
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(status=status.HTTP_200_OK)
@@ -382,7 +391,9 @@ class UserViewSet(mixins.RetrieveModelMixin,
     @ action(detail=False, methods=['post'])
     def verify(self, request, *args, **kwargs):
 
-        serializer = AccountVerificationSerializer(data=request.data)
+        serializer = AccountVerificationSerializer(data=request.data,
+                                                   context={'request': request, "portal": self.portal}
+                                                   )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         data = {'message': 'Verified account!'}
@@ -411,7 +422,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         serializer = PaypalConnectSerializer(
             user,
             data=request.data,
-            context={"request": request},
+            context={"request": request, "portal": self.portal},
             partial=partial
         )
         serializer.is_valid(raise_exception=True)
@@ -422,20 +433,12 @@ class UserViewSet(mixins.RetrieveModelMixin,
     def get_user(self, request, *args, **kwargs):
         if request.user.id == None:
             return Response(status=404)
-        subdomain = tldextract.extract(request.META['HTTP_ORIGIN']).subdomain
-        portal = None
-
-        try:
-            portal = Portal.objects.get(url=subdomain)
-        except Portal.DoesNotExist:
-            pass
+        portal = self.portal
 
         if portal and not PortalMember.objects.filter(user=request.user, portal=portal).exists():
             return Response(status=404)
-        data = {
-            'user': DetailedUserModelSerializer(request.user, context={"request": request}, many=False).data,
-
-        }
+        data = {'user': DetailedUserModelSerializer(
+            request.user, context={"request": request, "portal": portal}, many=False).data, }
         if 'STRIPE_API_KEY' in env:
             stripe.api_key = env('STRIPE_API_KEY')
         else:
@@ -452,6 +455,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
     def get_user_by_email_jwt(self, request, *args, **kwargs):
         serializer = GetUserByJwtSerializer(
             data=request.data,
+            context={"request": request, "portal": self.portal},
         )
         serializer.is_valid(raise_exception=True)
         data = serializer.data
@@ -472,7 +476,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
     def invite_user(self, request, *args, **kwargs):
         serializer = self.get_serializer(
             data=request.data,
-            context={'request': request}
+            context={"request": request, "portal": self.portal},
         )
         serializer.is_valid(raise_exception=True)
 
@@ -502,7 +506,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         serializer = AttachPaymentMethodSerializer(
             user,
             data=request.data,
-            context={"request": request, "stripe": stripe},
+            context={"request": request, "stripe": stripe, "portal": self.portal},
             partial=partial
         )
         serializer.is_valid(raise_exception=True)
@@ -529,7 +533,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
         serializer = DetachPaymentMethodSerializer(
             user,
             data=request.data,
-            context={"request": request, "stripe": stripe},
+            context={"request": request, "stripe": stripe, "portal": self.portal},
             partial=partial
         )
         serializer.is_valid(raise_exception=True)

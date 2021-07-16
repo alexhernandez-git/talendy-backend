@@ -4,6 +4,8 @@ from django.contrib.gis.db import models
 
 class Follow(CModel):
     # Login Status
+    portal = models.ForeignKey("portals.Portal", on_delete=models.SET_NULL, null=True)
 
-    from_user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name="from_follow_user")
-    followed_user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name="to_followed_user")
+    from_member = models.ForeignKey('portals.PortalMember', on_delete=models.CASCADE, related_name="from_follow_member")
+    followed_member = models.ForeignKey(
+        'portals.PortalMember', on_delete=models.CASCADE, related_name="to_followed_member")

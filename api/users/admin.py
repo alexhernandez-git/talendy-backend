@@ -11,7 +11,7 @@ from api.users.models import User, Earning, Follow, UserLoginActivity, Connectio
 @admin.register(Follow)
 class FollowAdmin(admin.ModelAdmin):
 
-    list_display = ("id", "from_user", "followed_user")
+    list_display = ("id", "from_member", "followed_member")
 
 
 @admin.register(Connection)

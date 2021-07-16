@@ -1,6 +1,7 @@
 
 
 # Django
+from api.portals.models.portal_members import PortalMember
 import pdb
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -68,11 +69,12 @@ class ConnectionViewSet(
     def get_queryset(self):
 
         user = self.request.user
+        member = get_object_or_404(PortalMember, user=user, portal=self.portal)
         if self.action == "list":
 
-            queryset = Connection.objects.filter(Q(requester=user) | Q(addressee=user), accepted=True)
+            queryset = Connection.objects.filter(Q(requester=member) | Q(addressee=member), accepted=True)
         elif self.action == "list_invitations":
-            queryset = Connection.objects.filter(addressee=user, accepted=False)
+            queryset = Connection.objects.filter(addressee=member, accepted=False)
 
         return queryset
 
