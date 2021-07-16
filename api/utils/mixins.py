@@ -30,7 +30,12 @@ class AddPortalMixin(viewsets.GenericViewSet):
 class AddListMixin(viewsets.GenericViewSet):
 
     def dispatch(self, request, *args, **kwargs):
+        url = self.kwargs["portal_url"]
 
+        try:
+            self.portal = Portal.objects.get(url=url)
+        except Portal.DoesNotExist:
+            self.portal = get_object_or_404(Portal, url="oficial")
         id = self.kwargs["slug_id"]
 
         self.post_object = get_object_or_404(Post, id=id)
@@ -45,6 +50,12 @@ class AddListMixin(viewsets.GenericViewSet):
 class AddPostMixin(viewsets.GenericViewSet):
 
     def dispatch(self, request, *args, **kwargs):
+        url = self.kwargs["portal_url"]
+
+        try:
+            self.portal = Portal.objects.get(url=url)
+        except Portal.DoesNotExist:
+            self.portal = get_object_or_404(Portal, url="oficial")
 
         id = self.kwargs["slug_id"]
 
@@ -56,6 +67,12 @@ class AddPostMixin(viewsets.GenericViewSet):
 class AddChatMixin(viewsets.GenericViewSet):
 
     def dispatch(self, request, *args, **kwargs):
+        url = self.kwargs["portal_url"]
+
+        try:
+            self.portal = Portal.objects.get(url=url)
+        except Portal.DoesNotExist:
+            self.portal = get_object_or_404(Portal, url="oficial")
 
         id = self.kwargs["slug_id"]
 

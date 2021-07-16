@@ -13,6 +13,7 @@ import uuid
 
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status, viewsets, mixins
+from api.utils.mixins import AddPortalMixin
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -48,7 +49,7 @@ class CollaborateRequestViewSet(
     mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
+    AddPortalMixin,
 ):
 
     queryset = CollaborateRequest.objects.all()

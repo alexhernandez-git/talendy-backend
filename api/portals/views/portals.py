@@ -1,6 +1,7 @@
 
 
 # Django
+from api.utils.mixins import AddPortalMixin
 from typing import OrderedDict
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -51,7 +52,7 @@ class PortalViewSet(
     mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
-    viewsets.GenericViewSet
+    AddPortalMixin
 ):
 
     queryset = Portal.objects.all()

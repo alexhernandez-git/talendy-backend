@@ -1,6 +1,7 @@
 
 
 # Django
+from api.utils.mixins import AddPortalMixin
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
@@ -41,7 +42,7 @@ from api.utils import helpers
 
 class ReviewViewSet(
     mixins.ListModelMixin,
-    viewsets.GenericViewSet
+    AddPortalMixin
 ):
 
     queryset = Review.objects.all()

@@ -1,6 +1,7 @@
 
 
 # Django
+from api.utils.mixins import AddPortalMixin
 import pdb
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
@@ -49,7 +50,7 @@ class ChatViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    viewsets.GenericViewSet,
+    AddPortalMixin,
 ):
 
     queryset = Chat.objects.all()

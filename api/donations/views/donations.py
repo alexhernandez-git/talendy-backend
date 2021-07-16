@@ -1,6 +1,7 @@
 
 
 # Django
+from api.utils.mixins import AddPortalMixin
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from config.settings.base import env
@@ -43,7 +44,7 @@ import stripe
 class DonationViewSet(
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
-    viewsets.GenericViewSet
+    AddPortalMixin
 ):
 
     queryset = Donation.objects.all()

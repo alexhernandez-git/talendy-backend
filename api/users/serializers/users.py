@@ -111,13 +111,7 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
     def get_member(self, obj):
 
         if 'request' in self.context:
-            subdomain = tldextract.extract(self.context['request'].META['HTTP_ORIGIN']).subdomain
-            portal = None
-
-            try:
-                portal = Portal.objects.get(url=subdomain)
-            except Portal.DoesNotExist:
-                pass
+            portal = self.context['portal']
 
             if portal:
                 from api.portals.serializers import PortalMemberModelSerializer
@@ -179,7 +173,8 @@ class UserModelSerializer(serializers.ModelSerializer):
         if 'request' in self.context and self.context['request'].user.id:
             user = self.context['request'].user
 
-            portal = self.context['portal']
+            view = self.context['view']
+            portal = view.portal
             from_member = None
             try:
                 from_member = PortalMember.objects.get(user=user, portal=portal)
@@ -197,7 +192,8 @@ class UserModelSerializer(serializers.ModelSerializer):
     def get_connection_invitation_sent(self, obj):
         if 'request' in self.context and self.context['request'].user.id:
             user = self.context['request'].user
-            portal = self.portal
+            portal = self.context['portal']
+
             requester = None
             try:
                 requester = PortalMember.objects.get(user=user, portal=portal)
@@ -215,7 +211,8 @@ class UserModelSerializer(serializers.ModelSerializer):
     def get_accept_invitation(self, obj):
         if 'request' in self.context and self.context['request'].user.id:
             user = self.context['request'].user
-            portal = self.portal
+            portal = self.context['portal']
+
             requester = None
             try:
                 requester = PortalMember.objects.get(user=obj, portal=portal)
@@ -233,7 +230,8 @@ class UserModelSerializer(serializers.ModelSerializer):
     def get_is_connection(self, obj):
         if 'request' in self.context and self.context['request'].user.id:
             user = self.context['request'].user
-            portal = self.portal
+            portal = self.context['portal']
+
             user_1 = None
             try:
                 user_1 = PortalMember.objects.get(user=user, portal=portal)
@@ -252,7 +250,7 @@ class UserModelSerializer(serializers.ModelSerializer):
     def get_member(self, obj):
 
         if 'request' in self.context:
-            portal = self.portal
+            portal = self.context['portal']
 
             if portal:
                 from api.portals.serializers import PortalMemberModelSerializer
