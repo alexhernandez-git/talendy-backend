@@ -169,11 +169,10 @@ class UserModelSerializer(serializers.ModelSerializer):
         )
 
     def get_is_followed(self, obj):
-        if 'request' in self.context and self.context['request'].user.id:
+        if 'request' in self.context and self.context['request'].user.id and 'portal' in self.context:
             user = self.context['request'].user
 
-            view = self.context['view']
-            portal = view.portal
+            portal = self.context['portal']
             from_member = None
             try:
                 from_member = PortalMember.objects.get(user=user, portal=portal)

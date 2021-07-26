@@ -98,10 +98,12 @@ class PostModelSerializer(serializers.ModelSerializer):
         portal = self.context['portal']
         member = PortalMember.objects.get(user=user, portal=portal)
         # Pay with karma from member
-        if 'karma_offered' in data and int(data['karma_offered']) < 100:
-            raise serializers.ValidationError("Not enough karma offered")
-        if 'karma_offered' in data and int(data['karma_offered']) > member.karma_amount:
-            raise serializers.ValidationError("You don't have enough karma")
+        if member.role == PortalMember.BASIC:
+
+            if 'karma_offered' in data and int(data['karma_offered']) < 100:
+                raise serializers.ValidationError("Not enough karma offered")
+            if 'karma_offered' in data and int(data['karma_offered']) > member.karma_amount:
+                raise serializers.ValidationError("You don't have enough karma")
         return data
 
     def create(self, validated_data):
@@ -130,6 +132,7 @@ class PostModelSerializer(serializers.ModelSerializer):
         # Update member statistics
 
         # Set the karma only if the role is Basic user
+
         member = PortalMember.objects.get(user=user, portal=portal)
         if member.role == PortalMember.BASIC:
             KarmaEarning.objects.create(user=user, amount=post.karma_offered, type=KarmaEarning.SPENT, portal=portal)
@@ -181,7 +184,7 @@ class PostModelSerializer(serializers.ModelSerializer):
             )
         PostMember.objects.create(post=post, user=user, role=PostMember.ADMIN)
 
-        users_following = Follow.objects.filter(followed_member=user, portal=portal)
+        users_following = Follow.objects.filter(followed_member=member, portal=portal)
         for user_following in users_following:
             # Create the notification for the user
             if post.privacity == Post.CONNECTIONS_ONLY and not Connection.objects.filter(
