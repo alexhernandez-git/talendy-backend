@@ -115,6 +115,7 @@ class PortalViewSet(
                 "format": self.format_kwarg,
                 "view": self,
                 "stripe": stripe,
+
             }
 
         else:

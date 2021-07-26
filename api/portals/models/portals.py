@@ -64,6 +64,8 @@ class Portal(CModel):
 
     free_trial_invoiced = models.BooleanField(default=False)
 
+    initial_karma_amount = models.IntegerField(default=1000)
+
     have_active_plan = models.BooleanField(
         'have active plan',
         default=False,

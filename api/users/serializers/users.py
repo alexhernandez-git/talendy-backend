@@ -110,9 +110,8 @@ class DetailedUserModelSerializer(serializers.ModelSerializer):
 
     def get_member(self, obj):
 
-        if 'request' in self.context:
+        if 'request' in self.context and 'portal' in self.context:
             portal = self.context['portal']
-
             if portal:
                 from api.portals.serializers import PortalMemberModelSerializer
                 portal_member = PortalMember.objects.get(portal=portal, user=obj)
@@ -190,7 +189,7 @@ class UserModelSerializer(serializers.ModelSerializer):
         return False
 
     def get_connection_invitation_sent(self, obj):
-        if 'request' in self.context and self.context['request'].user.id:
+        if 'request' in self.context and self.context['request'].user.id and 'portal' in self.context:
             user = self.context['request'].user
             portal = self.context['portal']
 
@@ -209,7 +208,7 @@ class UserModelSerializer(serializers.ModelSerializer):
         return False
 
     def get_accept_invitation(self, obj):
-        if 'request' in self.context and self.context['request'].user.id:
+        if 'request' in self.context and self.context['request'].user.id and 'portal' in self.context:
             user = self.context['request'].user
             portal = self.context['portal']
 
@@ -228,7 +227,7 @@ class UserModelSerializer(serializers.ModelSerializer):
         return False
 
     def get_is_connection(self, obj):
-        if 'request' in self.context and self.context['request'].user.id:
+        if 'request' in self.context and self.context['request'].user.id and 'portal' in self.context:
             user = self.context['request'].user
             portal = self.context['portal']
 
@@ -249,7 +248,7 @@ class UserModelSerializer(serializers.ModelSerializer):
 
     def get_member(self, obj):
 
-        if 'request' in self.context:
+        if 'request' in self.context and 'portal' in self.context:
             portal = self.context['portal']
 
             if portal:
@@ -529,6 +528,7 @@ class UserLoginSerializer(serializers.Serializer):
 
                 # Update the member karma statistics
                 new_member.karma_earned += new_member.initial_karma_amount
+                new_member.karma_amount += new_member.initial_karma_amount
                 new_member.karma_earned_by_join_portal += new_member.initial_karma_amount
                 karma_earned = 1
                 karma_spent = 1
@@ -551,7 +551,9 @@ class UserLoginSerializer(serializers.Serializer):
                     portal.active_admin_members_count += 1
                 new_member.is_active = True
                 new_member.save()
+
                 portal.save()
+
         regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
         # for custom mails use: '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$'
         if email and password:
@@ -577,7 +579,7 @@ class UserLoginSerializer(serializers.Serializer):
         if not user:
             raise serializers.ValidationError(
                 'Invalid credentials')
-        # If there is a portal check if user is a member of this portal
+       # If there is a portal check if user is a member of this portal
 
         if portal and not PortalMember.objects.filter(user=user, portal=portal).exists():
             raise serializers.ValidationError(

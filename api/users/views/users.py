@@ -144,7 +144,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if self.action == 'list_users_with_most_karma':
 
             if portal:
-                return User.objects.filter(pk__in=members_list, account_deactivated=False, is_staff=False)
+                return User.objects.filter(
+                    pk__in=members_list, account_deactivated=False, is_staff=False, portal=portal)
             return User.objects.filter(account_deactivated=False, is_staff=False)
 
         elif self.action == "list_users_not_followed":
@@ -318,10 +319,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         serializer.is_valid(raise_exception=True)
         user, token = serializer.save()
 
-        data = {
-            'user': DetailedUserModelSerializer(user, context={"request": request}, many=False).data,
-            'access_token': token,
-        }
+        data = {'user': DetailedUserModelSerializer(
+            user, context={"request": request, "portal": self.portal}, many=False).data, 'access_token': token, }
 
         if 'STRIPE_API_KEY' in env:
             stripe.api_key = env('STRIPE_API_KEY')
